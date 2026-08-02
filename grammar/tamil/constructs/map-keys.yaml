@@ -1,0 +1,24 @@
+id: map-keys
+status: codegen
+subset: Tamil-0.38
+go_inspired: |
+  map[float64]string
+  map[Point]int
+  map[[2]int]string
+  map[*int]string
+tamil_ebnf: |
+  MapType key Type must be comparable.
+semantics: >
+  Map keys may be any comparable type: முழுஎண், நிலை, சரம், மிதவைஎண்,
+  pointers, comparable அமைப்பு, comparable [N]T, and defined types with
+  comparable underlyings. Slices and maps remain invalid keys.
+  Float keys: +0/-0 same; NaN not equal to itself (IEEE).
+examples:
+  - tamil: |
+      m := அகராதி[மிதவைஎண்]சரம்{1.5: "அ"}
+      பதிப்பி(m[1.5])
+    go_equivalent: |
+      m := map[float64]string{1.5: "அ"}
+      println(m[1.5])
+notes:
+  - "No new keywords; widens mapKeyOK to comparable()."

@@ -1,0 +1,20 @@
+id: import-unused
+status: codegen
+subset: Tamil-0.32
+go_inspired: |
+  import "fmt" // error if unused
+tamil_ebnf: |
+  (no new syntax)
+semantics: >
+  Non-blank கொணர் qualifiers must be referenced (pkg.Name or type). Blank
+  import _ remains load-only. Import cycles report the package path
+  (A → B → A).
+examples:
+  - tamil: |
+      கொணர் "கணிதம்"
+      // error if கணிதம் is never used
+    go_equivalent: |
+      import "math"
+      // error if unused
+notes:
+  - "Hardens import.yaml / load."

@@ -1,0 +1,21 @@
+id: float
+status: codegen
+subset: Tamil-0.30
+go_inspired: |
+  var x float64 = 1.5
+tamil_ebnf: |
+  TypeName includes "மிதவைஎண்" .
+  float_lit = decimals "." [ decimals ] | "." decimals .
+semantics: >
+  மிதவைஎண் is IEEE-754 binary64 (C double). Literals 1.5, 1., .5. Ops + - * /
+  and ordered compares; no % on floats. Int/float via T(x) conversion
+  (Tamil-0.33). பதிப்பி and []மிதவைஎண் supported.
+examples:
+  - tamil: |
+      அ := 1.5
+      பதிப்பி(அ * 2.0)
+    go_equivalent: |
+      a := 1.5
+      fmt.Println(a * 2.0)
+notes:
+  - "Keyword locked: மிதவைஎண் (parallel to முழுஎண்)."

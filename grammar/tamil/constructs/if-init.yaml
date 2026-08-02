@@ -1,0 +1,26 @@
+id: if-init
+status: codegen
+subset: Tamil-0.15
+go_inspired: |
+  if x := foo(); x > 0 { ... } else { ... }
+  switch x := foo(); x { case 1: ... }
+tamil_ebnf: |
+  IfStmt     = "எனில்" [ SimpleStmt ";" ] Expression Block [ "இல்லையேல்" ( IfStmt | Block ) ] .
+  SwitchStmt = "திசைவி" [ SimpleStmt ";" ] [ Expression ] "{" { CaseClause } "}" .
+ast:
+  IfStmt.Init / SwitchStmt.Init: SimpleStmt
+semantics: >
+  Optional init before the condition/tag, scoped to the whole எனில்
+  (including இல்லையேல்) or திசைவி (tag, cases, bodies). Typical init is
+  short declaration (:=) or assignment. No new keywords.
+examples:
+  - tamil: |
+      எனில் x := 3; x > 0 {
+          பதிப்பி(x)
+      }
+    go_equivalent: |
+      if x := 3; x > 0 {
+          println(x)
+      }
+notes:
+  - "Also applies to திசைவி — see switch.yaml."

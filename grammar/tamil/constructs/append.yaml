@@ -1,0 +1,18 @@
+id: append
+status: codegen
+subset: Tamil-0.5
+go_inspired: append
+tamil_ebnf: |
+  BuiltinCall = … | "சேர்" "(" Expression { "," Expression } ")" .
+tamil_keywords:
+  append: சேர்
+semantics: >
+  சேர்(xs, v, …) appends one or more elements (Tamil-0.19 multi-append) and
+  returns a slice of the same type. Capacity may grow via the runtime arena.
+examples:
+  - tamil: |
+      xs := []முழுஎண்{1, 2}
+      xs = சேர்(xs, 3)
+    go_equivalent: |
+      xs := []int{1, 2}
+      xs = append(xs, 3)

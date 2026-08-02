@@ -1,0 +1,21 @@
+id: nested-slice
+status: codegen
+subset: Tamil-0.21
+go_inspired: |
+  a := [][]int{{1, 2}, {3}}
+  println(a[0][1])
+tamil_ebnf: |
+  SliceType = "[" "]" Type .
+semantics: >
+  Slice element types may themselves be slices: [][]முழுஎண், [][]நிலை,
+  [][]சரம், and deeper. Indexing, நீளம், சேர், and xs[i:j] / xs[i:j:k] work
+  on every level. []struct / []*T: Tamil-0.25 (slice-struct.yaml).
+examples:
+  - tamil: |
+      அ := [][]முழுஎண்{[]முழுஎண்{1, 2}, []முழுஎண்{3}}
+      பதிப்பி(அ[0][1])
+    go_equivalent: |
+      a := [][]int{[]int{1, 2}, []int{3}}
+      println(a[0][1])
+notes:
+  - "Extends slice.yaml (0.3 leaf-only)."

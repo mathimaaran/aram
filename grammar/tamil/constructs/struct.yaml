@@ -1,0 +1,51 @@
+id: struct
+status: codegen
+subset: Tamil-0.6
+go_inspired: |
+  type Point struct { X int; Y int }
+  p := Point{X: 1, Y: 2}
+  p.X = 3
+tamil_keywords:
+  type: வகை
+  struct: அமைப்பு
+tamil_ebnf: |
+  TypeDecl   = "வகை" identifier TypeLit .   (* struct form; see also type-alias.yaml *)
+  TypeLit    = StructType .
+  StructType = "அமைப்பு" "{" { FieldDecl } "}" .
+  FieldDecl  = identifier Type .
+  Selector   = Primary "." identifier .
+  CompositeLit = ( SliceType | TypeName ) "{" [ LiteralElement { "," LiteralElement } ] "}" .
+  LiteralElement = Expression | identifier ":" Expression .
+ast:
+  type: TypeDecl | StructType | SelectorExpr | KeyValueExpr
+semantics: >
+  Named struct types. Composite literals (keyed and, since 0.20, positional),
+  field selection with ".", and field assignment. Zero value zeroes all fields.
+  Selecting on *Struct auto-dereferences (see pointer.yaml).
+  Field types: Tamil-0.13 allows nested structs, *T, and []T — see
+  struct-fields.yaml (0.6–0.7 were scalars only). Struct == / != :
+  Tamil-0.16 (struct-eq.yaml). பதிப்பி of structs: Tamil-0.17.
+  Positional literals: Tamil-0.20 (struct-lit-pos.yaml).
+examples:
+  - tamil: |
+      வகை புள்ளி அமைப்பு {
+          x முழுஎண்
+          y முழுஎண்
+      }
+      செயல்பாடு தொடக்கம்() {
+          ப := புள்ளி{x: 3, y: 4}
+          பதிப்பி(ப.x)
+          ப.y = 9
+          பதிப்பி(ப.y)
+      }
+    go_equivalent: |
+      type Point struct { x int; y int }
+      func main() {
+          p := Point{x: 3, y: 4}
+          println(p.x)
+          p.y = 9
+          println(p.y)
+      }
+notes:
+  - "Pointers (*T / & / *) are Tamil-0.7 — see pointer.yaml."
+  - "Methods are Tamil-0.8 — see method.yaml."

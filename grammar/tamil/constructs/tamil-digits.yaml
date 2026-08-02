@@ -1,0 +1,20 @@
+id: tamil-digits
+status: codegen
+subset: Tamil-0.31
+go_inspired: |
+  // no Go analog; optional digit forms
+tamil_ebnf: |
+  digit = "0"…"9" | "௦"…"௯" .
+semantics: >
+  Numeric literals may use Tamil digits ௦–௯ (normalized to ASCII for value).
+  Identifiers still use Arabic digits only. Mixable with ASCII digits in one
+  literal (e.g. 1௨).
+examples:
+  - tamil: |
+      அ := ௧௨
+      பதிப்பி(அ)
+    go_equivalent: |
+      a := 12
+      fmt.Println(a)
+notes:
+  - "Optional sugar; Arabic digits remain the primary form in docs."

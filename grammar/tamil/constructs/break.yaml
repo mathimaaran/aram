@@ -1,0 +1,30 @@
+id: break
+status: specified
+subset: Tamil-0.1
+go_inspired: "break"
+tamil_keywords:
+  break: முறி
+tamil_ebnf: |
+  BreakStmt = "முறி" .
+ast:
+  type: BreakStmt
+  fields: []
+semantics: >
+  Exits the innermost சுழல். Illegal outside a loop.
+examples:
+  - tamil: |
+      சுழல் i := 0; i < 10; i = i + 1 {
+          எனில் i == 3 {
+              முறி
+          }
+          பதிப்பி(i)
+      }
+    go_equivalent: |
+      for i := 0; i < 10; i = i + 1 {
+          if i == 3 {
+              break
+          }
+          println(i)
+      }
+notes:
+  - "Locked 2026-08-01: முறி (muri) = break."

@@ -1,0 +1,20 @@
+id: array
+status: codegen
+subset: Tamil-0.24
+go_inspired: |
+  a := [3]int{10, 20, 30}
+  println(a[1])
+  s := a[1:3]
+tamil_ebnf: |
+  ArrayType = "[" integer_lit "]" Type .
+semantics: >
+  Fixed-size arrays [N]T are value types (distinct from slices). Composite
+  literals, index get/set, நீளம், திறன் (both = N), ஒவ்வொரு, and slicing to a
+  []T are supported. N must be a non-negative integer literal.
+examples:
+  - tamil: |
+      அ := [3]முழுஎண்{10, 20, 30}
+      பதிப்பி(அ[1])
+    go_equivalent: |
+      a := [3]int{10, 20, 30}
+      println(a[1])

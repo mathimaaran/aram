@@ -1,0 +1,32 @@
+id: range
+status: codegen
+subset: Tamil-0.5
+go_inspired: |
+  for i, v := range xs { }
+  for i, r := range s { }  # string → rune
+tamil_keywords:
+  range: ஒவ்வொரு
+tamil_ebnf: |
+  ForStmt     = "சுழல்" [ Condition | ForClause | RangeClause ] Block .
+  RangeClause = IdentifierList ( ":=" | "=" ) "ஒவ்வொரு" Expression .
+ast:
+  type: RangeStmt
+  fields: [key, value, define, x, body]
+semantics: >
+  Iterates over a slice or சரம். For slices: index is முழுஎண், value is the element.
+  For சரம்: index is the byte offset; value is the Unicode code point as முழுஎண் (Go rune).
+  Blank "_" skips a binding. := declares; = assigns to existing variables.
+examples:
+  - tamil: |
+      சுழல் i, v := ஒவ்வொரு எண்கள் {
+          பதிப்பி(v)
+      }
+      சுழல் i, r := ஒவ்வொரு "அறம்" {
+          பதிப்பி(r)
+      }
+    go_equivalent: |
+      for i, v := range nums { println(v) }
+      for i, r := range "அறம்" { println(r) }
+notes:
+  - "Name locked 2026-08-01: ஒவ்வொரு (explicit 'each')."
+  - "Tamil-0.5: ranging over சரம் uses UTF-8 rune decoding."

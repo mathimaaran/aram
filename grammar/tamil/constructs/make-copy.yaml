@@ -1,0 +1,28 @@
+id: make-copy
+status: codegen
+subset: Tamil-0.22
+go_inspired: |
+  xs := make([]int, 3, 8)
+  n := copy(dst, src)
+  c := cap(xs)
+tamil_keywords:
+  make: ஆக்கு
+  copy: நகல்
+  cap: திறன்
+tamil_ebnf: |
+  BuiltinCall = … | "ஆக்கு" "(" Type "," Expression [ "," Expression ] ")"
+              | "நகல்" "(" Expression "," Expression ")"
+              | "திறன்" "(" Expression ")" .
+semantics: >
+  ஆக்கு([]T, len) and ஆக்கு([]T, len, cap) allocate a zeroed slice (arena).
+  நகல்(dst, src) copies min(len(dst), len(src)) elements; returns count.
+  திறன்(xs) is slice capacity (not strings). Slice types only for ஆக்கு in 0.22.
+examples:
+  - tamil: |
+      xs := ஆக்கு([]முழுஎண், 3, 8)
+      பதிப்பி(நீளம்(xs))
+      பதிப்பி(திறன்(xs))
+    go_equivalent: |
+      xs := make([]int, 3, 8)
+      println(len(xs))
+      println(cap(xs))

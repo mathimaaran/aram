@@ -1,0 +1,21 @@
+id: print
+status: specified
+subset: Tamil-0
+go_inspired: "println (builtin / fmt)"
+tamil_ebnf: |
+  BuiltinCall = "பதிப்பி" "(" Expression ")" .
+tamil_keywords:
+  print: பதிப்பி
+ast:
+  type: BuiltinCall
+  fields: [name, args]
+semantics: >
+  Writes the value to stdout followed by a newline.
+  Accepts முழுஎண், நிலை, சரம், and named structs (Tamil-0.17 — see
+  print-struct.yaml). Not slices, pointers, or இன்மை at top level.
+  Name பதிப்பி = print/publish.
+examples:
+  - tamil: |
+      பதிப்பி("வணக்கம், அறம்!")
+    go_equivalent: |
+      println("வணக்கம், அறம்!")

@@ -1,0 +1,32 @@
+id: multifile
+status: codegen
+subset: Tamil-0.9
+go_inspired: |
+  // several .go files in package main, no import between them
+tamil_ebnf: |
+  SourceFile = PackageClause { TopLevelDecl } .
+  (* Multiple SourceFiles with the same PackageName form one package. *)
+semantics: >
+  Same-package multi-file: every file declares தொகுப்பு தொடக்கம்.
+  Types, functions, and methods are shared across files in the package.
+  Exactly one செயல்பாடு தொடக்கம்() must exist in the package.
+  The aram tool accepts multiple .aram paths or a directory of *.aram.
+  Cross-package கொணர் is Tamil-0.10 — see import.yaml.
+examples:
+  - tamil: |
+      # file வடிவம்.aram
+      தொகுப்பு தொடக்கம்
+      வகை புள்ளி அமைப்பு { x முழுஎண் }
+      செயல்பாடு (ப *புள்ளி) அமை(ம முழுஎண்) { ப.x = ம }
+
+      # file தொடக்கம்.aram
+      தொகுப்பு தொடக்கம்
+      செயல்பாடு தொடக்கம்() {
+          ப := புள்ளி{x: 0}
+          ப.அமை(7)
+          பதிப்பி(ப.x)
+      }
+    go_equivalent: |
+      // point.go + main.go in package main
+notes:
+  - "Import keyword கொணர் (bring) is Tamil-0.10 — see import.yaml."

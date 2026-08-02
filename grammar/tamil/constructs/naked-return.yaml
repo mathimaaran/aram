@@ -1,0 +1,30 @@
+id: naked-return
+status: codegen
+subset: Tamil-0.27
+go_inspired: |
+  func div(a, b int) (q int, r int) {
+      q = a / b
+      r = a % b
+      return
+  }
+tamil_ebnf: |
+  ReturnStmt = "திருப்பு" [ ExpressionList ] .
+semantics: >
+  A bare திருப்பு (no values) is allowed when the enclosing function has named
+  results; it returns the current values of those result variables. Unnamed
+  result lists still require explicit values. Completes named-results.yaml.
+examples:
+  - tamil: |
+      செயல்பாடு வகு(அ முழுஎண், ஆ முழுஎண்) (ஈ முழுஎண், மீ முழுஎண்) {
+          ஈ = அ / ஆ
+          மீ = அ % ஆ
+          திருப்பு
+      }
+    go_equivalent: |
+      func div(a, b int) (q int, r int) {
+          q = a / b
+          r = a % b
+          return
+      }
+notes:
+  - "Requires Tamil-0.26 named results."

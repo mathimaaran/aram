@@ -1,0 +1,35 @@
+id: named-results
+status: codegen
+subset: Tamil-0.26
+go_inspired: |
+  func div(a, b int) (q int, r int) {
+      q = a / b
+      r = a % b
+      return q, r
+  }
+tamil_ebnf: |
+  Result     = Type | "(" [ ResultList ] ")" .
+  ResultList = NamedResults | TypeList .
+  NamedResults = Identifier Type { "," Identifier Type } .
+  TypeList   = Type { "," Type } .
+semantics: >
+  Parenthesized results may name each value. All results in a list are named
+  or all are unnamed (no mixing). Named results are declared in the function
+  scope and zero-initialized; they may be assigned before திருப்பு.
+  Naked return (bare திருப்பு): Tamil-0.27 — see naked-return.yaml.
+examples:
+  - tamil: |
+      செயல்பாடு வகு(அ முழுஎண், ஆ முழுஎண்) (ஈ முழுஎண், மீ முழுஎண்) {
+          ஈ = அ / ஆ
+          மீ = அ % ஆ
+          திருப்பு ஈ, மீ
+      }
+    go_equivalent: |
+      func div(a, b int) (q int, r int) {
+          q = a / b
+          r = a % b
+          return q, r
+      }
+notes:
+  - "Builds on multi-return.yaml (Tamil-0.23)."
+  - "Naked return: Tamil-0.27 — see naked-return.yaml."

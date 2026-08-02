@@ -1,0 +1,19 @@
+id: slice-expr
+status: codegen
+subset: Tamil-0.5
+go_inspired: "s[low:high] slicing"
+tamil_ebnf: |
+  SliceExpr = Primary "[" [ Expression ] ":" [ Expression ] "]"
+            | Primary "[" [ Expression ] ":" Expression ":" Expression "]" .
+semantics: >
+  Sub-slice of a slice, or substring of a சரம் (byte offsets, like Go).
+  Forms: xs[i:j], xs[i:], xs[:j], xs[:], and xs[i:j:k] / xs[:j:k] (0.19).
+  Out-of-range bounds abort at runtime. Three-index not allowed on சரம்.
+examples:
+  - tamil: |
+      பதிப்பி(எண்கள்[1:3])
+      பதிப்பி("அறம்"[0:3])
+    go_equivalent: |
+      // print elems of nums[1:3]; println("அறம்"[0:3])
+notes:
+  - "Three-index: see slice-grow.yaml (0.19)."

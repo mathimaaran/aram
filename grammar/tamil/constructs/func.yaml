@@ -1,0 +1,29 @@
+id: func
+status: specified
+subset: Tamil-0
+go_inspired: "func FunctionName Signature FunctionBody"
+go_ebnf: |
+  FunctionDecl = "func" FunctionName Signature [ FunctionBody ] .
+tamil_ebnf: |
+  FunctionDecl = "செயல்பாடு" FunctionName Signature FunctionBody .
+tamil_keywords:
+  func: செயல்பாடு
+ast:
+  type: FuncDecl
+  fields: [name, params, result, body]
+semantics: >
+  Declares a function. Tamil-0 entrypoint is செயல்பாடு தொடக்கம் with no
+  parameters and no result (or later explicit முழுஎண்). தொடக்கம் is not a keyword.
+examples:
+  - tamil: |
+      செயல்பாடு தொடக்கம்() {
+          பதிப்பி("வணக்கம், அறம்!")
+      }
+    go_equivalent: |
+      func main() {
+          println("வணக்கம், அறம்!")
+      }
+notes:
+  - "Methods with receivers are Tamil-0.8 — see method.yaml."
+open_questions:
+  - "Shorten செயல்பாடு if typing cost is too high?"

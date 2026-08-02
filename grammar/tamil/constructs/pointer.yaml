@@ -1,0 +1,39 @@
+id: pointer
+status: codegen
+subset: Tamil-0.7
+go_inspired: |
+  var x int = 5
+  p := &x
+  *p = 7
+  type Point struct { x int }
+  q := &Point{x: 1}
+  q.x = 9
+tamil_ebnf: |
+  PointerType = "*" Type .
+  Type        = TypeName | SliceType | PointerType .
+  Unary       = [ "-" | "!" | "*" | "&" ] Unary | Primary .
+  Assignment  = ( identifier | IndexExpr | SelectorExpr | StarExpr ) "=" Expression .
+ast:
+  type: PointerType | UnaryExpr
+semantics: >
+  Pointer types *T where T is முழுஎண், நிலை, சரம், a named struct, or another
+  pointer. Address-of &x requires an addressable operand (variable, field,
+  index, or *p). Dereference *p yields the pointed-to value and may be assigned.
+  Selecting a field on *Struct auto-dereferences (Go-style p.x). Zero value is
+  இன்மை (C NULL). *T struct fields: Tamil-0.13 (struct-fields.yaml).
+  Nil keyword and pointer == / != : Tamil-0.12 (nil.yaml). No பதிப்பி of pointers.
+  Methods: see method.yaml (0.8).
+examples:
+  - tamil: |
+      மாறி அ முழுஎண் = 5
+      சு := &அ
+      *சு = 7
+      பதிப்பி(அ)
+    go_equivalent: |
+      var a int = 5
+      p := &a
+      *p = 7
+      println(a)
+notes:
+  - "Methods on pointer/value receivers are Tamil-0.8 — see method.yaml."
+  - "* is also binary multiply; & is address-of only (no bitwise and yet)."

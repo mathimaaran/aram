@@ -1,0 +1,30 @@
+id: continue
+status: specified
+subset: Tamil-0.1
+go_inspired: "continue"
+tamil_keywords:
+  continue: தொடர்
+tamil_ebnf: |
+  ContinueStmt = "தொடர்" .
+ast:
+  type: ContinueStmt
+  fields: []
+semantics: >
+  Continues the innermost சுழல் (next iteration). Illegal outside a loop.
+examples:
+  - tamil: |
+      சுழல் i := 0; i < 5; i = i + 1 {
+          எனில் i == 2 {
+              தொடர்
+          }
+          பதிப்பி(i)
+      }
+    go_equivalent: |
+      for i := 0; i < 5; i = i + 1 {
+          if i == 2 {
+              continue
+          }
+          println(i)
+      }
+notes:
+  - "Locked 2026-08-01: தொடர் = continue."

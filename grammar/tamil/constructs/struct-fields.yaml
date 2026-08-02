@@ -1,0 +1,38 @@
+id: struct-fields
+status: codegen
+subset: Tamil-0.13
+go_inspired: |
+  type Node struct { Val int; Next *Node }
+  type Rect struct { Min Point; Max Point }
+  type Bag struct { Xs []int }
+tamil_ebnf: |
+  FieldDecl = [ "வெளி" ] identifier Type .
+  Type      = TypeName | SliceType | PointerType .
+semantics: >
+  Struct fields may be முழுஎண், நிலை, சரம், a named struct (by value),
+  *T (including recursive *Self), or []முழுஎண்|[]நிலை|[]சரம்.
+  Value-recursive structs (T contains T by value) are rejected. Pointer
+  cycles are allowed. Same literals (keyed / positional 0.20), selection, and
+  assignment as 0.6+.
+  Nested selection auto-derefs *Struct fields (Go-style).
+examples:
+  - tamil: |
+      வகை முனை அமைப்பு {
+          மதிப்பு முழுஎண்
+          அடுத்து *முனை
+      }
+      செயல்பாடு தொடக்கம்() {
+          மாறி அ முனை = முனை{மதிப்பு: 1, அடுத்து: இன்மை}
+          மாறி ஆ முனை = முனை{மதிப்பு: 2, அடுத்து: &அ}
+          பதிப்பி(ஆ.அடுத்து.மதிப்பு)
+      }
+    go_equivalent: |
+      type Node struct { Val int; Next *Node }
+      func main() {
+          a := Node{Val: 1, Next: nil}
+          b := Node{Val: 2, Next: &a}
+          println(b.Next.Val)
+      }
+notes:
+  - "Extends struct.yaml / pointer.yaml field cuts from 0.6–0.7."
+  - "No []struct or nested [][]T yet."

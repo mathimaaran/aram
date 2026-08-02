@@ -1,0 +1,29 @@
+id: conversion-extra
+status: codegen
+subset: Tamil-0.34
+go_inspired: |
+  type Flag bool
+  f := Flag(true)
+  s := string(65)
+  q := (*Score)(p) // Score's underlying is int
+  x := 2 + 3.5     // Aram: mixed typed int/float → float
+tamil_ebnf: |
+  Conversion = Type "(" Expression ")" .
+  Type may be "(" "*" Type ")" for pointer conversions .
+semantics: >
+  Extends conversion.yaml: (1) நிலை ↔ defined-of-நிலை; (2) சரம்(முழுஎண்) encodes
+  a Unicode code point as UTF-8; (3) (*T)(p) when T and the pointee share the
+  same underlying type; (4) arithmetic and ordered compares allow mixed
+  முழுஎண்/மிதவைஎண் and yield மிதவைஎண் (int side promoted).
+examples:
+  - tamil: |
+      பதிப்பி(சரம்(65))
+      பதிப்பி(2 + 3.5)
+      q := (*மதிப்பெண்)(p)
+    go_equivalent: |
+      fmt.Println(string(65))
+      // Go needs float64(2)+3.5 for typed ints; Aram promotes
+      q := (*Score)(p)
+notes:
+  - "Mixed int/float is slightly more permissive than Go for typed values."
+  - "சரம் ↔ []இருமி8 / []இருமி32: Tamil-0.39 — byte-rune.yaml."

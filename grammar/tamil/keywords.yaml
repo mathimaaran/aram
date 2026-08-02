@@ -1,0 +1,238 @@
+# Tamil keyword glossary
+
+status: active
+subset: Tamil-0.43
+style: semantic Tamil
+note: >
+  Tamil-0 remains frozen as the base. Tamil-0.43 defer method bind
+  (no new keywords). Further breaking changes need Tamil-0.44+ and a
+  dated note in notes/design-decisions.md. ASCII operators and braces stay.
+
+keywords:
+  - go: package
+    tamil: தொகுப்பு
+    token: PACKAGE
+    notes: "collection / package; frozen 2026-08-01"
+
+  - go: main  # package or func name convention — NOT a keyword
+    tamil: தொடக்கம்
+    token: IDENT_ENTRY
+    notes: >
+      Conventional entry identifier (like Go main), not reserved.
+      Required package name and function name for a runnable program.
+
+  - go: func
+    tamil: செயல்பாடு
+    token: FUNC
+
+  - go: var
+    tamil: மாறி
+    token: VAR
+
+  - go: if
+    tamil: எனில்
+    token: IF
+
+  - go: else
+    tamil: இல்லையேல்
+    token: ELSE
+
+  - go: return
+    tamil: திருப்பு
+    token: RETURN
+
+  - go: for
+    tamil: சுழல்
+    token: FOR
+    notes: "Tamil-0.1 — single loop keyword like Go for"
+
+  - go: break
+    tamil: முறி
+    token: BREAK
+    notes: "Tamil-0.1 — break out of innermost சுழல்"
+
+  - go: continue
+    tamil: தொடர்
+    token: CONTINUE
+    notes: "Tamil-0.1 — continue innermost சுழல்"
+
+  - go: int
+    tamil: முழுஎண்
+    token: TYPE_INT
+
+  - go: bool
+    tamil: நிலை
+    token: TYPE_BOOL
+
+  - go: float64
+    tamil: மிதவைஎண்
+    token: TYPE_FLOAT
+    notes: "Tamil-0.30 — IEEE-754 binary64 (C double)"
+
+  - go: byte / uint8
+    tamil: இருமி8
+    token: TYPE_BYTE
+    notes: "Tamil-0.39 — 8-bit unsigned (இருமி = binary unit)"
+
+  - go: rune / int32
+    tamil: இருமி32
+    token: TYPE_RUNE
+    notes: "Tamil-0.39 — Unicode code point (signed 32-bit)"
+
+  - go: string
+    tamil: சரம்
+    token: TYPE_STRING
+    notes: "Tamil-0.2 — string as a first-class value type"
+
+  - go: true
+    tamil: மெய்
+    token: TRUE
+
+  - go: false
+    tamil: பொய்
+    token: FALSE
+
+  - go: print / println
+    tamil: பதிப்பி
+    token: BUILTIN_PRINT
+
+  - go: len
+    tamil: நீளம்
+    token: BUILTIN_LEN
+    notes: "Tamil-0.3 — length of a slice"
+
+  - go: range
+    tamil: ஒவ்வொரு
+    token: RANGE
+    notes: "Tamil-0.4 — each; range over slices; Tamil-0.5 also சரம் (runes)"
+
+  - go: append
+    tamil: சேர்
+    token: BUILTIN_APPEND
+    notes: "Tamil-0.5 — append; Tamil-0.19 multi-append சேர்(xs, a, b, …)"
+
+  - go: make
+    tamil: ஆக்கு
+    token: BUILTIN_MAKE
+    notes: "Tamil-0.22 — make a zeroed slice"
+
+  - go: copy
+    tamil: நகல்
+    token: BUILTIN_COPY
+    notes: "Tamil-0.22 — copy slice elements"
+
+  - go: cap
+    tamil: திறன்
+    token: BUILTIN_CAP
+    notes: "Tamil-0.22 — slice capacity"
+
+  - go: type
+    tamil: வகை
+    token: TYPE
+    notes: "Tamil-0.6 — type declaration"
+
+  - go: struct
+    tamil: அமைப்பு
+    token: STRUCT
+    notes: "Tamil-0.6 — struct type literal"
+
+  - go: import
+    tamil: கொணர்
+    token: IMPORT
+    notes: "Tamil-0.10 — bring; cross-package import"
+
+  - go: // export (capitalized name in Go; no keyword)
+    tamil: வெளி
+    token: EXPORT
+    notes: "Tamil-0.11 — outside; opt-in export (replaces Go capitalization)"
+
+  - go: nil
+    tamil: இன்மை
+    token: NIL
+    notes: "Tamil-0.12 — absence; nil pointer value"
+
+  - go: switch
+    tamil: திசைவி
+    token: SWITCH
+    notes: "Tamil-0.14 — director / router"
+
+  - go: default
+    tamil: மற்றபடி
+    token: DEFAULT
+    notes: "Tamil-0.14 — switch default; case reuses எனில்"
+
+  - go: map
+    tamil: அகராதி
+    token: MAP
+    notes: "Tamil-0.35 — map type அகராதி[K]V"
+
+  - go: delete
+    tamil: நீக்கு
+    token: DELETE
+    notes: "Tamil-0.35 — delete map key"
+
+  - go: defer
+    tamil: தள்ளிவை
+    token: DEFER
+    notes: "Tamil-0.37 — postpone call until function return (LIFO)"
+
+reserved_later: []
+
+builtins:
+  - name: பதிப்பி
+    arity: 1
+    args: [string_or_int_or_bool]
+    effect: write to stdout followed by newline
+
+  - name: நீளம்
+    arity: 1
+    args: [slice_or_string_or_map]
+    result: முழுஎண்
+    effect: slice length, map length, or byte length of சரம்
+
+  - name: சேர்
+    arity: "2+"
+    args: [slice, element, "..."]
+    result: same_slice_type
+    effect: append one or more elements; may reallocate via arena
+
+  - name: ஆக்கு
+    arity: "1-3"
+    args: [slice_or_map_type, "len_or_hint?", "cap?"]
+    result: slice_or_map
+    effect: >
+      slice: ஆக்கு([]T, len [, cap]); map: ஆக்கு(அகராதி[K]V [, hint]);
+      arena-allocated
+
+  - name: நகல்
+    arity: 2
+    args: [dst_slice, src_slice]
+    result: முழுஎண்
+    effect: copy min(len) elements; return count
+
+  - name: திறன்
+    arity: 1
+    args: [slice]
+    result: முழுஎண்
+    effect: slice capacity
+
+  - name: நீக்கு
+    arity: 2
+    args: [map, key]
+    result: void
+    effect: remove key from map; no-op if missing or map is இன்மை
+
+operators_ascii:
+  - ["+", "-", "*", "/", "%"]
+  - ["==", "!=", "<", "<=", ">", ">="]
+  - ["=", ":=", ":"]
+  - ["!", "&", "{", "}", "(", ")", "[", "]", ",", ".", ";"]
+  notes: >
+    * is multiply (binary) and pointer type / dereference (unary).
+    & is address-of (unary) in Tamil-0.7; no bitwise-and yet.
+
+short_declaration:
+  operator: ":="
+  status: frozen
+  notes: >
+    Go-style short var declaration. Allowed in சுழல் init as well.

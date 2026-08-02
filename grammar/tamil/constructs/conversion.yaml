@@ -1,0 +1,28 @@
+id: conversion
+status: codegen
+subset: Tamil-0.33
+go_inspired: |
+  type Score int
+  s := Score(7)
+  n := int(s)
+  f := float64(n)
+tamil_ebnf: |
+  Conversion = Type "(" Expression ")" .
+semantics: >
+  T(x) converts x to type T when allowed: identical types; defined type ↔ its
+  underlying (including same-underlying defined types); முழுஎண் ↔ மிதவைஎண்
+  (truncates toward zero for float→int). Exactly one argument. Completes
+  type-alias.yaml and float.yaml.
+examples:
+  - tamil: |
+      வகை மதிப்பெண் முழுஎண்
+      ஆ := மதிப்பெண்(7)
+      இ := முழுஎண்(ஆ)
+      உ := முழுஎண்(3.9)
+    go_equivalent: |
+      type Score int
+      s := Score(7)
+      n := int(s)
+      i := int(3.9)
+notes:
+  - "Bool/string/pointer + mixed int/float: Tamil-0.34 — conversion-extra.yaml."

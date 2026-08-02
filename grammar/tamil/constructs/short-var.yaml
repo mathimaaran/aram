@@ -1,0 +1,37 @@
+id: short_var
+status: specified
+subset: Tamil-0
+go_inspired: 'IdentifierList ":=" ExpressionList'
+go_ebnf: |
+  ShortVarDecl = IdentifierList ":=" ExpressionList .
+tamil_ebnf: |
+  ShortVarDecl = IdentifierList ":=" ExpressionList .
+tamil_keywords: {}
+operators:
+  short_decl: ":="
+ast:
+  type: ShortVarDecl
+  fields: [names, values]
+semantics: >
+  Declares one or more new variables and assigns initial values.
+  Types are inferred from the initializers (Tamil-0: integer lit → முழுஎண்;
+  மெய்/பொய் → நிலை). At least one name on the left must be new in the
+  scope (Go-like rule; exact redeclaration rules TBD with checker).
+  Reassignment of an existing variable alone uses "=" not ":=".
+examples:
+  - tamil: |
+      x := 10
+      y := மெய்
+      x = 20
+    go_equivalent: |
+      x := 10
+      y := true
+      x = 20
+  - tamil: |
+      மாறி a முழுஎண் = 1
+      b := a + 2
+    go_equivalent: |
+      var a int = 1
+      b := a + 2
+notes:
+  - "Locked 2026-07-25: keep Go-style := alongside மாறி."

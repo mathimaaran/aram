@@ -1,0 +1,36 @@
+id: export
+status: codegen
+subset: Tamil-0.11
+go_inspired: |
+  // Go: capitalized name = exported (no keyword)
+  func Add(...)  // exported
+  func add(...)  // package-private
+tamil_keywords:
+  export: வெளி
+tamil_ebnf: |
+  TopLevelDecl = [ "வெளி" ] ( FunctionDecl | VarDecl | TypeDecl ) .
+  FieldDecl    = [ "வெளி" ] identifier Type .
+ast:
+  exported: bool  # on FuncDecl, TypeDecl, Field
+semantics: >
+  Names are package-private by default. Prefix வெளி to export a top-level
+  func/type (and later package var) or a struct field so other packages may
+  use it via கொணர். Same package (all files) always sees unmarked names.
+  Importers may only reference வெளி funcs, types, fields, and methods.
+  Tamil has no letter case, so this replaces Go's capitalization rule.
+examples:
+  - tamil: |
+      தொகுப்பு கணிதம்
+      வெளி செயல்பாடு கூட்டு(அ முழுஎண், ஆ முழுஎண்) முழுஎண் {
+          திருப்பு அ + ஆ
+      }
+      செயல்பாடு உதவி(அ முழுஎண்) முழுஎண் {  # private
+          திருப்பு அ
+      }
+    go_equivalent: |
+      package கணிதம்
+      func கூட்டு(...) int { ... }  // exported
+      func உதவி(...) int { ... }   // unexported
+notes:
+  - "வெளி = outside / outward. Opt-in export (Go-like defaults)."
+  - "Entry தொடக்கம் need not be வெளி (never imported)."

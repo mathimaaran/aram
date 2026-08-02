@@ -1,0 +1,51 @@
+id: method
+status: codegen
+subset: Tamil-0.8
+go_inspired: |
+  func (p Point) Sum() int { return p.x + p.y }
+  func (p *Point) SetX(v int) { p.x = v }
+  p.Sum()
+  p.SetX(10)
+tamil_ebnf: |
+  FunctionDecl = "செயல்பாடு" [ Receiver ] FunctionName Signature FunctionBody .
+  Receiver     = "(" identifier Type ")" .
+  Primary      = Operand { IndexOrSlice | "." identifier | Arguments } .
+  Arguments    = "(" [ ExpressionList ] ")" .
+ast:
+  type: FuncDecl (Receiver) | CallExpr (Fun = SelectorExpr)
+semantics: >
+  Methods on named struct types only. Receiver is (name T) or (name *T).
+  Calls use X.Name(args). Value methods may be called on T or *T.
+  Pointer methods may be called on *T, or on an addressable T (pass &X).
+  Method names must not collide with fields or other methods on the type.
+  No interfaces, method values, or embedding in Tamil-0.8.
+examples:
+  - tamil: |
+      வகை புள்ளி அமைப்பு {
+          x முழுஎண்
+          y முழுஎண்
+      }
+      செயல்பாடு (ப புள்ளி) கூட்டு() முழுஎண் {
+          திருப்பு ப.x + ப.y
+      }
+      செயல்பாடு (ப *புள்ளி) அமை_x(ம முழுஎண்) {
+          ப.x = ம
+      }
+      செயல்பாடு தொடக்கம்() {
+          ப := புள்ளி{x: 3, y: 4}
+          பதிப்பி(ப.கூட்டு())
+          ப.அமை_x(10)
+          பதிப்பி(ப.x)
+      }
+    go_equivalent: |
+      type Point struct { x int; y int }
+      func (p Point) Sum() int { return p.x + p.y }
+      func (p *Point) SetX(v int) { p.x = v }
+      func main() {
+          p := Point{x: 3, y: 4}
+          println(p.Sum())
+          p.SetX(10)
+          println(p.x)
+      }
+notes:
+  - "Interfaces and method expressions are later."

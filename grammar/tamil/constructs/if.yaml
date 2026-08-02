@@ -1,0 +1,30 @@
+id: if
+status: codegen
+subset: Tamil-0
+go_inspired: 'if Expression Block [ "else" ... ]'
+go_ebnf: |
+  IfStmt = "if" [ SimpleStmt ";" ] Expression Block [ "else" ( IfStmt | Block ) ] .
+tamil_ebnf: |
+  IfStmt = "எனில்" [ SimpleStmt ";" ] Expression Block [ "இல்லையேல்" ( IfStmt | Block ) ] .
+tamil_keywords:
+  if: எனில்
+  else: இல்லையேல்
+ast:
+  type: IfStmt
+  fields: [init, cond, body, else]
+semantics: >
+  Cond must be நிலை. Optional init SimpleStmt (Tamil-0.15) is scoped to the
+  whole எனில் including இல்லையேல் — see if-init.yaml.
+examples:
+  - tamil: |
+      எனில் x > 0 {
+          பதிப்பி("நேர்மம்")
+      } இல்லையேல் {
+          பதிப்பி("அல்ல")
+      }
+    go_equivalent: |
+      if x > 0 {
+          println("நேர்மம்")
+      } else {
+          println("அல்ல")
+      }

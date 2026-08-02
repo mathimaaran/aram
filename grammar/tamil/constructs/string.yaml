@@ -1,0 +1,24 @@
+id: string
+status: codegen
+subset: Tamil-0.2
+go_inspired: string
+tamil_ebnf: |
+  Type = "முழுஎண்" | "நிலை" | "சரம்" .
+  # + concatenates சரம்; == / != compare lexicographically (C strcmp).
+tamil_keywords:
+  string: சரம்
+ast:
+  type: TypeName
+  fields: [name]
+semantics: >
+  First-class string type. Variables, params, and results may be சரம்.
+  Short declaration := infers சரம் from string literals and string-typed exprs.
+  Operator + concatenates two சரம் values (runtime allocates; C backend).
+  Operators == and != compare string contents. பதிப்பி prints சரம் with a newline.
+examples:
+  - tamil: |
+      மாறி பெயர் சரம் = "அறம்"
+      பதிப்பி("வணக்கம், " + பெயர்)
+    go_equivalent: |
+      var name string = "அறம்"
+      println("வணக்கம், " + name)

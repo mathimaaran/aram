@@ -1,0 +1,25 @@
+id: return
+status: specified
+subset: Tamil-0
+go_inspired: "return [ ExpressionList ]"
+go_ebnf: |
+  ReturnStmt = "return" [ ExpressionList ] .
+tamil_ebnf: |
+  ReturnStmt = "திருப்பு" [ ExpressionList ] .
+tamil_keywords:
+  return: திருப்பு
+ast:
+  type: ReturnStmt
+  fields: [results]
+semantics: >
+  Returns from the current function. Bare திருப்பு is void, or a naked return
+  of named results (Tamil-0.27 — naked-return.yaml).
+examples:
+  - tamil: |
+      செயல்பாடு கூட்டு(a முழுஎண், b முழுஎண்) முழுஎண் {
+          திருப்பு a + b
+      }
+    go_equivalent: |
+      func add(a int, b int) int {
+          return a + b
+      }

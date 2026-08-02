@@ -1,0 +1,23 @@
+id: for
+status: specified
+subset: Tamil-0.1
+go_inspired: |
+  for { }
+  for Expression { }
+  for [ Init ] ; [ Condition ] ; [ Post ] Block
+tamil_keywords:
+  for: சுழல்
+tamil_ebnf: |
+  ForStmt   = "சுழல்" [ Condition | ForClause ] Block .
+  Condition = Expression .
+  ForClause = [ SimpleStmt ] ";" [ Expression ] ";" [ SimpleStmt ] .
+ast:
+  type: ForStmt
+  fields: [init, cond, post, body]
+semantics: >
+  One loop keyword (Go-style). Cond must be நிலை when present.
+  init/post are optional SimpleStmts. range / break / continue not yet.
+examples:
+  - corpus: corpus/tamil/சுழல்.aram
+notes:
+  - "Name locked: சுழல். Implemented in Tamil-0.1 (2026-08-01)."

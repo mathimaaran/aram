@@ -1,0 +1,31 @@
+id: nil
+status: codegen
+subset: Tamil-0.12
+go_inspired: |
+  var p *int = nil
+  if p == nil { ... }
+  if p != nil { ... }
+tamil_keywords:
+  nil: இன்மை
+tamil_ebnf: |
+  Operand = … | "இன்மை" | … .
+ast:
+  type: NilLit
+semantics: >
+  இன்மை is the nil pointer value (untyped until used in a pointer context).
+  Allowed: assign/return/pass to *T, compare with == / != against a pointer
+  (or another இன்மை). Not allowed: p := இன்மை (no type to infer), பதிப்பி(இன்மை),
+  or use as non-pointer. Pointer == / != between same *T also allowed.
+  Emits as C NULL.
+examples:
+  - tamil: |
+      மாறி ப *முழுஎண் = இன்மை
+      எனில் ப == இன்மை {
+          பதிப்பி(1)
+      }
+    go_equivalent: |
+      var p *int = nil
+      if p == nil { println(1) }
+notes:
+  - "இன்மை = absence / non-existence. Locked 2026-08-01."
+  - "Completes Tamil-0.7 pointers; see pointer.yaml."

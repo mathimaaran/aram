@@ -1,0 +1,25 @@
+id: package
+status: codegen
+subset: Tamil-0.9
+go_inspired: "package PackageName"
+go_ebnf: |
+  PackageClause = "package" PackageName .
+tamil_ebnf: |
+  PackageClause = "தொகுப்பு" PackageName .
+tamil_keywords:
+  package: தொகுப்பு
+ast:
+  type: PackageClause
+  fields: [name]
+semantics: >
+  Declares the package name for the source file. Tamil-0.9 allows multiple
+  files with the same package name (see multifile.yaml). Cross-package
+  கொணர் (import) comes later.
+examples:
+  - tamil: |
+      தொகுப்பு தொடக்கம்
+    go_equivalent: |
+      package main
+notes:
+  - "தொடக்கம் is the entry package name by convention (not a keyword)."
+  - "Same-package multi-file: multifile.yaml."

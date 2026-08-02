@@ -1,0 +1,32 @@
+id: import-alias
+status: codegen
+subset: Tamil-0.18
+go_inspired: |
+  import m "lib"
+  m.Add(1, 2)
+  import _ "lib" // blank
+tamil_ebnf: |
+  ImportDecl = "கொணர்" [ ImportName ] string_lit .
+  ImportName = identifier .
+ast:
+  type: ImportSpec
+  fields: [Alias, Path, Local, Pkg]
+semantics: >
+  கொணர் "path" binds the imported தொகுப்பு name as the qualifier.
+  கொணர் alias "path" binds alias instead (Go-style). Alias "_" is a blank
+  import: the package is loaded but no qualifier is introduced (no init()
+  side effects yet). Dot imports are out of scope. Qualifiers in source
+  use the local name; C symbols still use the real package name.
+examples:
+  - tamil: |
+      தொகுப்பு தொடக்கம்
+      கொணர் க "கணிதம்"
+      செயல்பாடு தொடக்கம்() {
+          பதிப்பி(க.கூட்டு(3, 4))
+      }
+    go_equivalent: |
+      package main
+      import க "கணிதம்"
+      func main() { println(க.Add(3, 4)) }
+notes:
+  - "Extends import.yaml (0.10)."

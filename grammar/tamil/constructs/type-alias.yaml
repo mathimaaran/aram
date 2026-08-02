@@ -1,0 +1,22 @@
+id: type-alias
+status: codegen
+subset: Tamil-0.29
+go_inspired: |
+  type Count = int
+  type Score int
+tamil_ebnf: |
+  TypeDecl = "வகை" identifier ( "=" Type | TypeLit | Type ) .
+semantics: >
+  வகை T = U is a transparent alias (same type as U). வகை T U (non-struct) is a
+  defined type with underlying U; untyped numeric literals may assign to it.
+  Struct form வகை T அமைப்பு {…} unchanged. Conversions: Tamil-0.33
+  (conversion.yaml).
+examples:
+  - tamil: |
+      வகை எண் = முழுஎண்
+      வகை மதிப்பெண் முழுஎண்
+    go_equivalent: |
+      type Count = int
+      type Score int
+notes:
+  - "Defined types of structs remain the அமைப்பு form."

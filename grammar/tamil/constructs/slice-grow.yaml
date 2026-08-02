@@ -1,0 +1,26 @@
+id: slice-grow
+status: codegen
+subset: Tamil-0.19
+go_inspired: |
+  append(xs, 1, 2, 3)
+  ys := xs[i:j:k]
+tamil_ebnf: |
+  BuiltinCall = … | "சேர்" "(" Expression { "," Expression } ")" .
+  SliceExpr   = Primary "[" [ Expression ] ":" [ Expression ] "]"
+              | Primary "[" [ Expression ] ":" Expression ":" Expression "]" .
+semantics: >
+  சேர்(xs, v1, v2, …) appends one or more elements (at least one after the
+  slice). Three-index slice xs[low:high:max] sets length high-low and capacity
+  max-low (Go rules: high required; 0 ≤ low ≤ high ≤ max ≤ cap). Not valid on
+  சரம். Two-index forms unchanged.
+examples:
+  - tamil: |
+      xs := []முழுஎண்{1}
+      xs = சேர்(xs, 2, 3)
+      ys := xs[0:1:2]
+    go_equivalent: |
+      xs := []int{1}
+      xs = append(xs, 2, 3)
+      ys := xs[0:1:2]
+notes:
+  - "Extends append.yaml and slice-expr.yaml (0.5)."

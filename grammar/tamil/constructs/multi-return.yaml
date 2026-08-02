@@ -1,0 +1,25 @@
+id: multi-return
+status: codegen
+subset: Tamil-0.23
+go_inspired: |
+  func div(a, b int) (int, int) { return a / b, a % b }
+  q, r := div(17, 5)
+tamil_ebnf: |
+  Result     = Type | "(" [ TypeList ] ")" .
+  TypeList   = Type { "," Type } .
+  ReturnStmt = "திருப்பு" [ ExpressionList ] .
+semantics: >
+  Functions may return multiple unnamed values. Unpack with := or = when the
+  RHS is a single call. Blank _ discards. Multi-value calls are invalid in
+  single-value contexts. C backend returns an anonymous struct.
+examples:
+  - tamil: |
+      செயல்பாடு வகு(அ முழுஎண், ஆ முழுஎண்) (முழுஎண், முழுஎண்) {
+          திருப்பு அ / ஆ, அ % ஆ
+      }
+      ஈ, மீ := வகு(17, 5)
+    go_equivalent: |
+      func div(a, b int) (int, int) { return a / b, a % b }
+      q, r := div(17, 5)
+notes:
+  - "Named results: Tamil-0.26 — see named-results.yaml."

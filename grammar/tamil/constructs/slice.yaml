@@ -1,0 +1,34 @@
+id: slice
+status: codegen
+subset: Tamil-0.3
+go_inspired: "[]T slice type, composite literal, index, len"
+tamil_ebnf: |
+  Type         = TypeName | SliceType .
+  SliceType    = "[" "]" Type .
+  CompositeLit = SliceType "{" [ ExpressionList ] "}" .
+  IndexExpr    = Primary "[" Expression "]" .
+  LenCall      = "நீளம்" "(" Expression ")" .
+tamil_keywords:
+  len: நீளம்
+ast:
+  type: SliceType | CompositeLit | IndexExpr
+  fields: [elem, elts, x, index]
+semantics: >
+  Go-like slices of முழுஎண், நிலை, or சரம்; nested [][]T since Tamil-0.21
+  (nested-slice.yaml). Composite literal []T{…} builds a slice. Index get/set
+  with முழுஎண் index. நீளம்(xs) returns length as முழுஎண் (also byte length of
+  சரம் since Tamil-0.5). சேர் and xs[i:j] are Tamil-0.5 — see append.yaml and
+  slice-expr.yaml.
+examples:
+  - tamil: |
+      மாறி எண்கள் []முழுஎண் = []முழுஎண்{10, 20, 30}
+      பதிப்பி(நீளம்(எண்கள்))
+      பதிப்பி(எண்கள்[1])
+      எண்கள்[1] = 99
+    go_equivalent: |
+      var nums []int = []int{10, 20, 30}
+      println(len(nums))
+      println(nums[1])
+      nums[1] = 99
+notes:
+  - "No append, no slicing xs[i:j], no fixed [N]T in Tamil-0.3."

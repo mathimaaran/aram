@@ -1,0 +1,31 @@
+id: defer
+status: codegen
+subset: Tamil-0.43
+go_inspired: |
+  defer f(x)
+  defer p.Show()          // value recv: copy p now
+  defer p.Bump()          // pointer recv: save &p now
+  defer done              // Aram sugar ≡ done()
+tamil_keywords:
+  defer: தள்ளிவை
+tamil_ebnf: |
+  DeferStmt = "தள்ளிவை" ( CallExpr | identifier | SelectorExpr ) .
+semantics: >
+  தள்ளிவை schedules a call to run when the surrounding function returns
+  (LIFO). Arguments (and receivers) are evaluated immediately; the call
+  runs later. Bare identifier/selector is zero-arg call sugar. Method
+  receivers: value methods copy the receiver; pointer methods on an
+  addressable value save &x (later mutations are visible). Conversions
+  rejected. C: arena thunk stack + epilogue.
+examples:
+  - tamil: |
+      தள்ளிவை அ.காட்டு
+      தள்ளிவை ஆ.சுட்டி_காட்டு
+    go_equivalent: |
+      defer a.Show()   // value receiver
+      defer b.Bump()   // pointer receiver
+notes:
+  - "Keyword locked: தள்ளிவை (put aside / postpone)."
+  - "Tamil-0.42: bare zero-arg sugar."
+  - "Tamil-0.43: correct pointer-method receiver bind on defer."
+  - "Closures / first-class method values still later."

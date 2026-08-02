@@ -1,0 +1,57 @@
+id: switch
+status: codegen
+subset: Tamil-0.14
+go_inspired: |
+  switch x {
+  case 1:
+    ...
+  case 2, 3:
+    ...
+  default:
+    ...
+  }
+  switch {
+  case x > 0:
+    ...
+  }
+tamil_keywords:
+  switch: திசைவி
+  case: எனில்   # reused; no separate case keyword
+  default: மற்றபடி
+tamil_ebnf: |
+  SwitchStmt  = "திசைவி" [ SimpleStmt ";" ] [ Expression ] "{" { CaseClause } "}" .
+  CaseClause  = "எனில்" ExpressionList Block | "மற்றபடி" Block .
+ast:
+  type: SwitchStmt | CaseClause
+semantics: >
+  Go-like switch without fallthrough (each case is a braced block).
+  With a tag expression, each எனில் list is compared with == (முழுஎண்,
+  சரம், or நிலை). Multiple values in one எனில் are OR. Tagless form
+  (திசைவி { … }) treats each எனில் expression as a நிலை condition.
+  At most one மற்றபடி. Optional init (0.15) scopes over tag and cases.
+  No type switch, no fallthrough.
+examples:
+  - tamil: |
+      திசைவி n {
+          எனில் 1 {
+              பதிப்பி("ஒன்று")
+          }
+          எனில் 2, 3 {
+              பதிப்பி("இரண்டு/மூன்று")
+          }
+          மற்றபடி {
+              பதிப்பி("பிற")
+          }
+      }
+    go_equivalent: |
+      switch n {
+      case 1:
+          println("ஒன்று")
+      case 2, 3:
+          println("இரண்டு/மூன்று")
+      default:
+          println("பிற")
+      }
+notes:
+  - "திசைவி = director / router. Locked 2026-08-01 with மற்றபடி."
+  - "Case reuses எனில் to avoid a third keyword."

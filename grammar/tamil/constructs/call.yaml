@@ -1,0 +1,21 @@
+id: call
+status: specified
+subset: Tamil-0
+go_inspired: "Function call Primary"
+tamil_ebnf: |
+  Call = identifier "(" [ ExpressionList ] ")" .
+  Primary = ... | BuiltinCall | Call | ...
+ast:
+  type: CallExpr
+  fields: [callee, args]
+semantics: >
+  Calls a user-defined function. Argument count and types must match the
+  callee signature once the checker exists. பதிப்பி is a BuiltinCall, not Call.
+examples:
+  - tamil: |
+      முடிவு := கூட்டு(4, 5)
+    go_equivalent: |
+      result := add(4, 5)
+  - corpus: corpus/tamil/கூட்டு.aram
+notes:
+  - "Added to EBNF when corpus gained helper-function examples."

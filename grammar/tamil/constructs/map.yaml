@@ -1,0 +1,37 @@
+id: map
+status: codegen
+subset: Tamil-0.35
+go_inspired: |
+  m := make(map[string]int)
+  m["a"] = 7
+  v, ok := m["a"]
+  delete(m, "a")
+tamil_keywords:
+  map: அகராதி
+  delete: நீக்கு
+tamil_ebnf: |
+  MapType = "அகராதி" "[" Type "]" Type .
+  BuiltinCall includes
+    "ஆக்கு" "(" MapType [ "," Expression ] ")"
+    | "நீக்கு" "(" Expression "," Expression ")" .
+semantics: >
+  அகராதி[K]V is a reference map (nil zero value). Keys must be comparable
+  (Tamil-0.38: scalars, pointers, comparable structs/arrays; see map-keys.yaml).
+  ஆக்கு(அகராதி[K]V) or ஆக்கு(அகராதி[K]V, hint). Index get/set; comma-ok
+  v, ok := m[k]; நீளம்; ஒவ்வொரு k, v; நீக்கு(m, k); compare only to இன்மை.
+  Backing table is arena-allocated open addressing.
+examples:
+  - tamil: |
+      m := ஆக்கு(அகராதி[சரம்]முழுஎண்)
+      m["அ"] = 7
+      வ, உண்டு := m["அ"]
+      நீக்கு(m, "அ")
+    go_equivalent: |
+      m := make(map[string]int)
+      m["அ"] = 7
+      v, ok := m["அ"]
+      delete(m, "அ")
+notes:
+  - "Keywords locked: அகராதி (map), நீக்கு (delete)."
+  - "Maps are not comparable to each other — only to இன்மை."
+  - "Assignment to an entry in a nil map aborts (Go panic)."

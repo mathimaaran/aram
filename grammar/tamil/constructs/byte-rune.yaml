@@ -1,0 +1,28 @@
+id: byte-rune
+status: codegen
+subset: Tamil-0.39
+go_inspired: |
+  bs := []byte{65, 66}
+  s := string(bs)
+  b2 := []byte(s)
+  rs := []rune("அ")
+  s2 := string(rs)
+tamil_ebnf: |
+  TypeName = … | "இருமி8" | "இருமி32" .
+  Conversion = Type "(" Expression ")" .
+semantics: >
+  இருமி8 is an 8-bit unsigned integer (Go byte / uint8). இருமி32 is a Unicode
+  code point (Go rune / int32). Both are numeric and comparable. Slices
+  []இருமி8 and []இருமி32 convert both ways with சரம் (UTF-8 bytes / runes).
+  சரம்(இருமி32) / சரம்(இருமி8) / சரம்(முழுஎண்) encode one code point as UTF-8.
+examples:
+  - tamil: |
+      bs := []இருமி8{65, 66}
+      பதிப்பி(சரம்(bs))
+      பதிப்பி(சரம்(இருமி32(65)))
+    go_equivalent: |
+      bs := []byte{65, 66}
+      fmt.Println(string(bs))
+      fmt.Println(string(rune(65)))
+notes:
+  - "Named இருமி (= binary unit) + bit width; not பைட்/எழுத்து."

@@ -1,0 +1,22 @@
+id: print-struct
+status: codegen
+subset: Tamil-0.17
+go_inspired: |
+  fmt.Println(p) // or fmt.Printf("%+v\n", p)
+tamil_ebnf: |
+  BuiltinCall = "பதிப்பி" "(" Expression ")" .
+semantics: >
+  பதிப்பி accepts a named struct value and writes a debug line:
+  TypeName{field: value, …} then newline. Nested structs recurse.
+  Field formatting: முழுஎண் as decimal, நிலை as மெய்/பொய், சரம் in
+  quotes, pointers as இன்மை or a hex address, slices as [e0, e1, …].
+  Top-level பதிப்பி still rejects bare pointers, slices, and இன்மை.
+examples:
+  - tamil: |
+      ப := புள்ளி{x: 3, y: 4}
+      பதிப்பி(ப)
+    go_equivalent: |
+      p := Point{x: 3, y: 4}
+      println(p) // Aram format: புள்ளி{x: 3, y: 4}
+notes:
+  - "Debug aid; not a stable serialization format."

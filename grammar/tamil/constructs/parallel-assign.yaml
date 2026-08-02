@@ -1,0 +1,18 @@
+id: parallel-assign
+status: codegen
+subset: Tamil-0.28
+go_inspired: |
+  a, b = b, a
+tamil_ebnf: |
+  Assignment = ExpressionList "=" ExpressionList .
+semantics: >
+  Multi-LHS assignment accepts a matching RHS list (evaluated left-to-right into
+  temps, then assigned — so swap works). The existing unpack form a, b = f()
+  remains. Completes multi-return.yaml.
+examples:
+  - tamil: |
+      அ, ஆ = ஆ, அ
+    go_equivalent: |
+      a, b = b, a
+notes:
+  - "Builds on multi-return.yaml (Tamil-0.23)."

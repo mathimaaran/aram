@@ -1,0 +1,33 @@
+id: import
+status: codegen
+subset: Tamil-0.10
+go_inspired: |
+  import "lib"
+  lib.Add(1, 2)
+tamil_keywords:
+  import: கொணர்
+tamil_ebnf: |
+  SourceFile = PackageClause { ImportDecl } { TopLevelDecl } .
+  ImportDecl = "கொணர்" [ identifier ] string_lit .
+ast:
+  type: ImportSpec
+semantics: >
+  கொணர் "rel/path" loads all *.aram files in that directory (relative to the
+  importing file) as one package. The package name is the imported files'
+  தொகுப்பு name. Use qualified names pkg.Func / pkg.Type. Only வெளி names are
+  visible across packages (Tamil-0.11). Import aliases / blank `_`: Tamil-0.18
+  (import-alias.yaml). No cycles.
+examples:
+  - tamil: |
+      தொகுப்பு தொடக்கம்
+      கொணர் "கணிதம்"
+      செயல்பாடு தொடக்கம்() {
+          பதிப்பி(கணிதம்.கூட்டு(3, 4))
+      }
+    go_equivalent: |
+      package main
+      import "கணிதம்"
+      func main() { println(கணிதம்.Add(3, 4)) }
+notes:
+  - "கொணர் = bring (verb). Noun இறக்குமதி was rejected."
+  - "Visibility: see export.yaml (வெளி)."

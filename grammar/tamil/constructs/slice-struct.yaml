@@ -1,0 +1,21 @@
+id: slice-struct
+status: codegen
+subset: Tamil-0.25
+go_inspired: |
+  xs := []Point{{1, 2}}
+  ps := []*int{&a}
+tamil_ebnf: |
+  SliceType = "[" "]" Type .
+semantics: >
+  Slice elements may be named structs or pointers ([]T / []*T), in addition
+  to scalars and nested slices. Index, நீளம், சேர், ஆக்கு, நகல், திறன், and
+  slicing work as for other slices. இன்மை is a valid []*T element.
+examples:
+  - tamil: |
+      xs := []புள்ளி{புள்ளி{1, 2}}
+      பதிப்பி(xs[0].x)
+    go_equivalent: |
+      xs := []Point{Point{1, 2}}
+      println(xs[0].x)
+notes:
+  - "Extends nested-slice.yaml (0.21 leaf nesting only)."

@@ -1,0 +1,21 @@
+id: struct-lit-pos
+status: codegen
+subset: Tamil-0.20
+go_inspired: |
+  p := Point{1, 2}
+tamil_ebnf: |
+  LiteralElement = Expression | identifier ":" Expression .
+semantics: >
+  Struct composite literals may be keyed (name: value) or fully positional
+  (declaration order). Mixing is an error. Positional requires exactly as
+  many elements as fields. Cross-package positional literals require every
+  field to be வெளி. Keyed form still allows omitting fields (zero value).
+examples:
+  - tamil: |
+      ப := புள்ளி{3, 4}
+      பதிப்பி(ப.x)
+    go_equivalent: |
+      p := Point{3, 4}
+      println(p.x)
+notes:
+  - "Extends struct.yaml (0.6 keyed-only)."

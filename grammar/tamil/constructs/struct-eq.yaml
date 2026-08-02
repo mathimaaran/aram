@@ -1,0 +1,31 @@
+id: struct-eq
+status: codegen
+subset: Tamil-0.16
+go_inspired: |
+  type Point struct { X, Y int }
+  p == q
+  p != q
+tamil_ebnf: |
+  Equality = Comparison { ( "==" | "!=" ) Comparison } .
+semantics: >
+  Struct values may be compared with == / != when every field is comparable
+  (Go rule): முழுஎண், நிலை, சரம், pointers, and nested comparable structs.
+  Slice fields make a struct non-comparable. Comparison is field-wise;
+  string fields use content equality; pointer fields compare addresses.
+examples:
+  - tamil: |
+      வகை புள்ளி அமைப்பு { x முழுஎண்; y முழுஎண் }
+      செயல்பாடு தொடக்கம்() {
+          அ := புள்ளி{x: 1, y: 2}
+          ஆ := புள்ளி{x: 1, y: 2}
+          எனில் அ == ஆ { பதிப்பி(1) }
+      }
+    go_equivalent: |
+      type Point struct { x, y int }
+      func main() {
+          a := Point{x: 1, y: 2}
+          b := Point{x: 1, y: 2}
+          if a == b { println(1) }
+      }
+notes:
+  - "Emits per-type C helpers; no memcmp (padding / string pointers)."

@@ -1,0 +1,28 @@
+// Aram: கூட்டு.aram — helper function, திருப்பு, call
+// Go equivalent:
+//
+//	package main
+//
+//	import "fmt"
+//
+//	func add(a int, b int) int {
+//		return a + b
+//	}
+//
+//	func main() {
+//		var result int = add(4, 5)
+//		fmt.Println(result)
+//		fmt.Println(add(10, -3))
+//	}
+
+தொகுப்பு தொடக்கம்
+
+செயல்பாடு கூட்டு(அ முழுஎண், ஆ முழுஎண்) முழுஎண் {
+    திருப்பு அ + ஆ
+}
+
+செயல்பாடு தொடக்கம்() {
+    மாறி முடிவு முழுஎண் = கூட்டு(4, 5)
+    பதிப்பி(முடிவு)
+    பதிப்பி(கூட்டு(10, -3))
+}

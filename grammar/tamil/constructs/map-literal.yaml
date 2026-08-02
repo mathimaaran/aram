@@ -1,0 +1,23 @@
+id: map-literal
+status: codegen
+subset: Tamil-0.36
+go_inspired: |
+  m := map[string]int{"a": 7, "b": 3}
+tamil_ebnf: |
+  CompositeLit = ( SliceType | ArrayType | MapType | TypeName ) "{"
+                 [ LiteralElement { "," LiteralElement } ] "}" .
+  LiteralElement = Expression | Expression ":" Expression .
+semantics: >
+  அகராதி[K]V{k: v, …} builds a non-nil map (empty {} is non-nil length 0).
+  Every element must be keyed. Duplicate keys: last write wins at runtime.
+  KeyValueExpr.Key is an expression (not only field idents).
+examples:
+  - tamil: |
+      m := அகராதி[சரம்]முழுஎண்{"அ": 7}
+      பதிப்பி(m["அ"])
+    go_equivalent: |
+      m := map[string]int{"அ": 7}
+      println(m["அ"])
+notes:
+  - "No new keywords; extends CompositeLit."
+  - "C emit uses a GNU statement-expression (gcc)."
