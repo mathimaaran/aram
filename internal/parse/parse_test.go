@@ -55,6 +55,7 @@ func TestParseValidCorpus(t *testing.T) {
 			"அகராதி_விசை_வளர்.aram",
 			"இருமி.aram",
 			"பொதுவகை.aram",
+			"பகாஎண்.aram",
 			"பலமதிப்பு.aram",
 			"நிலையான.aram",
 			"அமைப்பு.aram",

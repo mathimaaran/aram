@@ -403,3 +403,12 @@ func TestEmitAndRunGenerics(t *testing.T) {
 		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
 	}
 }
+
+func TestEmitAndRunPrime(t *testing.T) {
+	_, _, cSrc := compile(t, "பகாஎண்.aram")
+	got := runC(t, cSrc)
+	want := "மெய்\nபொய்\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
