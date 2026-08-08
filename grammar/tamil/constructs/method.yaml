@@ -19,6 +19,7 @@ semantics: >
   Pointer methods may be called on *T, or on an addressable T (pass &X).
   Method names must not collide with fields or other methods on the type.
   No interfaces or embedding in Tamil-0.8. Method values: Tamil-0.44.
+  Method expressions T.M / (*T).M: Tamil-0.47.
 examples:
   - tamil: |
       வகை புள்ளி அமைப்பு {
@@ -49,4 +50,5 @@ examples:
       }
 notes:
   - "Method values: see func-value.yaml (Tamil-0.44)."
-  - "Interfaces and method expressions are later."
+  - "Method expressions: see method-expr.yaml (Tamil-0.47)."
+  - "Interfaces still later."

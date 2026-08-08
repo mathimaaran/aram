@@ -301,8 +301,8 @@ visible). Applies to bare and `p.m()` forms. See `defer.yaml`.
 
 Function types (`செயல்பாடு(…) …` in type position) and first-class
 method values / package function values. Receiver bind for method
-values matches 0.43 defer. No function literals, method expressions, or
-interfaces. See `constructs/func-value.yaml`.
+values matches 0.43 defer. No function literals or interfaces in 0.44;
+method expressions arrived in 0.47. See `constructs/func-value.yaml`.
 
 ## Tamil-0.45 (2026-08-01)
 
@@ -316,6 +316,12 @@ promotes captured locals. Builds on 0.44 `aram_fn`. See
 Go 1.22+ per-iteration loop variables: `சுழல்` / `ஒவ்வொரு` vars declared
 with `:=` are distinct each iteration, so closures capture the correct
 iteration values. See `constructs/closure.yaml`.
+
+## Tamil-0.47 (2026-08-08)
+
+Method expressions `T.M` and `(*T).M` as unbound function values on the
+`aram_fn` path. Method-set rules match Go (value receivers on `T`; value
+and pointer on `*T`). See `constructs/method-expr.yaml`.
 
 ## Priority (2026-08-01)
 

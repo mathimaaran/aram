@@ -218,6 +218,62 @@ func (e *emitter) writeMethodValue(b *strings.Builder, expr *ast.SelectorExpr, m
 	b.WriteByte(')')
 }
 
+func (e *emitter) methodExprKey(si *check.StructInfo, mi *check.MethodInfo, exprPtr bool) string {
+	suf := "_T"
+	if exprPtr {
+		suf = "_PT"
+	}
+	return "me_" + e.methodTrampKey(si, mi) + suf
+}
+
+func (e *emitter) ensureMethodExpr(me *check.MethodExprInfo) {
+	e.ensureFuncRuntime()
+	key := e.methodExprKey(me.Struct, me.Method, me.ExprRecvPtr)
+	if e.funcTrampDone == nil {
+		e.funcTrampDone = map[string]bool{}
+	}
+	if e.funcTrampDone[key] {
+		return
+	}
+	e.funcTrampDone[key] = true
+	tb := &e.funcTramps
+	tramp := "aram_tramp_" + key
+	bind := "aram_me_" + key
+	params := append([]check.Type{me.RecvType}, me.Method.Params...)
+	results := me.Method.Results
+
+	e.writeFuncSigLine(tb, "static ", tramp, results, true, params)
+	tb.WriteString(" {\n")
+	tb.WriteString("\t(void)env;\n")
+	tb.WriteByte('\t')
+	if len(results) > 0 {
+		tb.WriteString("return ")
+	}
+	tb.WriteString(cPkgIdent(me.Struct.Pkg, me.Struct.Name+"_"+me.Method.Name))
+	tb.WriteByte('(')
+	if me.ExprRecvPtr && !me.Method.RecvIsPtr {
+		// (*T).M for value method: dereference first arg.
+		tb.WriteString("*a0")
+	} else {
+		tb.WriteString("a0")
+	}
+	for i := range me.Method.Params {
+		fmt.Fprintf(tb, ", a%d", i+1)
+	}
+	tb.WriteString(");\n}\n")
+
+	fmt.Fprintf(tb, "static aram_fn %s(void) {\n", bind)
+	tb.WriteString("\taram_fn f;\n")
+	fmt.Fprintf(tb, "\tf.fn = (void *)%s;\n", tramp)
+	tb.WriteString("\tf.env = NULL;\n")
+	tb.WriteString("\treturn f;\n}\n")
+}
+
+func (e *emitter) writeMethodExpr(b *strings.Builder, me *check.MethodExprInfo) {
+	e.ensureMethodExpr(me)
+	fmt.Fprintf(b, "aram_me_%s()", e.methodExprKey(me.Struct, me.Method, me.ExprRecvPtr))
+}
+
 func (e *emitter) writePkgFuncValue(b *strings.Builder, fv *check.PkgFuncValueInfo) {
 	e.ensurePkgFuncValue(fv.Pkg, fv.Name, fv.Params, fv.Results)
 	fmt.Fprintf(b, "aram_fv_%s()", e.pkgFuncTrampKey(fv.Pkg, fv.Name))

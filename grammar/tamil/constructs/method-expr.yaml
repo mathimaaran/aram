@@ -1,0 +1,37 @@
+id: method-expr
+status: codegen
+subset: Tamil-0.47
+go_inspired: |
+  type Point struct { x, y int }
+  func (p Point) Sum() int { return p.x + p.y }
+  func (p *Point) SetX(v int) { p.x = v }
+  f := Point.Sum          // func(Point) int
+  g := (*Point).SetX      // func(*Point, int)
+  h := (*Point).Sum       // value method via *T OK
+tamil_keywords:
+  # no new keywords; reuses type names + selector
+tamil_ebnf: |
+  # Method expression forms (expression context):
+  #   TypeName "." MethodName
+  #   "(" "*" TypeName ")" "." MethodName
+  Primary = Operand { "." identifier | Arguments | … } .
+semantics: >
+  T.M and (*T).M yield unbound function values whose first parameter is
+  the receiver as written (T or *T). Method-set rules match Go: T.M only
+  if M has a value receiver; (*T).M if M is in the method set of *T
+  (value or pointer receiver). Variable names shadow type names (value
+  path → method value). Builds on Tamil-0.44 aram_fn; reuse call helpers.
+examples:
+  - tamil: |
+      க := புள்ளி.கூட்டு
+      பதிப்பி(க(ப))
+      அ := (*புள்ளி).அமை_x
+      அ(&ப, 10)
+    go_equivalent: |
+      sum := Point.Sum
+      println(sum(p))
+      set := (*Point).SetX
+      set(&p, 10)
+notes:
+  - "Interfaces still later."
+  - "Bound method values remain X.M (func-value.yaml)."

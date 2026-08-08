@@ -422,6 +422,15 @@ func TestEmitAndRunMethodValue(t *testing.T) {
 	}
 }
 
+func TestEmitAndRunMethodExpr(t *testing.T) {
+	_, _, cSrc := compile(t, "முறை_வெளிப்பாடு.aram")
+	got := runC(t, cSrc)
+	want := "7\n10\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
 func TestEmitAndRunClosure(t *testing.T) {
 	_, _, cSrc := compile(t, "மூடுகை.aram")
 	got := runC(t, cSrc)

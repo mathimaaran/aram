@@ -42,6 +42,7 @@ func CheckProgram(merged []*ast.File, entry string) (*ProgramInfo, []error) {
 		TypeParamName: map[Type]string{},
 		CallInst:      map[*ast.CallExpr]*MonoInst{},
 		MethodValues:  map[ast.Expr]*MethodValueInfo{},
+		MethodExprs:   map[ast.Expr]*MethodExprInfo{},
 		PkgFuncValues: map[ast.Expr]*PkgFuncValueInfo{},
 		Closures:      map[*ast.FuncLit]*ClosureInfo{},
 		PromoteInFunc: map[*ast.FuncDecl]map[string]Type{},

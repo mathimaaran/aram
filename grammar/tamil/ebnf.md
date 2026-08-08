@@ -2,7 +2,7 @@
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
-Status: **Tamil-0.46** (2026-08-01) — Go 1.22+ per-iteration loop vars.
+Status: **Tamil-0.47** (2026-08-08) — method expressions `T.M` / `(*T).M`.
 
 ```
 SourceFile    = PackageClause { ImportDecl } { TopLevelDecl } .
@@ -273,6 +273,12 @@ See `constructs/func-value.yaml`.
 variables by reference (arena-promoted locals in C). Tamil-0.46: `சுழல்`
 / `ஒவ்வொரு` iteration variables (`:=`) are per-iteration (Go 1.22+).
 See `constructs/closure.yaml`.
+
+## Method expressions (Tamil-0.47)
+
+`Type.Method` and `(*Type).Method` yield unbound `செயல்பாடு` values with
+the receiver as the first parameter. Method-set rules match Go.
+See `constructs/method-expr.yaml`.
 
 ## Entry convention
 

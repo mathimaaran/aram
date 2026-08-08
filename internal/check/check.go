@@ -144,6 +144,14 @@ type MethodValueInfo struct {
 	RecvIsPtr bool // X's type is already *T
 }
 
+// MethodExprInfo records a method expression T.M or (*T).M (Tamil-0.47).
+type MethodExprInfo struct {
+	Method       *MethodInfo
+	Struct       *StructInfo
+	ExprRecvPtr  bool // true for (*T).M; false for T.M
+	RecvType     Type // T or *T as written (first param of the func value)
+}
+
 // PkgFuncValueInfo records a package function used as a value.
 type PkgFuncValueInfo struct {
 	Pkg     string
@@ -258,6 +266,7 @@ type Info struct {
 	Instantiations []*MonoInst           // unique generic function instantiations
 	CallInst       map[*ast.CallExpr]*MonoInst
 	MethodValues   map[ast.Expr]*MethodValueInfo
+	MethodExprs    map[ast.Expr]*MethodExprInfo
 	PkgFuncValues  map[ast.Expr]*PkgFuncValueInfo
 	Closures       map[*ast.FuncLit]*ClosureInfo
 	// Locals/params that must be arena-promoted because a nested closure captures them.
@@ -2115,6 +2124,10 @@ func (c *Checker) checkSelectorExpr(e *ast.SelectorExpr) Type {
 			return TypeInvalid
 		}
 	}
+	// Tamil-0.47: method expression T.M or (*T).M
+	if ft, ok := c.tryMethodExpr(e); ok {
+		return ft
+	}
 	xt := c.checkExpr(e.X)
 	if xt == TypeInvalid {
 		return TypeInvalid
@@ -2161,6 +2174,89 @@ func (c *Checker) checkSelectorExpr(e *ast.SelectorExpr) Type {
 	}
 	c.error(e.Sel.Pos(), "type %s has no field or method %s", si.Name, e.Sel.Name)
 	return TypeInvalid
+}
+
+// tryMethodExpr handles T.M / (*T).M. ok is false if X is not a type expression.
+func (c *Checker) tryMethodExpr(e *ast.SelectorExpr) (Type, bool) {
+	base, exprPtr, ok := c.resolveMethodExprRecv(e.X)
+	if !ok {
+		return TypeInvalid, false
+	}
+	if !isStruct(base) {
+		c.error(e.X.Pos(), "method expression requires a named struct type")
+		return TypeInvalid, true
+	}
+	si := c.info.Structs[base]
+	mi, found := si.Methods[e.Sel.Name]
+	if !found {
+		c.error(e.Sel.Pos(), "type %s has no method %s", si.Name, e.Sel.Name)
+		return TypeInvalid, true
+	}
+	if c.cur != nil && si.Pkg != c.cur.name && !mi.Exported {
+		c.error(e.Sel.Pos(), "method %s.%s is not exported (need வெளி)", si.Name, mi.Name)
+		return TypeInvalid, true
+	}
+	// Method set of T: value receivers only. Method set of *T: both.
+	if !exprPtr && mi.RecvIsPtr {
+		c.error(e.Sel.Pos(), "method %s has pointer receiver; use (*%s).%s", mi.Name, si.Name, mi.Name)
+		return TypeInvalid, true
+	}
+	recvType := base
+	if exprPtr {
+		recvType = c.pointerOf(base)
+	}
+	params := append([]Type{recvType}, mi.Params...)
+	ft := c.funcOf(params, mi.Results)
+	c.info.MethodExprs[e] = &MethodExprInfo{
+		Method: mi, Struct: si, ExprRecvPtr: exprPtr, RecvType: recvType,
+	}
+	return ft, true
+}
+
+// resolveMethodExprRecv returns the named struct type and whether the expression is (*T).
+// ok is false when X is not a type form (fall through to value selector).
+func (c *Checker) resolveMethodExprRecv(x ast.Expr) (base Type, exprPtr bool, ok bool) {
+	switch x := x.(type) {
+	case *ast.Ident:
+		// Variable shadows type name.
+		if _, exists := c.scope.lookup(x.Name); exists {
+			return TypeInvalid, false, false
+		}
+		if c.cur == nil {
+			return TypeInvalid, false, false
+		}
+		t, found := c.cur.types[x.Name]
+		if !found || t == TypeInvalid {
+			return TypeInvalid, false, false
+		}
+		if isStruct(t) {
+			return t, false, true
+		}
+		// Defined types are not method receivers in Tamil-0.8+.
+		return TypeInvalid, false, false
+	case *ast.ParenExpr:
+		u, ok := x.X.(*ast.UnaryExpr)
+		if !ok || u.Op != token.MUL {
+			return TypeInvalid, false, false
+		}
+		id, ok := u.X.(*ast.Ident)
+		if !ok {
+			return TypeInvalid, false, false
+		}
+		if _, exists := c.scope.lookup(id.Name); exists {
+			return TypeInvalid, false, false
+		}
+		if c.cur == nil {
+			return TypeInvalid, false, false
+		}
+		t, found := c.cur.types[id.Name]
+		if !found || t == TypeInvalid || !isStruct(t) {
+			return TypeInvalid, false, false
+		}
+		return t, true, true
+	default:
+		return TypeInvalid, false, false
+	}
 }
 
 func (c *Checker) checkIndexExpr(e *ast.IndexExpr) Type {

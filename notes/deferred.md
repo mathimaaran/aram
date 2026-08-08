@@ -13,7 +13,7 @@ Update when a subset ships (strike or move items) or when a construct card recor
 | Interfaces | Only if earned | method.yaml |
 | Generic types / constraints | After interfaces earn a place | generics.yaml |
 
-Shipped: 0.11–0.46 (through per-iteration loop vars).
+Shipped: 0.11–0.47 (through method expressions).
 
 ## Struct & types
 
@@ -30,6 +30,7 @@ Shipped: 0.11–0.46 (through per-iteration loop vars).
 | ~~first-class method / function values~~ | Tamil-0.44 | func-value.yaml |
 | ~~function literals / closures~~ | Tamil-0.45 | closure.yaml |
 | ~~Go 1.22+ per-iteration loop vars~~ | Tamil-0.46 | closure.yaml |
+| ~~method expressions `T.M` / `(*T).M`~~ | Tamil-0.47 | method-expr.yaml |
 
 ## Packages, runtime, backends
 

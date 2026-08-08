@@ -20,8 +20,8 @@ semantics: >
   now: value methods copy X; pointer methods on addressable X bind &X
   (same as தள்ளிவை 0.43). Package function name as expression yields a
   function value. Call through a function-typed expression. No function
-  literals in 0.44 (see closure.yaml for 0.45); method expressions
-  (T.M) and interfaces still later.
+  literals in 0.44 (see closure.yaml for 0.45). Method expressions
+  T.M / (*T).M: Tamil-0.47 (method-expr.yaml). Interfaces still later.
 examples:
   - tamil: |
       அ := ப.அமை_x
@@ -39,3 +39,4 @@ notes:
   - "Receiver bind matches defer method bind (Tamil-0.43)."
   - "Generics cannot be used as values in 0.44."
   - "Closures / function literals: Tamil-0.45 (closure.yaml)."
+  - "Method expressions T.M: Tamil-0.47 (method-expr.yaml)."

@@ -63,6 +63,7 @@ func TestParseValidCorpus(t *testing.T) {
 			"சுட்டி.aram",
 			"முறை.aram",
 			"முறை_மதிப்பு.aram",
+			"முறை_வெளிப்பாடு.aram",
 			"மூடுகை.aram",
 			"சுழல்_மூடுகை.aram",
 		}

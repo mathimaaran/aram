@@ -3849,6 +3849,10 @@ func (e *emitter) writeExpr(b *strings.Builder, expr ast.Expr) {
 		e.writeSliceExpr(b, expr)
 	case *ast.SelectorExpr:
 		if e.info != nil {
+			if me := e.info.MethodExprs[expr]; me != nil {
+				e.writeMethodExpr(b, me)
+				return
+			}
 			if mv := e.info.MethodValues[expr]; mv != nil {
 				e.writeMethodValue(b, expr, mv)
 				return
