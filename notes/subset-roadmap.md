@@ -78,6 +78,7 @@ Out of scope for Tamil-0:
 - [x] Defer method bind (pointer `&x` capture)
 - [x] Function types + method / package function values
 - [x] Function literals / closures (capture by reference)
+- [x] Go 1.22+ per-iteration `சுழல்` / `ஒவ்வொரு` vars
 
 ## Later growth
 

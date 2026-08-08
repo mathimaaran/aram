@@ -2,7 +2,7 @@
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
-Status: **Tamil-0.45** (2026-08-01) — function literals / closures.
+Status: **Tamil-0.46** (2026-08-01) — Go 1.22+ per-iteration loop vars.
 
 ```
 SourceFile    = PackageClause { ImportDecl } { TopLevelDecl } .
@@ -267,11 +267,12 @@ package function names are values; call through a function-typed
 expression. Receiver bind matches defer 0.43. No function literals.
 See `constructs/func-value.yaml`.
 
-## Closures (Tamil-0.45)
+## Closures (Tamil-0.45 / 0.46)
 
 `செயல்பாடு(params) [results] { body }` as an expression. Captures free
-variables by reference (arena-promoted locals in C). See
-`constructs/closure.yaml`.
+variables by reference (arena-promoted locals in C). Tamil-0.46: `சுழல்`
+/ `ஒவ்வொரு` iteration variables (`:=`) are per-iteration (Go 1.22+).
+See `constructs/closure.yaml`.
 
 ## Entry convention
 

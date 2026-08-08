@@ -311,6 +311,12 @@ expressions. Free variables captured by reference (Go-like); C arena
 promotes captured locals. Builds on 0.44 `aram_fn`. See
 `constructs/closure.yaml`.
 
+## Tamil-0.46 (2026-08-01)
+
+Go 1.22+ per-iteration loop variables: `சுழல்` / `ஒவ்வொரு` vars declared
+with `:=` are distinct each iteration, so closures capture the correct
+iteration values. See `constructs/closure.yaml`.
+
 ## Priority (2026-08-01)
 
 Harden the language (other gaps) **before** starting the NASM x86-64

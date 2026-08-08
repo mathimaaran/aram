@@ -102,6 +102,7 @@ type emitter struct {
 	funcTrampDone map[string]bool
 	funcCallDone  map[string]bool
 	promoted      map[string]check.Type // arena-promoted locals in current frame
+	loopIter      map[string]string     // Tamil-0.46: source name → __it_* in for cond/post
 	structsDone   bool                  // full struct bodies already emitted (before []Struct helpers)
 }
 
@@ -3169,6 +3170,14 @@ func (e *emitter) writeFor(b *strings.Builder, s *ast.ForStmt, level int) {
 		b.WriteString("}\n")
 		return
 	}
+
+	// Tamil-0.46: per-iteration vars for := init (Go 1.22+).
+	sv, hasShort := s.Init.(*ast.ShortVarDecl)
+	if hasShort && len(sv.Names) > 0 {
+		e.writeForPerIter(b, s, sv, level)
+		return
+	}
+
 	indent(b, level)
 	b.WriteString("for (")
 	e.writeForInit(b, s.Init)
@@ -3180,6 +3189,74 @@ func (e *emitter) writeFor(b *strings.Builder, s *ast.ForStmt, level int) {
 	e.writeForPost(b, s.Post)
 	b.WriteString(") {\n")
 	e.writeBlock(b, s.Body, level+1)
+	indent(b, level)
+	b.WriteString("}\n")
+}
+
+func (e *emitter) iterIdent(name string) string {
+	return "__it_" + cIdent(name)
+}
+
+// writeForPerIter emits 3-clause for with Go 1.22 per-iteration body vars.
+func (e *emitter) writeForPerIter(b *strings.Builder, s *ast.ForStmt, sv *ast.ShortVarDecl, level int) {
+	indent(b, level)
+	b.WriteString("{\n")
+	for i, name := range sv.Names {
+		if name.Name == "_" {
+			continue
+		}
+		indent(b, level+1)
+		ct := e.inferCType(sv.Values[i])
+		if strings.HasPrefix(ct, "aram_slice_") {
+			e.needSlice = true
+		}
+		b.WriteString(ct)
+		b.WriteByte(' ')
+		b.WriteString(e.iterIdent(name.Name))
+		b.WriteString(" = ")
+		e.writeExpr(b, sv.Values[i])
+		b.WriteString(";\n")
+	}
+
+	e.loopIter = map[string]string{}
+	for _, name := range sv.Names {
+		if name.Name != "_" {
+			e.loopIter[name.Name] = e.iterIdent(name.Name)
+		}
+	}
+	indent(b, level+1)
+	b.WriteString("for (; ")
+	if s.Cond != nil {
+		e.writeExpr(b, s.Cond)
+	}
+	b.WriteString("; ")
+	e.writeForPost(b, s.Post)
+	b.WriteString(") {\n")
+	e.loopIter = nil
+
+	for i, name := range sv.Names {
+		if name.Name == "_" {
+			continue
+		}
+		it := e.iterIdent(name.Name)
+		if e.isPromoted(name.Name) {
+			t := e.promoted[name.Name]
+			e.writePromoteAlloc(b, name.Name, t, it, level+2)
+			continue
+		}
+		indent(b, level+2)
+		ct := e.inferCType(sv.Values[i])
+		b.WriteString(ct)
+		b.WriteByte(' ')
+		b.WriteString(cIdent(name.Name))
+		b.WriteString(" = ")
+		b.WriteString(it)
+		b.WriteString(";\n")
+	}
+
+	e.writeBlock(b, s.Body, level+2)
+	indent(b, level+1)
+	b.WriteString("}\n")
 	indent(b, level)
 	b.WriteString("}\n")
 }
@@ -3198,42 +3275,16 @@ func (e *emitter) writeRange(b *strings.Builder, s *ast.RangeStmt, level int) {
 	if !isArr {
 		e.needSlice = true
 	}
-	idxName := "_ri"
-	if s.Key != nil && s.Key.Name != "_" {
-		idxName = cIdent(s.Key.Name)
-	}
 	elemT := e.elemType(xt)
+	cursor := "_ri"
 
 	indent(b, level)
 	b.WriteString("{\n")
-	if s.Define {
-		if s.Key != nil && s.Key.Name != "_" {
-			indent(b, level+1)
-			b.WriteString("int64_t ")
-			b.WriteString(idxName)
-			b.WriteString(";\n")
-		}
-		if s.Value != nil && s.Value.Name != "_" {
-			indent(b, level+1)
-			b.WriteString(e.cTypeFrom(elemT))
-			b.WriteByte(' ')
-			b.WriteString(cIdent(s.Value.Name))
-			b.WriteString(";\n")
-		}
-	}
-
 	indent(b, level+1)
-	b.WriteString("for (")
-	if s.Key != nil && s.Key.Name != "_" {
-		b.WriteString(idxName)
-		b.WriteString(" = 0")
-	} else {
-		b.WriteString("int64_t ")
-		b.WriteString(idxName)
-		b.WriteString(" = 0")
-	}
-	b.WriteString("; ")
-	b.WriteString(idxName)
+	b.WriteString("for (int64_t ")
+	b.WriteString(cursor)
+	b.WriteString(" = 0; ")
+	b.WriteString(cursor)
 	b.WriteString(" < ")
 	if isArr {
 		fmt.Fprintf(b, "%dLL", e.info.Arrays[xt].Len)
@@ -3243,15 +3294,16 @@ func (e *emitter) writeRange(b *strings.Builder, s *ast.RangeStmt, level int) {
 		b.WriteString(").len")
 	}
 	b.WriteString("; ")
-	b.WriteString(idxName)
+	b.WriteString(cursor)
 	b.WriteString("++) {\n")
 
+	if s.Key != nil && s.Key.Name != "_" {
+		e.writeRangeIterBind(b, s.Define, s.Key.Name, check.TypeInt, "int64_t", cursor, level+2)
+	}
 	if s.Value != nil && s.Value.Name != "_" {
-		indent(b, level+2)
-		b.WriteString(cIdent(s.Value.Name))
-		b.WriteString(" = ")
-		e.writeRangeElem(b, s.X, xt, idxName)
-		b.WriteString(";\n")
+		var elemInit strings.Builder
+		e.writeRangeElem(&elemInit, s.X, xt, cursor)
+		e.writeRangeIterBind(b, s.Define, s.Value.Name, elemT, e.cTypeFrom(elemT), elemInit.String(), level+2)
 	}
 
 	e.writeBlock(b, s.Body, level+2)
@@ -3261,18 +3313,38 @@ func (e *emitter) writeRange(b *strings.Builder, s *ast.RangeStmt, level int) {
 	b.WriteString("}\n")
 }
 
+// writeRangeIterBind binds a range key/value for one iteration (Go 1.22+ when Define).
+func (e *emitter) writeRangeIterBind(b *strings.Builder, define bool, name string, t check.Type, ct, initExpr string, level int) {
+	if define {
+		if e.isPromoted(name) {
+			e.writePromoteAlloc(b, name, t, initExpr, level)
+			return
+		}
+		indent(b, level)
+		b.WriteString(ct)
+		b.WriteByte(' ')
+		b.WriteString(cIdent(name))
+		b.WriteString(" = ")
+		b.WriteString(initExpr)
+		b.WriteString(";\n")
+		return
+	}
+	// Assignment form: update outer variable.
+	indent(b, level)
+	if e.isPromoted(name) {
+		e.writePromotedIdent(b, name)
+	} else {
+		b.WriteString(cIdent(name))
+	}
+	b.WriteString(" = ")
+	b.WriteString(initExpr)
+	b.WriteString(";\n")
+}
+
 func (e *emitter) writeRangeMap(b *strings.Builder, s *ast.RangeStmt, level int) {
 	e.needMap = true
 	xt := e.typeOf(s.X)
 	mi := e.info.Maps[xt]
-	keyName := ""
-	if s.Key != nil && s.Key.Name != "_" {
-		keyName = cIdent(s.Key.Name)
-	}
-	valName := ""
-	if s.Value != nil && s.Value.Name != "_" {
-		valName = cIdent(s.Value.Name)
-	}
 	indent(b, level)
 	b.WriteString("{\n")
 	indent(b, level+1)
@@ -3280,35 +3352,15 @@ func (e *emitter) writeRangeMap(b *strings.Builder, s *ast.RangeStmt, level int)
 	b.WriteString(" _rm = ")
 	e.writeExpr(b, s.X)
 	b.WriteString(";\n")
-	if s.Define {
-		if keyName != "" {
-			indent(b, level+1)
-			b.WriteString(e.cTypeFrom(mi.Key))
-			b.WriteByte(' ')
-			b.WriteString(keyName)
-			b.WriteString(";\n")
-		}
-		if valName != "" {
-			indent(b, level+1)
-			b.WriteString(e.cTypeFrom(mi.Elem))
-			b.WriteByte(' ')
-			b.WriteString(valName)
-			b.WriteString(";\n")
-		}
-	}
 	indent(b, level+1)
 	b.WriteString("if (_rm) for (int64_t _ri = 0; _ri < _rm->cap; _ri++) {\n")
 	indent(b, level+2)
 	b.WriteString("if (_rm->entries[_ri].state != 1) continue;\n")
-	if keyName != "" {
-		indent(b, level+2)
-		b.WriteString(keyName)
-		b.WriteString(" = _rm->entries[_ri].key;\n")
+	if s.Key != nil && s.Key.Name != "_" {
+		e.writeRangeIterBind(b, s.Define, s.Key.Name, mi.Key, e.cTypeFrom(mi.Key), "_rm->entries[_ri].key", level+2)
 	}
-	if valName != "" {
-		indent(b, level+2)
-		b.WriteString(valName)
-		b.WriteString(" = _rm->entries[_ri].val;\n")
+	if s.Value != nil && s.Value.Name != "_" {
+		e.writeRangeIterBind(b, s.Define, s.Value.Name, mi.Elem, e.cTypeFrom(mi.Elem), "_rm->entries[_ri].val", level+2)
 	}
 	e.writeBlock(b, s.Body, level+2)
 	indent(b, level+1)
@@ -3319,15 +3371,6 @@ func (e *emitter) writeRangeMap(b *strings.Builder, s *ast.RangeStmt, level int)
 
 func (e *emitter) writeRangeString(b *strings.Builder, s *ast.RangeStmt, level int) {
 	e.needUTF8 = true
-	keyName := ""
-	if s.Key != nil && s.Key.Name != "_" {
-		keyName = cIdent(s.Key.Name)
-	}
-	valName := ""
-	if s.Value != nil && s.Value.Name != "_" {
-		valName = cIdent(s.Value.Name)
-	}
-
 	indent(b, level)
 	b.WriteString("{\n")
 	indent(b, level+1)
@@ -3336,31 +3379,32 @@ func (e *emitter) writeRangeString(b *strings.Builder, s *ast.RangeStmt, level i
 	b.WriteString(";\n")
 	indent(b, level+1)
 	b.WriteString("int64_t _rcur = 0;\n")
-	if s.Define {
-		if keyName != "" {
-			indent(b, level+1)
-			b.WriteString("int64_t ")
-			b.WriteString(keyName)
-			b.WriteString(";\n")
-		}
-		if valName != "" {
-			indent(b, level+1)
-			b.WriteString("int64_t ")
-			b.WriteString(valName)
-			b.WriteString(";\n")
-		}
-	}
 	indent(b, level+1)
 	b.WriteString("while (_rs[_rcur]) {\n")
-	if keyName != "" {
-		indent(b, level+2)
-		b.WriteString(keyName)
-		b.WriteString(" = _rcur;\n")
+	if s.Key != nil && s.Key.Name != "_" {
+		e.writeRangeIterBind(b, s.Define, s.Key.Name, check.TypeInt, "int64_t", "_rcur", level+2)
 	}
 	indent(b, level+2)
-	if valName != "" {
-		b.WriteString(valName)
-		b.WriteString(" = aram_utf8_next(_rs, &_rcur);\n")
+	if s.Value != nil && s.Value.Name != "_" {
+		if s.Define && e.isPromoted(s.Value.Name) {
+			tmp := fmt.Sprintf("_rv_%d", e.swID)
+			e.swID++
+			b.WriteString("int64_t ")
+			b.WriteString(tmp)
+			b.WriteString(" = aram_utf8_next(_rs, &_rcur);\n")
+			e.writePromoteAlloc(b, s.Value.Name, check.TypeInt, tmp, level+2)
+		} else if s.Define {
+			b.WriteString("int64_t ")
+			b.WriteString(cIdent(s.Value.Name))
+			b.WriteString(" = aram_utf8_next(_rs, &_rcur);\n")
+		} else {
+			if e.isPromoted(s.Value.Name) {
+				e.writePromotedIdent(b, s.Value.Name)
+			} else {
+				b.WriteString(cIdent(s.Value.Name))
+			}
+			b.WriteString(" = aram_utf8_next(_rs, &_rcur);\n")
+		}
 	} else {
 		b.WriteString("(void)aram_utf8_next(_rs, &_rcur);\n")
 	}
@@ -3597,6 +3641,12 @@ func (e *emitter) concreteType(t check.Type) check.Type {
 func (e *emitter) writeExpr(b *strings.Builder, expr ast.Expr) {
 	switch expr := expr.(type) {
 	case *ast.Ident:
+		if e.loopIter != nil {
+			if it, ok := e.loopIter[expr.Name]; ok {
+				b.WriteString(it)
+				return
+			}
+		}
 		if e.info != nil {
 			if fv := e.info.PkgFuncValues[expr]; fv != nil {
 				e.writePkgFuncValue(b, fv)

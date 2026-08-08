@@ -430,3 +430,12 @@ func TestEmitAndRunClosure(t *testing.T) {
 		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
 	}
 }
+
+func TestEmitAndRunLoopClosure(t *testing.T) {
+	_, _, cSrc := compile(t, "சுழல்_மூடுகை.aram")
+	got := runC(t, cSrc)
+	want := "0\n1\n2\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}

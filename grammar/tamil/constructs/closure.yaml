@@ -1,6 +1,6 @@
 id: closure
 status: codegen
-subset: Tamil-0.45
+subset: Tamil-0.46
 go_inspired: |
   f := func() { n++ }
   g := func(x int) int { return x + n }
@@ -13,8 +13,9 @@ semantics: >
   Function literals yield function values (aram_fn). Free variables from
   enclosing scopes are captured by reference (Go-like): mutations inside
   the closure are visible outside. Captured locals are arena-promoted in
-  C. Nested literals allowed. Loop variables captured as classic Go
-  (one var per loop, not per iteration).
+  C. Nested literals allowed. Tamil-0.46: சுழல் / ஒவ்வொரு iteration
+  variables (:=) are per-iteration (Go 1.22+), so closures see each
+  iteration’s own values.
 examples:
   - tamil: |
       ந := 0
@@ -28,4 +29,5 @@ examples:
       println(n)
 notes:
   - "Builds on Tamil-0.44 function types / aram_fn."
+  - "Tamil-0.46: Go 1.22+ per-iteration loop variables."
   - "Method expressions and interfaces still later."
