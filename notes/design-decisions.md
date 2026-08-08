@@ -297,6 +297,13 @@ Defer method bind: value receivers copied at `தள்ளிவை`; pointer
 receivers on addressable values save `&x` (mutations before return are
 visible). Applies to bare and `p.m()` forms. See `defer.yaml`.
 
+## Tamil-0.44 (2026-08-01)
+
+Function types (`செயல்பாடு(…) …` in type position) and first-class
+method values / package function values. Receiver bind for method
+values matches 0.43 defer. No function literals, method expressions, or
+interfaces. See `constructs/func-value.yaml`.
+
 ## Priority (2026-08-01)
 
 Harden the language (other gaps) **before** starting the NASM x86-64

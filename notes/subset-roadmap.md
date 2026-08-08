@@ -76,6 +76,7 @@ Out of scope for Tamil-0:
 - [x] Generics polish (multi-param, `[]யா`, import)
 - [x] Bare zero-arg `தள்ளிவை` sugar
 - [x] Defer method bind (pointer `&x` capture)
+- [x] Function types + method / package function values
 
 ## Later growth
 

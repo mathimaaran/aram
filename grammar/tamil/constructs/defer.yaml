@@ -28,4 +28,4 @@ notes:
   - "Keyword locked: தள்ளிவை (put aside / postpone)."
   - "Tamil-0.42: bare zero-arg sugar."
   - "Tamil-0.43: correct pointer-method receiver bind on defer."
-  - "Closures / first-class method values still later."
+  - "Method values: Tamil-0.44 (func-value.yaml). Closures still later."

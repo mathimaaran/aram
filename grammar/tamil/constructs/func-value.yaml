@@ -1,0 +1,40 @@
+id: func-value
+status: codegen
+subset: Tamil-0.44
+go_inspired: |
+  type F = func(int)
+  var f func(int)
+  f = c.Inc          // method value
+  f(1)
+  g := Add           // package function value
+  g(1, 2)
+tamil_keywords:
+  func: செயல்பாடு   # type position; no new keyword
+tamil_ebnf: |
+  FuncType = "செயல்பாடு" "(" [ TypeList ] ")" [ Result ] .
+  Type     = … | FuncType .
+  Primary  = Operand { … | "." identifier | Arguments } .
+  # bare X.M (method) and bare F (package func) are values when not called
+semantics: >
+  Function types hold callable values. Method value X.M binds the receiver
+  now: value methods copy X; pointer methods on addressable X bind &X
+  (same as தள்ளிவை 0.43). Package function name as expression yields a
+  function value. Call through a function-typed expression. No function
+  literals, method expressions (T.M), or interfaces in 0.44.
+examples:
+  - tamil: |
+      அ := ப.அமை_x
+      அ(10)
+      க := ப.கூட்டு
+      ப.x = 99
+      பதிப்பி(க())
+    go_equivalent: |
+      set := p.SetX
+      set(10)
+      sum := p.Sum
+      p.x = 99
+      println(sum())
+notes:
+  - "Receiver bind matches defer method bind (Tamil-0.43)."
+  - "Generics cannot be used as values in 0.44."
+  - "Closures / function literals still later."

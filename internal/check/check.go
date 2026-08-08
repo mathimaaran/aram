@@ -36,6 +36,7 @@ const (
 	typeArrayStart    = 40000 // fixed arrays [N]T
 	typeMapStart      = 50000 // maps அகராதி[K]V
 	typeParamStart    = 60000 // function type parameters (generics)
+	typeFuncStart     = 70000 // function types செயல்பாடு(…) (Tamil-0.44)
 )
 
 func (t Type) String() string {
@@ -109,7 +110,12 @@ func IsMap(t Type) bool {
 
 // IsTypeParam reports whether t is a function type parameter.
 func IsTypeParam(t Type) bool {
-	return t >= typeParamStart
+	return t >= typeParamStart && t < typeFuncStart
+}
+
+// IsFunc reports whether t is a function type செயல்பாடு(…)….
+func IsFunc(t Type) bool {
+	return t >= typeFuncStart
 }
 
 // ArrayInfo describes a fixed array type.
@@ -122,6 +128,28 @@ type ArrayInfo struct {
 type MapInfo struct {
 	Key  Type
 	Elem Type
+}
+
+// FuncInfo describes a function type செயல்பாடு(params) results.
+type FuncInfo struct {
+	Params  []Type
+	Results []Type // empty = void
+}
+
+// MethodValueInfo records a method value expression (X.M) for emit.
+type MethodValueInfo struct {
+	Method    *MethodInfo
+	Struct    *StructInfo
+	TakeAddr  bool // pointer method on addressable value → bind &X
+	RecvIsPtr bool // X's type is already *T
+}
+
+// PkgFuncValueInfo records a package function used as a value.
+type PkgFuncValueInfo struct {
+	Pkg     string
+	Name    string
+	Params  []Type
+	Results []Type
 }
 
 func isSlice(t Type) bool { return IsSlice(t) }
@@ -209,9 +237,12 @@ type Info struct {
 	TupleElems     map[Type][]Type       // multi-value return type → component types
 	Arrays         map[Type]ArrayInfo    // fixed array type → len + elem
 	Maps           map[Type]MapInfo      // map type → key + elem
+	Funcs          map[Type]FuncInfo     // function type → params/results
 	TypeParamName  map[Type]string       // type parameter → source name
 	Instantiations []*MonoInst           // unique generic function instantiations
 	CallInst       map[*ast.CallExpr]*MonoInst
+	MethodValues   map[ast.Expr]*MethodValueInfo
+	PkgFuncValues  map[ast.Expr]*PkgFuncValueInfo
 }
 
 // MonoInst is one monomorphized instantiation of a generic function.
@@ -306,6 +337,7 @@ type Checker struct {
 	nextArray     Type
 	nextMap       Type
 	nextTypeParam Type
+	nextFunc      Type
 	typeParamEnv  map[string]Type // active while checking a generic function
 	allowMulti    bool            // true while unpacking a multi-value call
 	pkgs          map[string]*pkgState
@@ -500,7 +532,59 @@ func (c *Checker) mapOf(key, elem Type) (Type, bool) {
 	return t, true
 }
 
+func typesEqual(a, b []Type) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func (c *Checker) funcOf(params, results []Type) Type {
+	for t, fi := range c.info.Funcs {
+		if typesEqual(fi.Params, params) && typesEqual(fi.Results, results) {
+			return t
+		}
+	}
+	t := c.nextFunc
+	c.nextFunc++
+	pc := append([]Type(nil), params...)
+	rc := append([]Type(nil), results...)
+	c.info.Funcs[t] = FuncInfo{Params: pc, Results: rc}
+	return t
+}
+
 func (c *Checker) typStr(t Type) string {
+	if IsFunc(t) {
+		fi := c.info.Funcs[t]
+		s := "செயல்பாடு("
+		for i, p := range fi.Params {
+			if i > 0 {
+				s += ", "
+			}
+			s += c.typStr(p)
+		}
+		s += ")"
+		switch len(fi.Results) {
+		case 0:
+		case 1:
+			s += " " + c.typStr(fi.Results[0])
+		default:
+			s += " ("
+			for i, r := range fi.Results {
+				if i > 0 {
+					s += ", "
+				}
+				s += c.typStr(r)
+			}
+			s += ")"
+		}
+		return s
+	}
 	if IsMap(t) {
 		mi := c.info.Maps[t]
 		return "அகராதி[" + c.typStr(mi.Key) + "]" + c.typStr(mi.Elem)
@@ -754,7 +838,7 @@ func (c *Checker) isFieldType(t Type) bool {
 	if t == TypeInt || t == TypeBool || t == TypeString || t == TypeFloat || t == TypeByte || t == TypeRune {
 		return true
 	}
-	if isSlice(t) || IsArray(t) || isPointer(t) || isStruct(t) || IsMap(t) {
+	if isSlice(t) || IsArray(t) || isPointer(t) || isStruct(t) || IsMap(t) || IsFunc(t) {
 		return true
 	}
 	if isDefined(t) {
@@ -885,6 +969,21 @@ func (c *Checker) typeFromExpr(te ast.TypeExpr) Type {
 			return TypeInvalid
 		}
 		return mt
+	case *ast.FuncType:
+		params := make([]Type, len(te.Params))
+		for i, p := range te.Params {
+			params[i] = c.typeFromExpr(p)
+			if params[i] == TypeInvalid || params[i] == TypeVoid {
+				return TypeInvalid
+			}
+		}
+		results := c.typesFromResults(te.Results)
+		for _, r := range results {
+			if r == TypeInvalid {
+				return TypeInvalid
+			}
+		}
+		return c.funcOf(params, results)
 	default:
 		return TypeInvalid
 	}
@@ -1607,6 +1706,22 @@ func (c *Checker) checkExpr(e ast.Expr) Type {
 		var ok bool
 		t, ok = c.scope.lookup(e.Name)
 		if !ok {
+			if c.cur != nil {
+				if sig := c.cur.funcs[e.Name]; sig != nil {
+					if sig.generic() {
+						c.error(e.Pos(), "cannot use generic function %s as a value", e.Name)
+						t = TypeInvalid
+					} else {
+						t = c.funcOf(sig.params, sig.results)
+						c.info.PkgFuncValues[e] = &PkgFuncValueInfo{
+							Pkg: c.cur.name, Name: e.Name,
+							Params: append([]Type(nil), sig.params...),
+							Results: append([]Type(nil), sig.results...),
+						}
+					}
+					break
+				}
+			}
 			c.error(e.Pos(), "undeclared: %s", e.Name)
 			t = TypeInvalid
 		}
@@ -1829,18 +1944,44 @@ func (c *Checker) checkCompositeLit(e *ast.CompositeLit) Type {
 }
 
 func (c *Checker) checkSelectorExpr(e *ast.SelectorExpr) Type {
+	if id, ok := e.X.(*ast.Ident); ok && c.cur != nil {
+		if imp, ok := c.cur.imports[id.Name]; ok {
+			c.markImportUsed(id.Name)
+			if sig := imp.funcs[e.Sel.Name]; sig != nil {
+				if !sig.exported {
+					c.error(e.Sel.Pos(), "function %s.%s is not exported (need வெளி)", imp.name, e.Sel.Name)
+					return TypeInvalid
+				}
+				if sig.generic() {
+					c.error(e.Pos(), "cannot use generic function %s.%s as a value", imp.name, e.Sel.Name)
+					return TypeInvalid
+				}
+				ft := c.funcOf(sig.params, sig.results)
+				c.info.PkgFuncValues[e] = &PkgFuncValueInfo{
+					Pkg: imp.name, Name: e.Sel.Name,
+					Params: append([]Type(nil), sig.params...),
+					Results: append([]Type(nil), sig.results...),
+				}
+				return ft
+			}
+			c.error(e.Sel.Pos(), "package %s has no function %s", id.Name, e.Sel.Name)
+			return TypeInvalid
+		}
+	}
 	xt := c.checkExpr(e.X)
 	if xt == TypeInvalid {
 		return TypeInvalid
 	}
-	if isPointer(xt) {
-		xt = c.elemOfPtr(xt)
+	recvIsPtr := isPointer(xt)
+	base := xt
+	if recvIsPtr {
+		base = c.elemOfPtr(xt)
 	}
-	if !isStruct(xt) {
+	if !isStruct(base) {
 		c.error(e.Pos(), "cannot select field from %s", c.typStr(c.info.Types[e.X]))
 		return TypeInvalid
 	}
-	si := c.info.Structs[xt]
+	si := c.info.Structs[base]
 	for _, f := range si.Fields {
 		if f.Name == e.Sel.Name {
 			if c.cur != nil && si.Pkg != c.cur.name && !f.Exported {
@@ -1850,7 +1991,28 @@ func (c *Checker) checkSelectorExpr(e *ast.SelectorExpr) Type {
 			return f.Type
 		}
 	}
-	c.error(e.Sel.Pos(), "type %s has no field %s", si.Name, e.Sel.Name)
+	if mi, ok := si.Methods[e.Sel.Name]; ok {
+		if c.cur != nil && si.Pkg != c.cur.name && !mi.Exported {
+			c.error(e.Sel.Pos(), "method %s.%s is not exported (need வெளி)", si.Name, mi.Name)
+			return TypeInvalid
+		}
+		takeAddr := false
+		if mi.RecvIsPtr {
+			if !recvIsPtr && !isAddressable(e.X) {
+				c.error(e.X.Pos(), "cannot take method value %s with pointer receiver on non-addressable value", mi.Name)
+				return TypeInvalid
+			}
+			if !recvIsPtr {
+				takeAddr = true
+			}
+		}
+		ft := c.funcOf(mi.Params, mi.Results)
+		c.info.MethodValues[e] = &MethodValueInfo{
+			Method: mi, Struct: si, TakeAddr: takeAddr, RecvIsPtr: recvIsPtr,
+		}
+		return ft
+	}
+	c.error(e.Sel.Pos(), "type %s has no field or method %s", si.Name, e.Sel.Name)
 	return TypeInvalid
 }
 
@@ -2267,8 +2429,8 @@ func (c *Checker) checkCall(e *ast.CallExpr) Type {
 				// Tamil-0.17: named structs OK
 			} else if isDefined(t) {
 				// Print via underlying (emit follows Underlying).
-			} else if isSlice(t) || isPointer(t) || IsMap(t) || t == TypeUntypedNil {
-				c.error(e.Args[0].Pos(), "பதிப்பி cannot print a slice, pointer, அகராதி, or இன்மை")
+			} else if isSlice(t) || isPointer(t) || IsMap(t) || IsFunc(t) || t == TypeUntypedNil {
+				c.error(e.Args[0].Pos(), "பதிப்பி cannot print a slice, pointer, அகராதி, செயல்பாடு, or இன்மை")
 			} else if t != TypeInt && t != TypeFloat && t != TypeString && t != TypeBool && t != TypeInvalid {
 				c.error(e.Args[0].Pos(), "பதிப்பி expects முழுஎண், மிதவைஎண், சரம், நிலை, or a struct")
 			}
@@ -2295,7 +2457,7 @@ func (c *Checker) checkCall(e *ast.CallExpr) Type {
 				return c.checkPkgFuncCall(e, sel, imp, explicit)
 			}
 		}
-		return c.checkMethodCall(e, sel)
+		return c.checkSelectorCall(e, sel)
 	}
 	if dest, ok := c.typeFromConversionFun(e.Fun); ok {
 		if id, ok := e.Fun.(*ast.Ident); ok && c.cur != nil {
@@ -2312,6 +2474,16 @@ func (c *Checker) checkCall(e *ast.CallExpr) Type {
 	var sig *funcSig
 	switch fun := e.Fun.(type) {
 	case *ast.Ident:
+		if t, ok := c.scope.lookup(fun.Name); ok {
+			if IsFunc(t) {
+				return c.checkFuncValueCall(e, t)
+			}
+			c.error(fun.Pos(), "call of non-function %s", fun.Name)
+			for _, arg := range e.Args {
+				c.checkExpr(arg)
+			}
+			return TypeInvalid
+		}
 		funName = fun.Name
 		funPos = fun.Pos()
 		if c.cur != nil {
@@ -2368,7 +2540,14 @@ func (c *Checker) checkCall(e *ast.CallExpr) Type {
 			return TypeInvalid
 		}
 	default:
+		ft := c.checkExpr(e.Fun)
+		if IsFunc(ft) {
+			return c.checkFuncValueCall(e, ft)
+		}
 		c.error(e.Pos(), "call of non-function")
+		for _, arg := range e.Args {
+			c.checkExpr(arg)
+		}
 		return TypeInvalid
 	}
 	if sig == nil {
@@ -2608,7 +2787,9 @@ func (c *Checker) recordMonoInst(pkg, name string, decl *ast.FuncDecl, typeArgs,
 	return inst
 }
 
-func (c *Checker) checkMethodCall(e *ast.CallExpr, sel *ast.SelectorExpr) Type {
+// checkSelectorCall handles X.Name(args): method call or call through a
+// function-typed field (not a method value — those use Ident after :=).
+func (c *Checker) checkSelectorCall(e *ast.CallExpr, sel *ast.SelectorExpr) Type {
 	xt := c.checkExpr(sel.X)
 	if xt == TypeInvalid {
 		for _, arg := range e.Args {
@@ -2620,22 +2801,45 @@ func (c *Checker) checkMethodCall(e *ast.CallExpr, sel *ast.SelectorExpr) Type {
 	if isPointer(xt) {
 		base = c.elemOfPtr(xt)
 	}
-	if !isStruct(base) {
-		c.error(sel.Pos(), "cannot call method on %s", c.typStr(xt))
+	if isStruct(base) {
+		si := c.info.Structs[base]
+		if mi, ok := si.Methods[sel.Sel.Name]; ok {
+			return c.checkMethodCallKnown(e, sel, xt, si, mi)
+		}
+		for _, f := range si.Fields {
+			if f.Name == sel.Sel.Name {
+				if c.cur != nil && si.Pkg != c.cur.name && !f.Exported {
+					c.error(sel.Sel.Pos(), "field %s.%s is not exported (need வெளி)", si.Name, f.Name)
+					for _, arg := range e.Args {
+						c.checkExpr(arg)
+					}
+					return TypeInvalid
+				}
+				if IsFunc(f.Type) {
+					c.record(sel, f.Type)
+					return c.checkFuncValueCall(e, f.Type)
+				}
+				c.error(sel.Pos(), "cannot call non-function field %s", f.Name)
+				for _, arg := range e.Args {
+					c.checkExpr(arg)
+				}
+				return TypeInvalid
+			}
+		}
+		c.error(sel.Sel.Pos(), "type %s has no method or field %s", si.Name, sel.Sel.Name)
 		for _, arg := range e.Args {
 			c.checkExpr(arg)
 		}
 		return TypeInvalid
 	}
-	si := c.info.Structs[base]
-	mi, ok := si.Methods[sel.Sel.Name]
-	if !ok {
-		c.error(sel.Sel.Pos(), "type %s has no method %s", si.Name, sel.Sel.Name)
-		for _, arg := range e.Args {
-			c.checkExpr(arg)
-		}
-		return TypeInvalid
+	c.error(sel.Pos(), "cannot call method on %s", c.typStr(xt))
+	for _, arg := range e.Args {
+		c.checkExpr(arg)
 	}
+	return TypeInvalid
+}
+
+func (c *Checker) checkMethodCallKnown(e *ast.CallExpr, sel *ast.SelectorExpr, xt Type, si *StructInfo, mi *MethodInfo) Type {
 	if c.cur != nil && si.Pkg != c.cur.name && !mi.Exported {
 		c.error(sel.Sel.Pos(), "method %s.%s is not exported (need வெளி)", si.Name, mi.Name)
 		for _, arg := range e.Args {
@@ -2658,4 +2862,23 @@ func (c *Checker) checkMethodCall(e *ast.CallExpr, sel *ast.SelectorExpr) Type {
 		}
 	}
 	return c.finishCallResult(e, mi.Results)
+}
+
+func (c *Checker) checkFuncValueCall(e *ast.CallExpr, ft Type) Type {
+	fi, ok := c.info.Funcs[ft]
+	if !ok {
+		c.error(e.Pos(), "call of non-function")
+		return TypeInvalid
+	}
+	c.record(e.Fun, ft)
+	if len(e.Args) != len(fi.Params) {
+		c.error(e.Pos(), "wrong number of arguments (want %d, got %d)", len(fi.Params), len(e.Args))
+	}
+	for i, arg := range e.Args {
+		t := c.checkExpr(arg)
+		if i < len(fi.Params) && !c.assignable(t, fi.Params[i], arg) {
+			c.error(arg.Pos(), "argument %d: want %s, got %s", i+1, c.typStr(fi.Params[i]), c.typStr(t))
+		}
+	}
+	return c.finishCallResult(e, fi.Results)
 }

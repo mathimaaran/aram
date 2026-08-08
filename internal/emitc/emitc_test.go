@@ -412,3 +412,12 @@ func TestEmitAndRunPrime(t *testing.T) {
 		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
 	}
 }
+
+func TestEmitAndRunMethodValue(t *testing.T) {
+	_, _, cSrc := compile(t, "முறை_மதிப்பு.aram")
+	got := runC(t, cSrc)
+	want := "10\n14\n7\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}

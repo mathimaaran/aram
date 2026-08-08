@@ -38,8 +38,11 @@ func CheckProgram(merged []*ast.File, entry string) (*ProgramInfo, []error) {
 		TupleElems:    map[Type][]Type{},
 		Arrays:        map[Type]ArrayInfo{},
 		Maps:          map[Type]MapInfo{},
+		Funcs:         map[Type]FuncInfo{},
 		TypeParamName: map[Type]string{},
 		CallInst:      map[*ast.CallExpr]*MonoInst{},
+		MethodValues:  map[ast.Expr]*MethodValueInfo{},
+		PkgFuncValues: map[ast.Expr]*PkgFuncValueInfo{},
 	}
 	c := &Checker{
 		scope:         &scope{vars: map[string]Type{}},
@@ -52,6 +55,7 @@ func CheckProgram(merged []*ast.File, entry string) (*ProgramInfo, []error) {
 		nextArray:     typeArrayStart,
 		nextMap:       typeMapStart,
 		nextTypeParam: typeParamStart,
+		nextFunc:      typeFuncStart,
 		pkgs:          map[string]*pkgState{},
 	}
 	for _, f := range merged {

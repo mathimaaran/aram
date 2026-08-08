@@ -154,6 +154,16 @@ type MapType struct {
 func (t *MapType) Pos() token.Pos { return t.TokPos }
 func (t *MapType) typeExpr()      {}
 
+// FuncType is செயல்பாடு(TypeList) [Result] (function type; Tamil-0.44).
+type FuncType struct {
+	Func    token.Pos
+	Params  []TypeExpr // unnamed parameter types
+	Results []*Field   // same shape as FuncDecl.Results
+}
+
+func (t *FuncType) Pos() token.Pos { return t.Func }
+func (t *FuncType) typeExpr()      {}
+
 // StructType is அமைப்பு { fields }
 type StructType struct {
 	TokPos token.Pos
@@ -181,6 +191,31 @@ func TypeString(t TypeExpr) string {
 		return "*" + TypeString(t.Elem)
 	case *MapType:
 		return "அகராதி[" + TypeString(t.Key) + "]" + TypeString(t.Elem)
+	case *FuncType:
+		s := "செயல்பாடு("
+		for i, p := range t.Params {
+			if i > 0 {
+				s += ", "
+			}
+			s += TypeString(p)
+		}
+		s += ")"
+		if len(t.Results) == 1 && t.Results[0].Name == nil {
+			s += " " + TypeString(t.Results[0].Type)
+		} else if len(t.Results) > 0 {
+			s += " ("
+			for i, r := range t.Results {
+				if i > 0 {
+					s += ", "
+				}
+				if r.Name != nil {
+					s += r.Name.Name + " "
+				}
+				s += TypeString(r.Type)
+			}
+			s += ")"
+		}
+		return s
 	case *StructType:
 		return "அமைப்பு"
 	default:

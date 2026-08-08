@@ -167,6 +167,9 @@ func (p *Parser) parseType() ast.TypeExpr {
 		p.next()
 		return &ast.PointerType{Star: star, Elem: p.parseType()}
 	}
+	if p.tok.Kind == token.FUNC {
+		return p.parseFuncType()
+	}
 	if p.tok.Kind == token.MAP {
 		tokPos := p.tok.Pos
 		p.next()
@@ -220,11 +223,29 @@ func startsType(k token.Kind) bool {
 	switch k {
 	case token.TYPE_INT, token.TYPE_BOOL, token.TYPE_STRING, token.TYPE_FLOAT,
 		token.TYPE_BYTE, token.TYPE_RUNE,
-		token.LBRACK, token.IDENT, token.MUL, token.MAP:
+		token.LBRACK, token.IDENT, token.MUL, token.MAP, token.FUNC:
 		return true
 	default:
 		return false
 	}
+}
+
+// parseFuncType parses செயல்பாடு "(" [ TypeList ] ")" [ Result ] .
+func (p *Parser) parseFuncType() *ast.FuncType {
+	funcPos := p.expect(token.FUNC).Pos
+	p.expect(token.LPAREN)
+	var params []ast.TypeExpr
+	if p.tok.Kind != token.RPAREN && p.tok.Kind != token.SEMICOLON {
+		params = append(params, p.parseType())
+		for p.tok.Kind == token.COMMA {
+			p.next()
+			params = append(params, p.parseType())
+		}
+	}
+	p.skipNewlineSemi()
+	p.expect(token.RPAREN)
+	results := p.parseResultTypes()
+	return &ast.FuncType{Func: funcPos, Params: params, Results: results}
 }
 
 func (p *Parser) parseTypeDecl(exported bool, exportPos token.Pos) *ast.TypeDecl {

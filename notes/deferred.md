@@ -10,10 +10,10 @@ Update when a subset ships (strike or move items) or when a construct card recor
 | Item | Notes | Source |
 |------|--------|--------|
 | NASM x86-64 → i386 | After language harden | roadmap |
-| Interfaces / method values | Only if earned | method.yaml |
+| Interfaces | Only if earned | method.yaml |
 | Generic types / constraints | After interfaces earn a place | generics.yaml |
 
-Shipped: 0.11–0.43 (through defer method bind).
+Shipped: 0.11–0.44 (through method / function values).
 
 ## Struct & types
 
@@ -27,7 +27,8 @@ Shipped: 0.11–0.43 (through defer method bind).
 |------|--------|--------|
 | ~~bare zero-arg defer~~ | Tamil-0.42 | defer.yaml |
 | ~~defer method bind (`&x`)~~ | Tamil-0.43 | defer.yaml |
-| defer closures / first-class method values | still later | defer.yaml |
+| ~~first-class method / function values~~ | Tamil-0.44 | func-value.yaml |
+| defer closures / function literals | still later | defer.yaml |
 
 ## Packages, runtime, backends
 

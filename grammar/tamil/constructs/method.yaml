@@ -18,7 +18,7 @@ semantics: >
   Calls use X.Name(args). Value methods may be called on T or *T.
   Pointer methods may be called on *T, or on an addressable T (pass &X).
   Method names must not collide with fields or other methods on the type.
-  No interfaces, method values, or embedding in Tamil-0.8.
+  No interfaces or embedding in Tamil-0.8. Method values: Tamil-0.44.
 examples:
   - tamil: |
       வகை புள்ளி அமைப்பு {
@@ -48,4 +48,5 @@ examples:
           println(p.x)
       }
 notes:
+  - "Method values: see func-value.yaml (Tamil-0.44)."
   - "Interfaces and method expressions are later."

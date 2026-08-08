@@ -90,6 +90,7 @@ type emitter struct {
 	needCopy    bool
 	needMap     bool
 	needDefer   bool
+	needFunc    bool // function values (Tamil-0.44)
 	needArena   bool
 	needUTF8    bool
 	needRuneStr  bool // சரம்(rune) conversion helper
@@ -97,6 +98,9 @@ type emitter struct {
 	swID         int  // unique temps for திசைவி
 	deferID      int  // unique deferred-call thunk ids
 	deferThunks  strings.Builder
+	funcTramps   strings.Builder
+	funcTrampDone map[string]bool
+	funcCallDone  map[string]bool
 	structsDone  bool // full struct bodies already emitted (before []Struct helpers)
 }
 
@@ -155,7 +159,11 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 	if e.info != nil && len(e.info.Maps) > 0 {
 		e.needMap = true
 	}
-	if e.needArena || e.needConcat || e.needAppend || e.needSlice || e.needMake || e.needRuneStr || e.needStrBytes || e.needMap || e.needDefer {
+	if e.info != nil && len(e.info.Funcs) > 0 {
+		e.needFunc = true
+	}
+	e.writeFuncTypedef(&b)
+	if e.needArena || e.needConcat || e.needAppend || e.needSlice || e.needMake || e.needRuneStr || e.needStrBytes || e.needMap || e.needDefer || e.needFunc {
 		e.needArena = true
 		b.WriteString("static unsigned char *aram_arena_buf;\n")
 		b.WriteString("static size_t aram_arena_len, aram_arena_cap;\n")
@@ -487,6 +495,10 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 	if e.needDefer {
 		// Thunks after forwards so they can call user functions.
 		b.WriteString(e.deferThunks.String())
+		b.WriteByte('\n')
+	}
+	if e.needFunc && e.funcTramps.Len() > 0 {
+		b.WriteString(e.funcTramps.String())
 		b.WriteByte('\n')
 	}
 	b.WriteString(body.String())
@@ -1313,6 +1325,9 @@ func (e *emitter) cTypeExpr(te ast.TypeExpr) string {
 			return e.mapCName(t)
 		}
 		return "void *"
+	case *ast.FuncType:
+		e.needFunc = true
+		return "aram_fn"
 	default:
 		return "void"
 	}
@@ -1378,6 +1393,40 @@ func (e *emitter) resolveTypeExpr(te ast.TypeExpr) check.Type {
 			}
 		}
 		return check.TypeInvalid
+	case *ast.FuncType:
+		params := make([]check.Type, len(te.Params))
+		for i, p := range te.Params {
+			params[i] = e.resolveTypeExpr(p)
+		}
+		var results []check.Type
+		for _, r := range te.Results {
+			results = append(results, e.resolveTypeExpr(r.Type))
+		}
+		if e.info != nil {
+			for t, fi := range e.info.Funcs {
+				if len(fi.Params) == len(params) && len(fi.Results) == len(results) {
+					ok := true
+					for i := range params {
+						if fi.Params[i] != params[i] {
+							ok = false
+							break
+						}
+					}
+					if ok {
+						for i := range results {
+							if fi.Results[i] != results[i] {
+								ok = false
+								break
+							}
+						}
+					}
+					if ok {
+						return t
+					}
+				}
+			}
+		}
+		return check.TypeInvalid
 	default:
 		return check.TypeInvalid
 	}
@@ -1428,6 +1477,10 @@ func (e *emitter) cTypeFrom(t check.Type) string {
 	}
 	if check.IsMap(t) {
 		return e.mapCName(t)
+	}
+	if check.IsFunc(t) {
+		e.needFunc = true
+		return "aram_fn"
 	}
 	if check.IsTuple(t) && e.info != nil {
 		if elems, ok := e.info.TupleElems[t]; ok {
@@ -1498,7 +1551,7 @@ func (e *emitter) zeroInit(te ast.TypeExpr) string {
 			return "{0}"
 		}
 		return "0"
-	case *ast.SliceType, *ast.ArrayType:
+	case *ast.SliceType, *ast.ArrayType, *ast.FuncType, *ast.MapType:
 		return "{0}"
 	case *ast.PointerType:
 		return "NULL"
@@ -3476,6 +3529,12 @@ func (e *emitter) concreteType(t check.Type) check.Type {
 func (e *emitter) writeExpr(b *strings.Builder, expr ast.Expr) {
 	switch expr := expr.(type) {
 	case *ast.Ident:
+		if e.info != nil {
+			if fv := e.info.PkgFuncValues[expr]; fv != nil {
+				e.writePkgFuncValue(b, fv)
+				return
+			}
+		}
 		b.WriteString(cIdent(expr.Name))
 	case *ast.BasicLit:
 		switch expr.Kind {
@@ -3616,6 +3675,10 @@ func (e *emitter) writeExpr(b *strings.Builder, expr ast.Expr) {
 				return
 			}
 		}
+		if ft := e.typeOf(expr.Fun); check.IsFunc(ft) {
+			e.writeFuncValueCall(b, expr, ft)
+			return
+		}
 		if sel, ok := expr.Fun.(*ast.SelectorExpr); ok {
 			if e.typeOf(sel.X) == check.TypeInvalid {
 				if id, ok := sel.X.(*ast.Ident); ok {
@@ -3659,6 +3722,16 @@ func (e *emitter) writeExpr(b *strings.Builder, expr ast.Expr) {
 	case *ast.SliceExpr:
 		e.writeSliceExpr(b, expr)
 	case *ast.SelectorExpr:
+		if e.info != nil {
+			if mv := e.info.MethodValues[expr]; mv != nil {
+				e.writeMethodValue(b, expr, mv)
+				return
+			}
+			if fv := e.info.PkgFuncValues[expr]; fv != nil {
+				e.writePkgFuncValue(b, fv)
+				return
+			}
+		}
 		e.writeExpr(b, expr.X)
 		if e.info != nil {
 			if _, ok := e.info.PtrElem[e.typeOf(expr.X)]; ok {

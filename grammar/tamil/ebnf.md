@@ -2,7 +2,7 @@
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
-Status: **Tamil-0.43** (2026-08-01) — defer method receiver bind.
+Status: **Tamil-0.44** (2026-08-01) — function types and method values.
 
 ```
 SourceFile    = PackageClause { ImportDecl } { TopLevelDecl } .
@@ -30,10 +30,11 @@ NamedResults  = identifier Type { "," identifier Type } .
 TypeList      = Type { "," Type } .
 FunctionBody  = Block .
 
-Type          = TypeName | SliceType | ArrayType | PointerType | MapType .
+Type          = TypeName | SliceType | ArrayType | PointerType | MapType | FuncType .
 ArrayType     = "[" integer_lit "]" Type .
 SliceType     = "[" "]" Type .
 MapType       = "அகராதி" "[" Type "]" Type .
+FuncType      = "செயல்பாடு" "(" [ TypeList ] ")" [ Result ] .
 TypeName      = "முழுஎண்" | "நிலை" | "சரம்" | "மிதவைஎண்" | "இருமி8" | "இருமி32" | QualifiedName .
 QualifiedName = [ identifier "." ] identifier .
 PointerType   = "*" Type .
@@ -257,6 +258,13 @@ Comparable keys: floats, pointers, structs, arrays. See `constructs/map-keys.yam
 
 Unconstrained function type params `[யா, ஆ]`; `[]யா`; inference or
 `f[T](…)` / `f[T,U](…)`; exported via `கொணர்`. See `constructs/generics.yaml`.
+
+## Function values (Tamil-0.44)
+
+`செயல்பாடு(TypeList) [Result]` is a type. Bare `X.M` (method) and bare
+package function names are values; call through a function-typed
+expression. Receiver bind matches defer 0.43. No function literals.
+See `constructs/func-value.yaml`.
 
 ## Entry convention
 
