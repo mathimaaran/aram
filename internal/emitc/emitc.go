@@ -101,7 +101,8 @@ type emitter struct {
 	funcTramps   strings.Builder
 	funcTrampDone map[string]bool
 	funcCallDone  map[string]bool
-	structsDone  bool // full struct bodies already emitted (before []Struct helpers)
+	promoted      map[string]check.Type // arena-promoted locals in current frame
+	structsDone   bool                  // full struct bodies already emitted (before []Struct helpers)
 }
 
 func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
@@ -2155,11 +2156,19 @@ func (e *emitter) cFuncSig(fn *ast.FuncDecl) string {
 func (e *emitter) writeFunc(b *strings.Builder, fn *ast.FuncDecl) {
 	prev := e.curFn
 	prevDefer := e.fnHasDefer
+	prevPromo := e.promoted
 	e.curFn = fn
 	e.fnHasDefer = hasDeferInFunc(fn)
+	e.promoted = map[string]check.Type{}
+	if e.info != nil {
+		for name, t := range e.info.PromoteInFunc[fn] {
+			e.promoted[name] = t
+		}
+	}
 	defer func() {
 		e.curFn = prev
 		e.fnHasDefer = prevDefer
+		e.promoted = prevPromo
 	}()
 
 	for _, r := range fn.Results {
@@ -2179,8 +2188,25 @@ func (e *emitter) writeFunc(b *strings.Builder, fn *ast.FuncDecl) {
 		e.needDefer = true
 		e.needArena = true
 	}
+	if len(e.promoted) > 0 {
+		e.ensureFuncRuntime()
+	}
 	b.WriteString(e.cFuncSig(fn))
 	b.WriteString(" {\n")
+	// Arena-promote captured params / receiver.
+	if fn.Recv != nil && e.isPromoted(fn.Recv.Name.Name) {
+		ct := e.cTypeExpr(fn.Recv.Type)
+		fmt.Fprintf(b, "\t%s *%s = (%s *)aram_arena_alloc(sizeof(%s));\n", ct, e.capIdent(fn.Recv.Name.Name), ct, ct)
+		fmt.Fprintf(b, "\t*%s = %s;\n", e.capIdent(fn.Recv.Name.Name), cIdent(fn.Recv.Name.Name))
+	}
+	for _, p := range fn.Params {
+		if p.Name == nil || !e.isPromoted(p.Name.Name) {
+			continue
+		}
+		ct := e.cTypeExpr(p.Type)
+		fmt.Fprintf(b, "\t%s *%s = (%s *)aram_arena_alloc(sizeof(%s));\n", ct, e.capIdent(p.Name.Name), ct, ct)
+		fmt.Fprintf(b, "\t*%s = %s;\n", e.capIdent(p.Name.Name), cIdent(p.Name.Name))
+	}
 	for _, r := range fn.Results {
 		if r.Name == nil {
 			continue
@@ -2680,6 +2706,11 @@ func (e *emitter) writeShortVar(b *strings.Builder, s *ast.ShortVarDecl, level i
 			if name.Name == "_" {
 				continue
 			}
+			if e.isPromoted(name.Name) {
+				t := e.promoted[name.Name]
+				e.writePromoteAlloc(b, name.Name, t, fmt.Sprintf("%s.r%d", tmp, i), level)
+				continue
+			}
 			indent(b, level)
 			ct := e.cTypeFrom(elems[i])
 			if strings.HasPrefix(ct, "aram_slice_") {
@@ -2693,6 +2724,24 @@ func (e *emitter) writeShortVar(b *strings.Builder, s *ast.ShortVarDecl, level i
 		return
 	}
 	for i, name := range s.Names {
+		if name.Name == "_" {
+			continue
+		}
+		if e.isPromoted(name.Name) {
+			t := e.promoted[name.Name]
+			// Evaluate init into a temp then store.
+			tmp := fmt.Sprintf("_ci_%d", e.swID)
+			e.swID++
+			indent(b, level)
+			b.WriteString(e.inferCType(s.Values[i]))
+			b.WriteByte(' ')
+			b.WriteString(tmp)
+			b.WriteString(" = ")
+			e.writeExpr(b, s.Values[i])
+			b.WriteString(";\n")
+			e.writePromoteAlloc(b, name.Name, t, tmp, level)
+			continue
+		}
 		indent(b, level)
 		ct := e.inferCType(s.Values[i])
 		if strings.HasPrefix(ct, "aram_slice_") {
@@ -2919,6 +2968,25 @@ func (e *emitter) writeStmt(b *strings.Builder, s ast.Stmt, level int) {
 			e.needSlice = true
 		}
 		for i, name := range s.Names {
+			if e.isPromoted(name.Name) {
+				t := e.promoted[name.Name]
+				init := e.zeroInit(s.Type)
+				if i < len(s.Values) {
+					tmp := fmt.Sprintf("_ci_%d", e.swID)
+					e.swID++
+					indent(b, level)
+					b.WriteString(e.cTypeExpr(s.Type))
+					b.WriteByte(' ')
+					b.WriteString(tmp)
+					b.WriteString(" = ")
+					e.writeExpr(b, s.Values[i])
+					b.WriteString(";\n")
+					e.writePromoteAlloc(b, name.Name, t, tmp, level)
+				} else {
+					e.writePromoteAlloc(b, name.Name, t, init, level)
+				}
+				continue
+			}
 			indent(b, level)
 			b.WriteString(e.cTypeExpr(s.Type))
 			b.WriteByte(' ')
@@ -3535,6 +3603,10 @@ func (e *emitter) writeExpr(b *strings.Builder, expr ast.Expr) {
 				return
 			}
 		}
+		if e.isPromoted(expr.Name) {
+			e.writePromotedIdent(b, expr.Name)
+			return
+		}
 		b.WriteString(cIdent(expr.Name))
 	case *ast.BasicLit:
 		switch expr.Kind {
@@ -3561,6 +3633,12 @@ func (e *emitter) writeExpr(b *strings.Builder, expr ast.Expr) {
 		e.writeExpr(b, expr.X)
 		b.WriteByte(')')
 	case *ast.UnaryExpr:
+		if expr.Op == token.AND {
+			b.WriteByte('(')
+			e.writeAddrOf(b, expr.X)
+			b.WriteByte(')')
+			return
+		}
 		b.WriteByte('(')
 		switch expr.Op {
 		case token.SUB:
@@ -3569,8 +3647,6 @@ func (e *emitter) writeExpr(b *strings.Builder, expr ast.Expr) {
 			b.WriteByte('!')
 		case token.MUL:
 			b.WriteByte('*')
-		case token.AND:
-			b.WriteByte('&')
 		}
 		e.writeExpr(b, expr.X)
 		b.WriteByte(')')
@@ -3743,6 +3819,8 @@ func (e *emitter) writeExpr(b *strings.Builder, expr ast.Expr) {
 			b.WriteByte('.')
 		}
 		b.WriteString(cIdent(expr.Sel.Name))
+	case *ast.FuncLit:
+		e.writeFuncLit(b, expr)
 	default:
 		b.WriteString("/*expr*/0")
 	}
@@ -3828,8 +3906,7 @@ func (e *emitter) writeMethodCall(b *strings.Builder, call *ast.CallExpr, sel *a
 		if _, isPtr := e.info.PtrElem[xt]; isPtr {
 			e.writeExpr(b, sel.X)
 		} else {
-			b.WriteByte('&')
-			e.writeExpr(b, sel.X)
+			e.writeAddrOf(b, sel.X)
 		}
 	} else {
 		if _, isPtr := e.info.PtrElem[xt]; isPtr {

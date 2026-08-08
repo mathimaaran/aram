@@ -551,6 +551,17 @@ func (s *SelectorExpr) Pos() token.Pos {
 }
 func (s *SelectorExpr) exprNode() {}
 
+// FuncLit is செயல்பாடு(params) [results] { body } (Tamil-0.45).
+type FuncLit struct {
+	Func    token.Pos
+	Params  []*Field
+	Results []*Field
+	Body    *BlockStmt
+}
+
+func (f *FuncLit) Pos() token.Pos { return f.Func }
+func (f *FuncLit) exprNode()      {}
+
 // KeyValueExpr is key: value inside a composite literal.
 // Key is a field name (*Ident) for structs, or any expression for maps.
 type KeyValueExpr struct {

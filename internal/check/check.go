@@ -152,6 +152,22 @@ type PkgFuncValueInfo struct {
 	Results []Type
 }
 
+// CaptureVar is one free variable captured by a function literal.
+type CaptureVar struct {
+	Name string
+	Type Type
+}
+
+// ClosureInfo records a function literal for emit (Tamil-0.45).
+type ClosureInfo struct {
+	Lit      *ast.FuncLit
+	Params   []Type
+	Results  []Type
+	Captures []CaptureVar
+	capSeen  map[string]bool
+	ID       int
+}
+
 func isSlice(t Type) bool { return IsSlice(t) }
 
 func isStruct(t Type) bool {
@@ -243,6 +259,10 @@ type Info struct {
 	CallInst       map[*ast.CallExpr]*MonoInst
 	MethodValues   map[ast.Expr]*MethodValueInfo
 	PkgFuncValues  map[ast.Expr]*PkgFuncValueInfo
+	Closures       map[*ast.FuncLit]*ClosureInfo
+	// Locals/params that must be arena-promoted because a nested closure captures them.
+	PromoteInFunc map[*ast.FuncDecl]map[string]Type
+	PromoteInLit  map[*ast.FuncLit]map[string]Type
 }
 
 // MonoInst is one monomorphized instantiation of a generic function.
@@ -306,12 +326,17 @@ type scope struct {
 }
 
 func (s *scope) lookup(name string) (Type, bool) {
+	t, _, ok := s.lookupScope(name)
+	return t, ok
+}
+
+func (s *scope) lookupScope(name string) (Type, *scope, bool) {
 	for cur := s; cur != nil; cur = cur.parent {
 		if t, ok := cur.vars[name]; ok {
-			return t, true
+			return t, cur, true
 		}
 	}
-	return TypeInvalid, false
+	return TypeInvalid, nil, false
 }
 
 func (s *scope) declare(name string, t Type, pos token.Pos, errs *[]error) {
@@ -322,11 +347,20 @@ func (s *scope) declare(name string, t Type, pos token.Pos, errs *[]error) {
 	s.vars[name] = t
 }
 
+type litFrame struct {
+	lit  *ast.FuncLit
+	root *scope
+	info *ClosureInfo
+}
+
 // Checker holds check state.
 type Checker struct {
 	errs         []error
 	scope        *scope
 	curFn        *funcSig
+	enclosingFn  *ast.FuncDecl
+	litStack     []litFrame
+	nextClosure  int
 	loopDepth    int
 	info         *Info
 	nextNamed    Type
@@ -1169,6 +1203,8 @@ func (c *Checker) checkFunc(fn *ast.FuncDecl) {
 		sig = c.cur.funcs[fn.Name.Name]
 	}
 	c.curFn = sig
+	prevEncl := c.enclosingFn
+	c.enclosingFn = fn
 	prevEnv := c.typeParamEnv
 	if sig != nil && sig.generic() {
 		c.typeParamEnv = map[string]Type{}
@@ -1204,7 +1240,111 @@ func (c *Checker) checkFunc(fn *ast.FuncDecl) {
 	c.checkBlock(fn.Body)
 	c.pop()
 	c.typeParamEnv = prevEnv
+	c.enclosingFn = prevEncl
 	c.curFn = nil
+}
+
+func scopeContains(ancestor, s *scope) bool {
+	for cur := s; cur != nil; cur = cur.parent {
+		if cur == ancestor {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Checker) noteCapture(name string, t Type, declScope *scope) {
+	if t == TypeInvalid || t == TypeVoid || name == "_" {
+		return
+	}
+	for i := range c.litStack {
+		fr := &c.litStack[i]
+		if scopeContains(fr.root, declScope) {
+			continue // declared inside this lit
+		}
+		ci := fr.info
+		if ci.capSeen == nil {
+			ci.capSeen = map[string]bool{}
+		}
+		if ci.capSeen[name] {
+			continue
+		}
+		ci.capSeen[name] = true
+		ci.Captures = append(ci.Captures, CaptureVar{Name: name, Type: t})
+		// Promote in the declaring frame.
+		promoted := false
+		for j := len(c.litStack) - 1; j >= 0; j-- {
+			if scopeContains(c.litStack[j].root, declScope) {
+				lit := c.litStack[j].lit
+				if c.info.PromoteInLit[lit] == nil {
+					c.info.PromoteInLit[lit] = map[string]Type{}
+				}
+				c.info.PromoteInLit[lit][name] = t
+				promoted = true
+				break
+			}
+		}
+		if !promoted && c.enclosingFn != nil {
+			if c.info.PromoteInFunc[c.enclosingFn] == nil {
+				c.info.PromoteInFunc[c.enclosingFn] = map[string]Type{}
+			}
+			c.info.PromoteInFunc[c.enclosingFn][name] = t
+		}
+	}
+}
+
+func (c *Checker) checkFuncLit(e *ast.FuncLit) Type {
+	params := make([]Type, 0, len(e.Params))
+	for _, p := range e.Params {
+		if p.Name == nil {
+			c.error(p.Type.Pos(), "function literal parameters must be named")
+			params = append(params, TypeInvalid)
+			continue
+		}
+		t := c.typeFromExpr(p.Type)
+		if t == TypeInvalid || t == TypeVoid {
+			c.error(p.Type.Pos(), "invalid parameter type")
+		}
+		params = append(params, t)
+	}
+	results := c.typesFromResults(e.Results)
+	for i, r := range results {
+		if r == TypeInvalid {
+			c.error(e.Results[i].Type.Pos(), "invalid result type")
+		}
+	}
+	ft := c.funcOf(params, results)
+
+	ci := &ClosureInfo{
+		Lit: e, Params: params, Results: results,
+		capSeen: map[string]bool{}, ID: c.nextClosure,
+	}
+	c.nextClosure++
+	c.info.Closures[e] = ci
+
+	prevFn := c.curFn
+	c.curFn = &funcSig{params: params, results: results, decl: nil}
+	c.push()
+	root := c.scope
+	for i, p := range e.Params {
+		if p.Name == nil {
+			continue
+		}
+		c.scope.declare(p.Name.Name, params[i], p.Name.Pos(), &c.errs)
+	}
+	for _, r := range e.Results {
+		if r.Name == nil {
+			continue
+		}
+		t := c.typeFromExpr(r.Type)
+		c.scope.declare(r.Name.Name, t, r.Name.Pos(), &c.errs)
+	}
+	c.litStack = append(c.litStack, litFrame{lit: e, root: root, info: ci})
+	c.checkBlock(e.Body)
+	c.litStack = c.litStack[:len(c.litStack)-1]
+	c.pop()
+	c.curFn = prevFn
+	return ft
 }
 
 func (c *Checker) checkBlock(b *ast.BlockStmt) {
@@ -1704,8 +1844,13 @@ func (c *Checker) checkExpr(e ast.Expr) Type {
 	switch e := e.(type) {
 	case *ast.Ident:
 		var ok bool
-		t, ok = c.scope.lookup(e.Name)
-		if !ok {
+		var declScope *scope
+		t, declScope, ok = c.scope.lookupScope(e.Name)
+		if ok {
+			if len(c.litStack) > 0 {
+				c.noteCapture(e.Name, t, declScope)
+			}
+		} else {
 			if c.cur != nil {
 				if sig := c.cur.funcs[e.Name]; sig != nil {
 					if sig.generic() {
@@ -1792,6 +1937,8 @@ func (c *Checker) checkExpr(e ast.Expr) Type {
 		t = c.checkSliceExpr(e)
 	case *ast.SelectorExpr:
 		t = c.checkSelectorExpr(e)
+	case *ast.FuncLit:
+		t = c.checkFuncLit(e)
 	case *ast.KeyValueExpr:
 		c.error(e.Pos(), "keyed element outside composite literal")
 		t = TypeInvalid

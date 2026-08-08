@@ -63,6 +63,7 @@ func TestParseValidCorpus(t *testing.T) {
 			"சுட்டி.aram",
 			"முறை.aram",
 			"முறை_மதிப்பு.aram",
+			"மூடுகை.aram",
 		}
 	for _, name := range files {
 		t.Run(name, func(t *testing.T) {

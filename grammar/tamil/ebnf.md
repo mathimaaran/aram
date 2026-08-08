@@ -2,7 +2,7 @@
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
-Status: **Tamil-0.44** (2026-08-01) — function types and method values.
+Status: **Tamil-0.45** (2026-08-01) — function literals / closures.
 
 ```
 SourceFile    = PackageClause { ImportDecl } { TopLevelDecl } .
@@ -77,7 +77,8 @@ Primary    = Operand { IndexOrSlice | "." identifier | Arguments } .
 IndexOrSlice = "[" Expression "]" | "[" [ Expression ] ":" [ Expression ] "]" .
 Arguments  = "(" [ ExpressionList ] ")" .
 Operand    = identifier | integer_lit | string_lit | "மெய்" | "பொய்" | "இன்மை"
-           | CompositeLit | BuiltinCall | Call | "(" Expression ")" .
+           | CompositeLit | BuiltinCall | Call | FuncLit | "(" Expression ")" .
+FuncLit    = "செயல்பாடு" "(" [ ParameterList ] ")" [ Result ] Block .
 
 CompositeLit = ( SliceType | ArrayType | MapType | TypeName ) "{" [ LiteralElement { "," LiteralElement } ] "}" .
 LiteralElement = Expression | Expression ":" Expression .
@@ -265,6 +266,12 @@ Unconstrained function type params `[யா, ஆ]`; `[]யா`; inference or
 package function names are values; call through a function-typed
 expression. Receiver bind matches defer 0.43. No function literals.
 See `constructs/func-value.yaml`.
+
+## Closures (Tamil-0.45)
+
+`செயல்பாடு(params) [results] { body }` as an expression. Captures free
+variables by reference (arena-promoted locals in C). See
+`constructs/closure.yaml`.
 
 ## Entry convention
 

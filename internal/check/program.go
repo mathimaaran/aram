@@ -43,6 +43,9 @@ func CheckProgram(merged []*ast.File, entry string) (*ProgramInfo, []error) {
 		CallInst:      map[*ast.CallExpr]*MonoInst{},
 		MethodValues:  map[ast.Expr]*MethodValueInfo{},
 		PkgFuncValues: map[ast.Expr]*PkgFuncValueInfo{},
+		Closures:      map[*ast.FuncLit]*ClosureInfo{},
+		PromoteInFunc: map[*ast.FuncDecl]map[string]Type{},
+		PromoteInLit:  map[*ast.FuncLit]map[string]Type{},
 	}
 	c := &Checker{
 		scope:         &scope{vars: map[string]Type{}},

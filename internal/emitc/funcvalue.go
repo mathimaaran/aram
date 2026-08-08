@@ -201,8 +201,7 @@ func (e *emitter) writeMethodValue(b *strings.Builder, expr *ast.SelectorExpr, m
 	if mv.Method.RecvIsPtr {
 		fmt.Fprintf(b, "aram_bind_%s_ptr(", key)
 		if mv.TakeAddr {
-			b.WriteByte('&')
-			e.writeExpr(b, expr.X)
+			e.writeAddrOf(b, expr.X)
 		} else {
 			e.writeExpr(b, expr.X)
 		}
@@ -234,4 +233,186 @@ func (e *emitter) writeFuncValueCall(b *strings.Builder, call *ast.CallExpr, ft 
 		e.writeExpr(b, a)
 	}
 	b.WriteByte(')')
+}
+
+func (e *emitter) capIdent(name string) string {
+	return "_cap_" + cIdent(name)
+}
+
+func (e *emitter) isPromoted(name string) bool {
+	_, ok := e.promoted[name]
+	return ok
+}
+
+func (e *emitter) writeAddrOf(b *strings.Builder, expr ast.Expr) {
+	if id, ok := expr.(*ast.Ident); ok && e.isPromoted(id.Name) {
+		b.WriteString(e.capIdent(id.Name))
+		return
+	}
+	b.WriteByte('&')
+	e.writeExpr(b, expr)
+}
+
+func (e *emitter) writePromotedIdent(b *strings.Builder, name string) {
+	b.WriteString("(*")
+	b.WriteString(e.capIdent(name))
+	b.WriteString(")")
+}
+
+func (e *emitter) closureKey(ci *check.ClosureInfo) string {
+	return fmt.Sprintf("cl%d", ci.ID)
+}
+
+func (e *emitter) envStructName(ci *check.ClosureInfo) string {
+	return "aram_env_" + e.closureKey(ci)
+}
+
+func (e *emitter) ensureClosure(ci *check.ClosureInfo) {
+	if ci == nil || ci.Lit == nil {
+		return
+	}
+	e.ensureFuncRuntime()
+	key := e.closureKey(ci)
+	if e.funcTrampDone == nil {
+		e.funcTrampDone = map[string]bool{}
+	}
+	if e.funcTrampDone[key] {
+		return
+	}
+	e.funcTrampDone[key] = true
+
+	var tb strings.Builder
+	envName := e.envStructName(ci)
+	tramp := "aram_tramp_" + key
+	bind := "aram_bind_" + key
+
+	// Env struct
+	if len(ci.Captures) > 0 {
+		fmt.Fprintf(&tb, "typedef struct { ")
+		for i, cap := range ci.Captures {
+			fmt.Fprintf(&tb, "%s *c%d; ", e.cTypeFrom(cap.Type), i)
+		}
+		fmt.Fprintf(&tb, "} %s;\n", envName)
+	}
+
+	// Trampoline
+	e.writeFuncSigLine(&tb, "static ", tramp, ci.Results, true, ci.Params)
+	tb.WriteString(" {\n")
+	prevPromo := e.promoted
+	e.promoted = map[string]check.Type{}
+	if len(ci.Captures) == 0 {
+		tb.WriteString("\t(void)env;\n")
+	} else {
+		fmt.Fprintf(&tb, "\t%s *_e = (%s *)env;\n", envName, envName)
+		for i, cap := range ci.Captures {
+			fmt.Fprintf(&tb, "\t%s *%s = _e->c%d;\n", e.cTypeFrom(cap.Type), e.capIdent(cap.Name), i)
+			e.promoted[cap.Name] = cap.Type
+		}
+	}
+	if e.info != nil {
+		for name, t := range e.info.PromoteInLit[ci.Lit] {
+			e.promoted[name] = t
+		}
+	}
+	for i, p := range ci.Lit.Params {
+		if p.Name == nil {
+			continue
+		}
+		name := p.Name.Name
+		ct := e.cTypeFrom(ci.Params[i])
+		if e.isPromoted(name) && !captureHas(ci, name) {
+			fmt.Fprintf(&tb, "\t%s *%s = (%s *)aram_arena_alloc(sizeof(%s));\n", ct, e.capIdent(name), ct, ct)
+			fmt.Fprintf(&tb, "\t*%s = a%d;\n", e.capIdent(name), i)
+		} else if !captureHas(ci, name) {
+			fmt.Fprintf(&tb, "\t%s %s = a%d;\n", ct, cIdent(name), i)
+		}
+	}
+	prevFn := e.curFn
+	e.curFn = &ast.FuncDecl{Params: ci.Lit.Params, Results: ci.Lit.Results, Body: ci.Lit.Body}
+	prevDefer := e.fnHasDefer
+	e.fnHasDefer = hasDeferStmt(ci.Lit.Body)
+	if e.fnHasDefer {
+		e.needDefer = true
+		tb.WriteString("\taram_defer_frame *_defers = NULL;\n")
+	}
+	e.writeBlock(&tb, ci.Lit.Body, 1)
+	if e.fnHasDefer {
+		e.writeDeferEpilogue(&tb, e.curFn)
+	}
+	e.curFn = prevFn
+	e.fnHasDefer = prevDefer
+	e.promoted = prevPromo
+	tb.WriteString("}\n")
+
+	// Bind helper
+	fmt.Fprintf(&tb, "static aram_fn %s(", bind)
+	if len(ci.Captures) == 0 {
+		tb.WriteString("void")
+	} else {
+		for i, cap := range ci.Captures {
+			if i > 0 {
+				tb.WriteString(", ")
+			}
+			fmt.Fprintf(&tb, "%s *c%d", e.cTypeFrom(cap.Type), i)
+		}
+	}
+	tb.WriteString(") {\n\taram_fn f;\n")
+	fmt.Fprintf(&tb, "\tf.fn = (void *)%s;\n", tramp)
+	if len(ci.Captures) == 0 {
+		tb.WriteString("\tf.env = NULL;\n")
+	} else {
+		fmt.Fprintf(&tb, "\t%s *e = (%s *)aram_arena_alloc(sizeof(%s));\n", envName, envName, envName)
+		for i := range ci.Captures {
+			fmt.Fprintf(&tb, "\te->c%d = c%d;\n", i, i)
+		}
+		tb.WriteString("\tf.env = e;\n")
+	}
+	tb.WriteString("\treturn f;\n}\n")
+
+	e.funcTramps.WriteString(tb.String())
+}
+
+func captureHas(ci *check.ClosureInfo, name string) bool {
+	for _, c := range ci.Captures {
+		if c.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *emitter) writeFuncLit(b *strings.Builder, lit *ast.FuncLit) {
+	if e.info == nil {
+		b.WriteString("/*bad func lit*/(aram_fn){0}")
+		return
+	}
+	ci := e.info.Closures[lit]
+	if ci == nil {
+		b.WriteString("/*bad func lit*/(aram_fn){0}")
+		return
+	}
+	e.ensureClosure(ci)
+	fmt.Fprintf(b, "aram_bind_%s(", e.closureKey(ci))
+	for i, cap := range ci.Captures {
+		if i > 0 {
+			b.WriteString(", ")
+		}
+		if e.isPromoted(cap.Name) {
+			b.WriteString(e.capIdent(cap.Name))
+		} else {
+			// Should have been promoted; take address of stack local as fallback.
+			b.WriteByte('&')
+			b.WriteString(cIdent(cap.Name))
+		}
+	}
+	b.WriteByte(')')
+}
+
+func (e *emitter) writePromoteAlloc(b *strings.Builder, name string, t check.Type, init string, level int) {
+	e.ensureFuncRuntime()
+	ct := e.cTypeFrom(t)
+	indent(b, level)
+	fmt.Fprintf(b, "%s *%s = (%s *)aram_arena_alloc(sizeof(%s));\n", ct, e.capIdent(name), ct, ct)
+	indent(b, level)
+	fmt.Fprintf(b, "*%s = %s;\n", e.capIdent(name), init)
 }

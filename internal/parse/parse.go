@@ -1111,6 +1111,8 @@ func (p *Parser) parseOperand() ast.Expr {
 		p.skipNewlineSemi()
 		rparen := p.expect(token.RPAREN)
 		return &ast.ParenExpr{Lparen: lparen, X: x, Rparen: rparen.Pos}
+	case token.FUNC:
+		return p.parsePrimarySuffix(p.parseFuncLit())
 	default:
 		p.errorExpected(fmt.Sprintf("expected expression, got %s", p.tok.Kind))
 		tok := p.tok
@@ -1119,6 +1121,21 @@ func (p *Parser) parseOperand() ast.Expr {
 		}
 		return &ast.Ident{NamePos: tok.Pos, Name: "?"}
 	}
+}
+
+// parseFuncLit parses செயல்பாடு "(" [ ParameterList ] ")" [ Result ] Block .
+func (p *Parser) parseFuncLit() *ast.FuncLit {
+	pos := p.expect(token.FUNC).Pos
+	p.expect(token.LPAREN)
+	var params []*ast.Field
+	if p.tok.Kind != token.RPAREN && p.tok.Kind != token.SEMICOLON {
+		params = p.parseParameterList()
+	}
+	p.skipNewlineSemi()
+	p.expect(token.RPAREN)
+	results := p.parseResultTypes()
+	body := p.parseBlock()
+	return &ast.FuncLit{Func: pos, Params: params, Results: results, Body: body}
 }
 
 func (p *Parser) parseCompositeLit(typ ast.TypeExpr) *ast.CompositeLit {

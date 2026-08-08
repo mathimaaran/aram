@@ -77,6 +77,7 @@ Out of scope for Tamil-0:
 - [x] Bare zero-arg `தள்ளிவை` sugar
 - [x] Defer method bind (pointer `&x` capture)
 - [x] Function types + method / package function values
+- [x] Function literals / closures (capture by reference)
 
 ## Later growth
 

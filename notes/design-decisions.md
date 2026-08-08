@@ -304,6 +304,13 @@ method values / package function values. Receiver bind for method
 values matches 0.43 defer. No function literals, method expressions, or
 interfaces. See `constructs/func-value.yaml`.
 
+## Tamil-0.45 (2026-08-01)
+
+Function literals / closures: `செயல்பாடு(params) [results] { body }` as
+expressions. Free variables captured by reference (Go-like); C arena
+promotes captured locals. Builds on 0.44 `aram_fn`. See
+`constructs/closure.yaml`.
+
 ## Priority (2026-08-01)
 
 Harden the language (other gaps) **before** starting the NASM x86-64

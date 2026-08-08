@@ -1,0 +1,31 @@
+id: closure
+status: codegen
+subset: Tamil-0.45
+go_inspired: |
+  f := func() { n++ }
+  g := func(x int) int { return x + n }
+tamil_keywords:
+  func: செயல்பாடு  # expression; no new keyword
+tamil_ebnf: |
+  FuncLit = "செயல்பாடு" "(" [ ParameterList ] ")" [ Result ] Block .
+  Operand = … | FuncLit .
+semantics: >
+  Function literals yield function values (aram_fn). Free variables from
+  enclosing scopes are captured by reference (Go-like): mutations inside
+  the closure are visible outside. Captured locals are arena-promoted in
+  C. Nested literals allowed. Loop variables captured as classic Go
+  (one var per loop, not per iteration).
+examples:
+  - tamil: |
+      ந := 0
+      அதிகரி := செயல்பாடு() { ந = ந + 1 }
+      அதிகரி()
+      பதிப்பி(ந)
+    go_equivalent: |
+      n := 0
+      inc := func() { n++ }
+      inc()
+      println(n)
+notes:
+  - "Builds on Tamil-0.44 function types / aram_fn."
+  - "Method expressions and interfaces still later."

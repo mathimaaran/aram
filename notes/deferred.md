@@ -13,7 +13,7 @@ Update when a subset ships (strike or move items) or when a construct card recor
 | Interfaces | Only if earned | method.yaml |
 | Generic types / constraints | After interfaces earn a place | generics.yaml |
 
-Shipped: 0.11–0.44 (through method / function values).
+Shipped: 0.11–0.45 (through closures).
 
 ## Struct & types
 
@@ -28,7 +28,7 @@ Shipped: 0.11–0.44 (through method / function values).
 | ~~bare zero-arg defer~~ | Tamil-0.42 | defer.yaml |
 | ~~defer method bind (`&x`)~~ | Tamil-0.43 | defer.yaml |
 | ~~first-class method / function values~~ | Tamil-0.44 | func-value.yaml |
-| defer closures / function literals | still later | defer.yaml |
+| ~~function literals / closures~~ | Tamil-0.45 | closure.yaml |
 
 ## Packages, runtime, backends
 
