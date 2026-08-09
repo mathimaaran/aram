@@ -91,12 +91,15 @@ type emitter struct {
 	needMap     bool
 	needDefer   bool
 	needFunc    bool // function values (Tamil-0.44)
+	needChan    bool // channels (Tamil-0.48)
+	needGo      bool // இழை (Tamil-0.48)
 	needArena   bool
 	needUTF8    bool
 	needRuneStr  bool // சரம்(rune) conversion helper
 	needStrBytes bool // சரம் ↔ []இருமி8 / []இருமி32 helpers
 	swID         int  // unique temps for திசைவி
 	deferID      int  // unique deferred-call thunk ids
+	goID         int  // unique temps for இழை / select / send
 	deferThunks  strings.Builder
 	funcTramps   strings.Builder
 	funcTrampDone map[string]bool
@@ -164,8 +167,9 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 	if e.info != nil && len(e.info.Funcs) > 0 {
 		e.needFunc = true
 	}
+	e.markChanNeeds()
 	e.writeFuncTypedef(&b)
-	if e.needArena || e.needConcat || e.needAppend || e.needSlice || e.needMake || e.needRuneStr || e.needStrBytes || e.needMap || e.needDefer || e.needFunc {
+	if e.needArena || e.needConcat || e.needAppend || e.needSlice || e.needMake || e.needRuneStr || e.needStrBytes || e.needMap || e.needDefer || e.needFunc || e.needChan || e.needGo {
 		e.needArena = true
 		b.WriteString("static unsigned char *aram_arena_buf;\n")
 		b.WriteString("static size_t aram_arena_len, aram_arena_cap;\n")
@@ -186,6 +190,7 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 		b.WriteString("\taram_arena_buf = 0; aram_arena_len = aram_arena_cap = 0;\n")
 		b.WriteString("}\n")
 	}
+	e.writeChanRuntime(&b)
 	if e.needConcat {
 		e.needArena = true
 		b.WriteString("static const char *aram_concat(const char *a, const char *b) {\n")
@@ -499,7 +504,7 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 		b.WriteString(e.deferThunks.String())
 		b.WriteByte('\n')
 	}
-	if e.needFunc && e.funcTramps.Len() > 0 {
+	if (e.needFunc || e.needGo) && e.funcTramps.Len() > 0 {
 		b.WriteString(e.funcTramps.String())
 		b.WriteByte('\n')
 	}
@@ -509,6 +514,9 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 	b.WriteString("\t")
 	b.WriteString(cPkgIdent(e.entry, "தொடக்கம்"))
 	b.WriteString("();\n")
+	if e.needGo {
+		b.WriteString("\taram_go_wait_all();\n")
+	}
 	if e.needArena {
 		b.WriteString("\taram_arena_free();\n")
 	}
@@ -1484,6 +1492,10 @@ func (e *emitter) cTypeFrom(t check.Type) string {
 		e.needFunc = true
 		return "aram_fn"
 	}
+	if check.IsChan(t) {
+		e.needChan = true
+		return "aram_chan *"
+	}
 	if check.IsTuple(t) && e.info != nil {
 		if elems, ok := e.info.TupleElems[t]; ok {
 			return e.retCName(elems)
@@ -1555,7 +1567,7 @@ func (e *emitter) zeroInit(te ast.TypeExpr) string {
 		return "0"
 	case *ast.SliceType, *ast.ArrayType, *ast.FuncType, *ast.MapType:
 		return "{0}"
-	case *ast.PointerType:
+	case *ast.PointerType, *ast.ChanType:
 		return "NULL"
 	default:
 		return "0"
@@ -3013,6 +3025,12 @@ func (e *emitter) writeStmt(b *strings.Builder, s ast.Stmt, level int) {
 		e.writeReturn(b, s, level)
 	case *ast.DeferStmt:
 		e.writeDefer(b, s, level)
+	case *ast.GoStmt:
+		e.writeGoStmt(b, s, level)
+	case *ast.SendStmt:
+		e.writeSend(b, s, level)
+	case *ast.SelectStmt:
+		e.writeSelect(b, s, level)
 	case *ast.IfStmt:
 		e.writeIf(b, s, level)
 	case *ast.SwitchStmt:
@@ -3689,6 +3707,10 @@ func (e *emitter) writeExpr(b *strings.Builder, expr ast.Expr) {
 			b.WriteByte(')')
 			return
 		}
+		if expr.Op == token.ARROW {
+			e.writeRecvExpr(b, expr)
+			return
+		}
 		b.WriteByte('(')
 		switch expr.Op {
 		case token.SUB:
@@ -3743,6 +3765,13 @@ func (e *emitter) writeExpr(b *strings.Builder, expr ast.Expr) {
 				e.writeExpr(b, expr.Args[0])
 				b.WriteString(", ")
 				e.writeExpr(b, expr.Args[1])
+				b.WriteByte(')')
+				return
+			}
+			if id != nil && id.Name == "மூடு" {
+				e.needChan = true
+				b.WriteString("aram_chan_close(")
+				e.writeExpr(b, expr.Args[0])
 				b.WriteByte(')')
 				return
 			}
@@ -3979,7 +4008,7 @@ func (e *emitter) writeMethodCall(b *strings.Builder, call *ast.CallExpr, sel *a
 
 func (e *emitter) writeMake(b *strings.Builder, call *ast.CallExpr) {
 	st := e.typeOf(call)
-	if !check.IsSlice(st) && !check.IsMap(st) && call.TypeArg != nil {
+	if !check.IsSlice(st) && !check.IsMap(st) && !check.IsChan(st) && call.TypeArg != nil {
 		st = e.resolveTypeExpr(call.TypeArg)
 	}
 	if check.IsMap(st) {
@@ -3987,6 +4016,18 @@ func (e *emitter) writeMake(b *strings.Builder, call *ast.CallExpr) {
 		e.needArena = true
 		b.WriteString(e.mapMakeName(st))
 		b.WriteByte('(')
+		if len(call.Args) >= 1 {
+			e.writeExpr(b, call.Args[0])
+		} else {
+			b.WriteString("0")
+		}
+		b.WriteByte(')')
+		return
+	}
+	if check.IsChan(st) {
+		e.needChan = true
+		ci := e.info.Chans[st]
+		fmt.Fprintf(b, "aram_chan_make((int)sizeof(%s), ", e.cTypeFrom(ci.Elem))
 		if len(call.Args) >= 1 {
 			e.writeExpr(b, call.Args[0])
 		} else {

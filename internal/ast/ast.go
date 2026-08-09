@@ -154,6 +154,24 @@ type MapType struct {
 func (t *MapType) Pos() token.Pos { return t.TokPos }
 func (t *MapType) typeExpr()      {}
 
+// ChanDir is the channel direction (Go-like).
+type ChanDir int
+
+const (
+	SEND ChanDir = 1 << iota
+	RECV
+)
+
+// ChanType is தடம் T, தடம்<- T, or <-தடம் T.
+type ChanType struct {
+	Begin token.Pos // CHAN or ARROW
+	Dir   ChanDir   // 0 = bidirectional; SEND; RECV
+	Elem  TypeExpr
+}
+
+func (t *ChanType) Pos() token.Pos { return t.Begin }
+func (t *ChanType) typeExpr()      {}
+
 // FuncType is செயல்பாடு(TypeList) [Result] (function type; Tamil-0.44).
 type FuncType struct {
 	Func    token.Pos
@@ -191,6 +209,15 @@ func TypeString(t TypeExpr) string {
 		return "*" + TypeString(t.Elem)
 	case *MapType:
 		return "அகராதி[" + TypeString(t.Key) + "]" + TypeString(t.Elem)
+	case *ChanType:
+		switch t.Dir {
+		case SEND:
+			return "தடம்<-" + TypeString(t.Elem)
+		case RECV:
+			return "<-தடம்" + TypeString(t.Elem)
+		default:
+			return "தடம் " + TypeString(t.Elem)
+		}
 	case *FuncType:
 		s := "செயல்பாடு("
 		for i, p := range t.Params {
@@ -345,6 +372,50 @@ type DeferStmt struct {
 
 func (s *DeferStmt) Pos() token.Pos { return s.TokPos }
 func (s *DeferStmt) stmtNode()      {}
+
+// GoStmt is இழை CallExpr.
+type GoStmt struct {
+	TokPos token.Pos
+	Call   *CallExpr
+}
+
+func (s *GoStmt) Pos() token.Pos { return s.TokPos }
+func (s *GoStmt) stmtNode()      {}
+
+// SendStmt is Chan <- Value.
+type SendStmt struct {
+	Chan  Expr
+	Arrow token.Pos
+	Value Expr
+}
+
+func (s *SendStmt) Pos() token.Pos {
+	if s.Chan != nil {
+		return s.Chan.Pos()
+	}
+	return s.Arrow
+}
+func (s *SendStmt) stmtNode() {}
+
+// SelectStmt is தடத்தேர்வு { CommClause… }.
+type SelectStmt struct {
+	TokPos token.Pos
+	Body   []*CommClause
+}
+
+func (s *SelectStmt) Pos() token.Pos { return s.TokPos }
+func (s *SelectStmt) stmtNode()      {}
+
+// CommClause is எனில் Comm Block or மற்றபடி Block (inside தடத்தேர்வு).
+// Comm is SendStmt, UnaryExpr{ARROW, …} recv, or Assign/ShortVar of recv.
+type CommClause struct {
+	TokPos  token.Pos
+	Comm    Stmt // nil when Default; else SendStmt, AssignStmt, ShortVarDecl, or ExprStmt(recv)
+	Body    *BlockStmt
+	Default bool
+}
+
+func (c *CommClause) Pos() token.Pos { return c.TokPos }
 
 // AssignStmt is LHS = Value, or LHS0, LHS1, … = call (multi-assign unpack).
 type AssignStmt struct {

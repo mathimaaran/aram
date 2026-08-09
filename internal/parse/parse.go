@@ -46,14 +46,23 @@ func (p *Parser) errorExpected(msg string) {
 	p.errs = append(p.errs, Error{Pos: p.tok.Pos, Msg: msg})
 }
 
+// advancePastError consumes one token after a syntax error, unless we are
+// already at a sync point. Required inside '{'…'}' loops: returning without
+// progress spins forever and grows unbounded AST lists.
+func (p *Parser) advancePastError() {
+	switch p.tok.Kind {
+	case token.EOF, token.RBRACE, token.RPAREN, token.RBRACK, token.SEMICOLON:
+		return
+	default:
+		p.next()
+	}
+}
+
 func (p *Parser) expect(k token.Kind) token.Token {
 	tok := p.tok
 	if tok.Kind != k {
 		p.errorExpected(fmt.Sprintf("expected %s, got %s", k, tok.Kind))
-		// advance if not EOF to reduce cascading errors
-		if p.tok.Kind != token.EOF {
-			p.next()
-		}
+		p.advancePastError()
 		return tok
 	}
 	p.next()
@@ -154,7 +163,7 @@ func (p *Parser) parseIdent() *ast.Ident {
 	tok := p.tok
 	if tok.Kind != token.IDENT {
 		p.errorExpected(fmt.Sprintf("expected identifier, got %s", tok.Kind))
-		p.next()
+		p.advancePastError()
 		return &ast.Ident{NamePos: tok.Pos, Name: "_"}
 	}
 	p.next()
@@ -166,6 +175,22 @@ func (p *Parser) parseType() ast.TypeExpr {
 		star := p.tok.Pos
 		p.next()
 		return &ast.PointerType{Star: star, Elem: p.parseType()}
+	}
+	if p.tok.Kind == token.ARROW {
+		begin := p.tok.Pos
+		p.next()
+		p.expect(token.CHAN)
+		return &ast.ChanType{Begin: begin, Dir: ast.RECV, Elem: p.parseType()}
+	}
+	if p.tok.Kind == token.CHAN {
+		begin := p.tok.Pos
+		p.next()
+		dir := ast.ChanDir(0)
+		if p.tok.Kind == token.ARROW {
+			p.next()
+			dir = ast.SEND
+		}
+		return &ast.ChanType{Begin: begin, Dir: dir, Elem: p.parseType()}
 	}
 	if p.tok.Kind == token.FUNC {
 		return p.parseFuncType()
@@ -215,6 +240,7 @@ func (p *Parser) parseType() ast.TypeExpr {
 		return &ast.TypeName{TokPos: id.NamePos, Name: id.Name}
 	default:
 		p.errorExpected(fmt.Sprintf("expected type, got %s", tok.Kind))
+		p.advancePastError()
 		return &ast.TypeName{TokPos: tok.Pos, Name: "?"}
 	}
 }
@@ -223,7 +249,7 @@ func startsType(k token.Kind) bool {
 	switch k {
 	case token.TYPE_INT, token.TYPE_BOOL, token.TYPE_STRING, token.TYPE_FLOAT,
 		token.TYPE_BYTE, token.TYPE_RUNE,
-		token.LBRACK, token.IDENT, token.MUL, token.MAP, token.FUNC:
+		token.LBRACK, token.IDENT, token.MUL, token.MAP, token.FUNC, token.CHAN, token.ARROW:
 		return true
 	default:
 		return false
@@ -310,6 +336,7 @@ func (p *Parser) parseTypeDecl(exported bool, exportPos token.Pos) *ast.TypeDecl
 		}
 	}
 	p.errorExpected("expected அமைப்பு, type, or '=' after வகை name")
+	p.advancePastError()
 	return &ast.TypeDecl{TokPos: pos, Exported: exported, Name: name, Type: &ast.TypeName{TokPos: p.tok.Pos, Name: "?"}}
 }
 
@@ -498,6 +525,10 @@ func (p *Parser) parseStmt() ast.Stmt {
 		return p.parseReturnStmt()
 	case token.DEFER:
 		return p.parseDeferStmt()
+	case token.GO:
+		return p.parseGoStmt()
+	case token.SELECT:
+		return p.parseSelectStmt()
 	case token.LBRACE:
 		return p.parseBlock()
 	default:
@@ -702,6 +733,7 @@ func (p *Parser) parseCaseClause() *ast.CaseClause {
 		return &ast.CaseClause{TokPos: pos, List: list, Body: p.parseBlock()}
 	default:
 		p.errorExpected("expected எனில் or மற்றபடி in திசைவி")
+		p.advancePastError()
 		return &ast.CaseClause{TokPos: pos, Body: &ast.BlockStmt{}}
 	}
 }
@@ -748,14 +780,129 @@ func (p *Parser) parseDeferStmt() *ast.DeferStmt {
 	}
 }
 
+func (p *Parser) parseGoStmt() *ast.GoStmt {
+	pos := p.tok.Pos
+	p.expect(token.GO)
+	x := p.parseExpr()
+	call, ok := x.(*ast.CallExpr)
+	if !ok {
+		p.errorExpected("இழை requires a function call")
+		return &ast.GoStmt{TokPos: pos}
+	}
+	return &ast.GoStmt{TokPos: pos, Call: call}
+}
+
+func (p *Parser) parseSelectStmt() *ast.SelectStmt {
+	pos := p.tok.Pos
+	p.expect(token.SELECT)
+	p.expect(token.LBRACE)
+	var body []*ast.CommClause
+	for p.tok.Kind != token.RBRACE && p.tok.Kind != token.EOF {
+		p.skipSemis()
+		if p.tok.Kind == token.RBRACE || p.tok.Kind == token.EOF {
+			break
+		}
+		body = append(body, p.parseCommClause())
+		p.skipSemis()
+	}
+	p.expect(token.RBRACE)
+	return &ast.SelectStmt{TokPos: pos, Body: body}
+}
+
+func (p *Parser) parseCommClause() *ast.CommClause {
+	pos := p.tok.Pos
+	switch p.tok.Kind {
+	case token.DEFAULT:
+		p.next()
+		return &ast.CommClause{TokPos: pos, Default: true, Body: p.parseBlock()}
+	case token.IF: // எனில் — same keyword as திசைவி cases / if
+		p.next()
+		// '{' after the comm starts the clause body — never a composite literal
+		// (e.g. எனில் ம := <-ச { ... }).
+		old := p.compositeOK
+		p.compositeOK = false
+		comm := p.parseSelectComm()
+		p.compositeOK = old
+		return &ast.CommClause{TokPos: pos, Comm: comm, Body: p.parseBlock()}
+	default:
+		p.errorExpected("expected எனில் or மற்றபடி in தடத்தேர்வு")
+		p.advancePastError()
+		return &ast.CommClause{TokPos: pos, Body: &ast.BlockStmt{}}
+	}
+}
+
+// parseSelectComm is parseSimpleStmt without composite-literal '{' (body follows).
+func (p *Parser) parseSelectComm() ast.Stmt {
+	if p.tok.Kind == token.IDENT {
+		first := p.parseIdent()
+		if p.tok.Kind == token.COMMA {
+			names := []*ast.Ident{first}
+			for p.tok.Kind == token.COMMA {
+				p.next()
+				names = append(names, p.parseIdent())
+			}
+			switch p.tok.Kind {
+			case token.DEFINE:
+				p.next()
+				return &ast.ShortVarDecl{Names: names, Values: p.parseExprList()}
+			case token.ASSIGN:
+				p.next()
+				lhs := make([]ast.Expr, len(names))
+				for i, n := range names {
+					lhs[i] = n
+				}
+				return &ast.AssignStmt{LHS: lhs, Values: p.parseExprList()}
+			default:
+				p.errorExpected("expected := or = after identifier list")
+				return &ast.ShortVarDecl{Names: names, Values: p.parseExprList()}
+			}
+		}
+		x := p.parseOperandFromIdent(first)
+		switch p.tok.Kind {
+		case token.DEFINE:
+			id, ok := x.(*ast.Ident)
+			if !ok {
+				p.errorExpected(":= requires identifier on the left")
+				p.next()
+				return &ast.ShortVarDecl{Names: []*ast.Ident{first}, Values: nil}
+			}
+			p.next()
+			return &ast.ShortVarDecl{Names: []*ast.Ident{id}, Values: p.parseExprList()}
+		case token.ASSIGN:
+			p.next()
+			return &ast.AssignStmt{LHS: []ast.Expr{x}, Values: []ast.Expr{p.parseExpr()}}
+		case token.ARROW:
+			arrow := p.tok.Pos
+			p.next()
+			return &ast.SendStmt{Chan: p.finishExpr(x), Arrow: arrow, Value: p.parseExpr()}
+		default:
+			return &ast.ExprStmt{X: p.finishExpr(x)}
+		}
+	}
+	if startsExpr(p.tok.Kind) {
+		x := p.parseExpr()
+		if p.tok.Kind == token.ASSIGN {
+			p.next()
+			return &ast.AssignStmt{LHS: []ast.Expr{x}, Values: []ast.Expr{p.parseExpr()}}
+		}
+		if p.tok.Kind == token.ARROW {
+			arrow := p.tok.Pos
+			p.next()
+			return &ast.SendStmt{Chan: x, Arrow: arrow, Value: p.parseExpr()}
+		}
+		return &ast.ExprStmt{X: x}
+	}
+	return &ast.ExprStmt{X: p.parseExpr()}
+}
+
 func startsExpr(k token.Kind) bool {
 	switch k {
 	case token.IDENT, token.INT, token.FLOAT, token.STRING, token.TRUE, token.FALSE, token.NIL,
 		token.TYPE_INT, token.TYPE_BOOL, token.TYPE_STRING, token.TYPE_FLOAT,
 		token.TYPE_BYTE, token.TYPE_RUNE,
-		token.PRINT, token.LEN, token.APPEND, token.MAKE, token.COPY, token.CAP, token.DELETE,
-		token.LPAREN, token.LBRACK, token.MAP,
-		token.SUB, token.NOT, token.MUL, token.AND:
+		token.PRINT, token.LEN, token.APPEND, token.MAKE, token.COPY, token.CAP, token.DELETE, token.CLOSE,
+		token.LPAREN, token.LBRACK, token.MAP, token.CHAN,
+		token.SUB, token.NOT, token.MUL, token.AND, token.ARROW:
 		return true
 	default:
 		return false
@@ -804,6 +951,10 @@ func (p *Parser) parseSimpleStmt() ast.Stmt {
 		case token.ASSIGN:
 			p.next()
 			return &ast.AssignStmt{LHS: []ast.Expr{x}, Values: []ast.Expr{p.parseExprAllowComposite()}}
+		case token.ARROW:
+			arrow := p.tok.Pos
+			p.next()
+			return &ast.SendStmt{Chan: p.finishExpr(x), Arrow: arrow, Value: p.parseExpr()}
 		default:
 			return &ast.ExprStmt{X: p.finishExpr(x)}
 		}
@@ -813,6 +964,11 @@ func (p *Parser) parseSimpleStmt() ast.Stmt {
 		if p.tok.Kind == token.ASSIGN {
 			p.next()
 			return &ast.AssignStmt{LHS: []ast.Expr{x}, Values: []ast.Expr{p.parseExprAllowComposite()}}
+		}
+		if p.tok.Kind == token.ARROW {
+			arrow := p.tok.Pos
+			p.next()
+			return &ast.SendStmt{Chan: x, Arrow: arrow, Value: p.parseExpr()}
 		}
 		return &ast.ExprStmt{X: x}
 	}
@@ -933,7 +1089,7 @@ func (p *Parser) parseFactorLeft(x ast.Expr) ast.Expr {
 
 func (p *Parser) parseUnary() ast.Expr {
 	switch p.tok.Kind {
-	case token.SUB, token.NOT, token.MUL, token.AND:
+	case token.SUB, token.NOT, token.MUL, token.AND, token.ARROW:
 		op := p.tok
 		p.next()
 		return &ast.UnaryExpr{OpPos: op.Pos, Op: op.Kind, X: p.parseUnary()}
@@ -1063,6 +1219,13 @@ func (p *Parser) parseOperand() ast.Expr {
 		pos := p.tok.Pos
 		p.next()
 		id := &ast.Ident{NamePos: pos, Name: "நீக்கு"}
+		call := p.parseCall(id, false)
+		call.Builtin = true
+		return call
+	case token.CLOSE:
+		pos := p.tok.Pos
+		p.next()
+		id := &ast.Ident{NamePos: pos, Name: "மூடு"}
 		call := p.parseCall(id, false)
 		call.Builtin = true
 		return call

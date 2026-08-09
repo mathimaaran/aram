@@ -381,6 +381,10 @@ func (l *Lexer) Next() token.Token {
 			return l.finish(token.Token{Kind: token.COLON, Lit: ":", Pos: start})
 		case '<':
 			l.next()
+			if l.peek() == '-' {
+				l.next()
+				return l.finish(token.Token{Kind: token.ARROW, Lit: "<-", Pos: start})
+			}
 			if l.peek() == '=' {
 				l.next()
 				return l.finish(token.Token{Kind: token.LEQ, Lit: "<=", Pos: start})

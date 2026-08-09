@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 
 	"aram/internal/ast"
 	"aram/internal/parse"
@@ -66,6 +67,8 @@ func TestParseValidCorpus(t *testing.T) {
 			"முறை_வெளிப்பாடு.aram",
 			"மூடுகை.aram",
 			"சுழல்_மூடுகை.aram",
+			"இழை.aram",
+			"தடத்தேர்வு.aram",
 		}
 	for _, name := range files {
 		t.Run(name, func(t *testing.T) {
@@ -140,5 +143,102 @@ func TestParseInvalidIncompleteAssign(t *testing.T) {
 	_, errs := parse.ParseFile(path, string(src))
 	if len(errs) == 0 {
 		t.Fatal("expected parse errors for incomplete assignment")
+	}
+}
+
+func TestParseSelectCorpus(t *testing.T) {
+	f := mustParse(t, corpus(t, "தடத்தேர்வு.aram"))
+	if len(f.Decls) == 0 {
+		t.Fatal("expected decls")
+	}
+}
+
+func parseWithTimeout(t *testing.T, path, src string) []error {
+	t.Helper()
+	done := make(chan []error, 1)
+	go func() {
+		_, errs := parse.ParseFile(path, src)
+		done <- errs
+	}()
+	select {
+	case errs := <-done:
+		return errs
+	case <-time.After(2 * time.Second):
+		t.Fatalf("parse hung: %s", path)
+		return nil
+	}
+}
+
+// Invalid select/switch/struct snippets must finish quickly (error ⇒ progress).
+func TestParseMustTerminateInvalid(t *testing.T) {
+	names := []string{
+		"தடத்தேர்வு_பிரிவு.aram",
+		"தடத்தேர்வு_முழுமையற்ற.aram",
+		"தடத்தேர்வு_வெற்று.aram",
+		"திசைவி_பிரிவு.aram",
+		"திசைவி_முழுமையற்ற.aram",
+		"இழை_அழைப்பு_இல்லை.aram",
+		"அமைப்பு_பிரிவு.aram",
+	}
+	for _, name := range names {
+		t.Run(name, func(t *testing.T) {
+			path := corpus(t, "invalid", name)
+			src, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			errs := parseWithTimeout(t, path, string(src))
+			if len(errs) == 0 {
+				t.Fatal("expected parse errors")
+			}
+		})
+	}
+}
+
+func TestParseMustTerminateInline(t *testing.T) {
+	cases := []struct {
+		name string
+		src  string
+	}{
+		{
+			name: "select_garbage",
+			src: `தொகுப்பு தொடக்கம்
+செயல்பாடு தொடக்கம்() {
+    தடத்தேர்வு { x }
+}
+`,
+		},
+		{
+			name: "switch_garbage",
+			src: `தொகுப்பு தொடக்கம்
+செயல்பாடு தொடக்கம்() {
+    திசைவி 1 { x }
+}
+`,
+		},
+		{
+			name: "select_only_default_ok_shape",
+			src: `தொகுப்பு தொடக்கம்
+செயல்பாடு தொடக்கம்() {
+    தடத்தேர்வு {
+        மற்றபடி { பதிப்பி(1) }
+    }
+}
+`,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			errs := parseWithTimeout(t, tc.name+".aram", tc.src)
+			if tc.name == "select_only_default_ok_shape" {
+				if len(errs) != 0 {
+					t.Fatalf("unexpected parse errors: %v", errs)
+				}
+				return
+			}
+			if len(errs) == 0 {
+				t.Fatal("expected parse errors")
+			}
+		})
 	}
 }

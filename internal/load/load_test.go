@@ -64,7 +64,7 @@ func TestMultiFileProgram(t *testing.T) {
 	if err := os.WriteFile(cFile, []byte(cSrc), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if out, err := exec.Command(cc, "-std=c11", "-O0", cFile, "-o", bin).CombinedOutput(); err != nil {
+	if out, err := exec.Command(cc, "-std=c11", "-O0", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
 		t.Fatalf("cc: %v\n%s\n%s", err, out, cSrc)
 	}
 	got, err := exec.Command(bin).CombinedOutput()
@@ -111,7 +111,7 @@ func TestImportProgram(t *testing.T) {
 	if err := os.WriteFile(cFile, []byte(cSrc), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if out, err := exec.Command(cc, "-std=c11", "-O0", cFile, "-o", bin).CombinedOutput(); err != nil {
+	if out, err := exec.Command(cc, "-std=c11", "-O0", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
 		t.Fatalf("cc: %v\n%s\n%s", err, out, cSrc)
 	}
 	got, err := exec.Command(bin).CombinedOutput()
@@ -215,7 +215,7 @@ func TestImportAlias(t *testing.T) {
 	if err := os.WriteFile(cFile, []byte(cSrc), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if out, err := exec.Command(cc, "-std=c11", "-O0", cFile, "-o", bin).CombinedOutput(); err != nil {
+	if out, err := exec.Command(cc, "-std=c11", "-O0", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
 		t.Fatalf("cc: %v\n%s\n%s", err, out, cSrc)
 	}
 	got, err := exec.Command(bin).CombinedOutput()

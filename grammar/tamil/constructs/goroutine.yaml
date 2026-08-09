@@ -1,0 +1,50 @@
+id: goroutine
+status: codegen
+subset: Tamil-0.48
+go_inspired: |
+  go f()
+  ch := make(chan bool)
+  ch <- true
+  v := <-ch
+  close(ch)
+  select {
+  case ch <- true:
+  case v := <-ch:
+  default:
+  }
+tamil_keywords:
+  go: இழை
+  chan: தடம்
+  select: தடத்தேர்வு
+  close: மூடு
+  case: எனில்   # shared with if / திசைவி case
+tamil_ebnf: |
+  GoStmt      = "இழை" CallExpr .
+  SendStmt    = Expression "<-" Expression .
+  ChanType    = "தடம்" [ "<-" ] Type | "<-" "தடம்" Type .
+  SelectStmt  = "தடத்தேர்வு" "{" { CommClause } "}" .
+  CommClause  = "எனில்" ( SendStmt | RecvStmt ) Block | "மற்றபடி" Block .
+  RecvStmt    = [ ExpressionList ( "=" | ":=" ) ] "<-" Expression .
+semantics: >
+  இழை starts a call on a new OS thread (pthread). main waits for all
+  இழை before exit. தடம் T is a channel; ஆக்கு(தடம் T) unbuffered,
+  ஆக்கு(தடம் T, n) buffered. <- send/recv; மூடு closes. தடத்தேர்வு
+  with எனில் / மற்றபடி. Directional types தடம்<- T and <-தடம் T.
+  C backend. Range over channels deferred.
+examples:
+  - tamil: |
+      ச := ஆக்கு(தடம் சரம்)
+      இழை செயல்பாடு() {
+          ச <- "வணக்கம்"
+      }()
+      பதிப்பி(<-ச)
+    go_equivalent: |
+      ch := make(chan string)
+      go func() { ch <- "hello" }()
+      println(<-ch)
+notes:
+  - "Keywords: இழை தடம் தடத்தேர்வு மூடு; select case reuses எனில் (2026-08-08)."
+  - "Dropped provisional சூழல் — too close to சுழல் (for)."
+  - "Select default reuses மற்றபடி."
+  - "Send on closed channel aborts (fatal)."
+  - "Recv on closed channel is always ready (zero value); மற்றபடி will not run."

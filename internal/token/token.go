@@ -49,6 +49,10 @@ const (
 	MAP         // அகராதி (map type)
 	DELETE      // நீக்கு (builtin; reserved)
 	DEFER       // தள்ளிவை
+	GO          // இழை
+	CHAN        // தடம்
+	SELECT      // தடத்தேர்வு
+	CLOSE // மூடு (builtin; reserved)
 
 	ADD // +
 	SUB // -
@@ -56,6 +60,7 @@ const (
 	QUO // /
 	REM // %
 	AND // & (unary address-of)
+	ARROW // <-
 
 	EQL    // ==
 	NEQ    // !=
@@ -122,6 +127,10 @@ var kindNames = [...]string{
 	MAP:         "MAP",
 	DELETE:      "DELETE",
 	DEFER:       "DEFER",
+	GO:          "GO",
+	CHAN:        "CHAN",
+	SELECT:      "SELECT",
+	CLOSE: "CLOSE",
 
 	ADD: "ADD",
 	SUB: "SUB",
@@ -129,6 +138,7 @@ var kindNames = [...]string{
 	QUO: "QUO",
 	REM: "REM",
 	AND: "AND",
+	ARROW: "ARROW",
 
 	EQL:    "EQL",
 	NEQ:    "NEQ",
@@ -195,6 +205,10 @@ var Keywords = map[string]Kind{
 	"அகராதி":   MAP,
 	"நீக்கு":   DELETE,
 	"தள்ளிவை": DEFER,
+	"இழை":      GO,
+	"தடம்":     CHAN,
+	"தடத்தேர்வு": SELECT,
+	"மூடு": CLOSE,
 }
 
 // LookupIdent returns the keyword kind or IDENT.

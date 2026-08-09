@@ -37,6 +37,7 @@ const (
 	typeMapStart      = 50000 // maps அகராதி[K]V
 	typeParamStart    = 60000 // function type parameters (generics)
 	typeFuncStart     = 70000 // function types செயல்பாடு(…) (Tamil-0.44)
+	typeChanStart     = 80000 // channels தடம் T (Tamil-0.48)
 )
 
 func (t Type) String() string {
@@ -115,7 +116,12 @@ func IsTypeParam(t Type) bool {
 
 // IsFunc reports whether t is a function type செயல்பாடு(…)….
 func IsFunc(t Type) bool {
-	return t >= typeFuncStart
+	return t >= typeFuncStart && t < typeChanStart
+}
+
+// IsChan reports whether t is a channel type தடம் T.
+func IsChan(t Type) bool {
+	return t >= typeChanStart
 }
 
 // ArrayInfo describes a fixed array type.
@@ -128,6 +134,12 @@ type ArrayInfo struct {
 type MapInfo struct {
 	Key  Type
 	Elem Type
+}
+
+// ChanInfo describes a channel type.
+type ChanInfo struct {
+	Elem Type
+	Dir  ast.ChanDir // 0 = bidirectional
 }
 
 // FuncInfo describes a function type செயல்பாடு(params) results.
@@ -261,6 +273,7 @@ type Info struct {
 	TupleElems     map[Type][]Type       // multi-value return type → component types
 	Arrays         map[Type]ArrayInfo    // fixed array type → len + elem
 	Maps           map[Type]MapInfo      // map type → key + elem
+	Chans          map[Type]ChanInfo     // channel type → elem + dir
 	Funcs          map[Type]FuncInfo     // function type → params/results
 	TypeParamName  map[Type]string       // type parameter → source name
 	Instantiations []*MonoInst           // unique generic function instantiations
@@ -381,6 +394,7 @@ type Checker struct {
 	nextMap       Type
 	nextTypeParam Type
 	nextFunc      Type
+	nextChan      Type
 	typeParamEnv  map[string]Type // active while checking a generic function
 	allowMulti    bool            // true while unpacking a multi-value call
 	pkgs          map[string]*pkgState
@@ -575,6 +589,25 @@ func (c *Checker) mapOf(key, elem Type) (Type, bool) {
 	return t, true
 }
 
+func (c *Checker) chanOf(elem Type, dir ast.ChanDir) Type {
+	if elem == TypeInvalid || elem == TypeVoid {
+		return TypeInvalid
+	}
+	if !c.isFieldType(elem) && !IsChan(elem) {
+		return TypeInvalid
+	}
+	for t, ci := range c.info.Chans {
+		if ci.Elem == elem && ci.Dir == dir {
+			return t
+		}
+	}
+	t := c.nextChan
+	c.nextChan++
+	c.info.Chans[t] = ChanInfo{Elem: elem, Dir: dir}
+	c.tupleOf([]Type{elem, TypeBool})
+	return t
+}
+
 func typesEqual(a, b []Type) bool {
 	if len(a) != len(b) {
 		return false
@@ -631,6 +664,17 @@ func (c *Checker) typStr(t Type) string {
 	if IsMap(t) {
 		mi := c.info.Maps[t]
 		return "அகராதி[" + c.typStr(mi.Key) + "]" + c.typStr(mi.Elem)
+	}
+	if IsChan(t) {
+		ci := c.info.Chans[t]
+		switch ci.Dir {
+		case ast.SEND:
+			return "தடம்<-" + c.typStr(ci.Elem)
+		case ast.RECV:
+			return "<-தடம்" + c.typStr(ci.Elem)
+		default:
+			return "தடம் " + c.typStr(ci.Elem)
+		}
 	}
 	if IsArray(t) {
 		ai := c.info.Arrays[t]
@@ -881,7 +925,7 @@ func (c *Checker) isFieldType(t Type) bool {
 	if t == TypeInt || t == TypeBool || t == TypeString || t == TypeFloat || t == TypeByte || t == TypeRune {
 		return true
 	}
-	if isSlice(t) || IsArray(t) || isPointer(t) || isStruct(t) || IsMap(t) || IsFunc(t) {
+	if isSlice(t) || IsArray(t) || isPointer(t) || isStruct(t) || IsMap(t) || IsFunc(t) || IsChan(t) {
 		return true
 	}
 	if isDefined(t) {
@@ -896,6 +940,8 @@ func (c *Checker) comparable(t Type) bool {
 	case t == TypeInt || t == TypeBool || t == TypeString || t == TypeFloat || t == TypeByte || t == TypeRune:
 		return true
 	case isPointer(t):
+		return true
+	case IsChan(t):
 		return true
 	case isSlice(t), IsMap(t):
 		return false
@@ -1012,6 +1058,17 @@ func (c *Checker) typeFromExpr(te ast.TypeExpr) Type {
 			return TypeInvalid
 		}
 		return mt
+	case *ast.ChanType:
+		elem := c.typeFromExpr(te.Elem)
+		if elem == TypeInvalid || elem == TypeVoid {
+			return TypeInvalid
+		}
+		ct := c.chanOf(elem, te.Dir)
+		if ct == TypeInvalid {
+			c.error(te.Pos(), "invalid channel element type %s", c.typStr(elem))
+			return TypeInvalid
+		}
+		return ct
 	case *ast.FuncType:
 		params := make([]Type, len(te.Params))
 		for i, p := range te.Params {
@@ -1397,6 +1454,12 @@ func (c *Checker) checkStmt(s ast.Stmt) {
 		c.checkReturn(s)
 	case *ast.DeferStmt:
 		c.checkDefer(s)
+	case *ast.GoStmt:
+		c.checkGo(s)
+	case *ast.SendStmt:
+		c.checkSend(s)
+	case *ast.SelectStmt:
+		c.checkSelect(s)
 	case *ast.BlockStmt:
 		c.checkBlock(s)
 	default:
@@ -1419,6 +1482,103 @@ func (c *Checker) checkDefer(s *ast.DeferStmt) {
 		return
 	}
 	_ = t // results of deferred call are discarded (bare name ⇒ zero-arg call)
+}
+
+func (c *Checker) checkGo(s *ast.GoStmt) {
+	if s.Call == nil {
+		c.error(s.Pos(), "இழை requires a function call")
+		return
+	}
+	t := c.checkExpr(s.Call)
+	if s.Call.Conversion {
+		c.error(s.Call.Pos(), "இழை requires a function call, not a conversion")
+		return
+	}
+	_ = t
+}
+
+func (c *Checker) checkSend(s *ast.SendStmt) {
+	ct := c.checkExpr(s.Chan)
+	vt := c.checkExpr(s.Value)
+	if ct == TypeInvalid {
+		return
+	}
+	if !IsChan(ct) {
+		c.error(s.Chan.Pos(), "cannot send to non-channel type %s", c.typStr(ct))
+		return
+	}
+	ci := c.info.Chans[ct]
+	if ci.Dir == ast.RECV {
+		c.error(s.Chan.Pos(), "cannot send on receive-only channel")
+		return
+	}
+	if vt != TypeInvalid && !c.assignable(vt, ci.Elem, s.Value) {
+		c.error(s.Value.Pos(), "cannot send %s to channel of %s", c.typStr(vt), c.typStr(ci.Elem))
+	}
+}
+
+func (c *Checker) checkSelect(s *ast.SelectStmt) {
+	hasDefault := false
+	for _, cl := range s.Body {
+		if cl.Default {
+			if hasDefault {
+				c.error(cl.Pos(), "multiple மற்றபடி in தடத்தேர்வு")
+			}
+			hasDefault = true
+			c.checkBlock(cl.Body)
+			continue
+		}
+		if cl.Comm == nil {
+			c.error(cl.Pos(), "தடத்தேர்வு எனில் requires a send or receive")
+			c.checkBlock(cl.Body)
+			continue
+		}
+		c.push()
+		c.checkComm(cl.Comm)
+		c.checkBlock(cl.Body)
+		c.pop()
+	}
+}
+
+func (c *Checker) checkComm(s ast.Stmt) {
+	switch s := s.(type) {
+	case *ast.SendStmt:
+		c.checkSend(s)
+	case *ast.ExprStmt:
+		u, ok := s.X.(*ast.UnaryExpr)
+		if !ok || u.Op != token.ARROW {
+			c.error(s.Pos(), "தடத்தேர்வு எனில் communication must be send or receive")
+			c.checkExpr(s.X)
+			return
+		}
+		c.checkExpr(s.X)
+	case *ast.AssignStmt:
+		if len(s.Values) != 1 {
+			c.error(s.Pos(), "தடத்தேர்வு எனில் receive assignment wants one receive")
+			return
+		}
+		u, ok := s.Values[0].(*ast.UnaryExpr)
+		if !ok || u.Op != token.ARROW {
+			c.error(s.Pos(), "தடத்தேர்வு எனில் assignment value must be a receive")
+			c.checkAssign(s)
+			return
+		}
+		c.checkAssign(s)
+	case *ast.ShortVarDecl:
+		if len(s.Values) != 1 {
+			c.error(s.Pos(), "தடத்தேர்வு எனில் receive declaration wants one receive")
+			return
+		}
+		u, ok := s.Values[0].(*ast.UnaryExpr)
+		if !ok || u.Op != token.ARROW {
+			c.error(s.Pos(), "தடத்தேர்வு எனில் short declaration value must be a receive")
+			c.checkShortVar(s)
+			return
+		}
+		c.checkShortVar(s)
+	default:
+		c.error(s.Pos(), "தடத்தேர்வு எனில் communication must be send or receive")
+	}
 }
 
 func (c *Checker) checkVarDecl(d *ast.VarDecl) {
@@ -1488,7 +1648,7 @@ func (c *Checker) assignable(got, want Type, e ast.Expr) bool {
 		return true
 	}
 	if got == TypeUntypedNil {
-		if isPointer(want) || IsMap(want) {
+		if isPointer(want) || IsMap(want) || IsChan(want) {
 			c.record(e, want)
 			return true
 		}
@@ -1496,6 +1656,13 @@ func (c *Checker) assignable(got, want Type, e ast.Expr) bool {
 	}
 	if got == want {
 		return true
+	}
+	if IsChan(got) && IsChan(want) {
+		g, w := c.info.Chans[got], c.info.Chans[want]
+		if g.Elem == w.Elem && (g.Dir == 0 || g.Dir == w.Dir) && !(w.Dir == 0 && g.Dir != 0) {
+			return true
+		}
+		return false
 	}
 	// Untyped literals may assign to a defined type of matching kind.
 	if isDefined(want) {
@@ -1930,6 +2097,23 @@ func (c *Checker) checkExpr(e ast.Expr) Type {
 				t = TypeInvalid
 			} else {
 				t = c.pointerOf(xt)
+			}
+		case token.ARROW:
+			if xt == TypeInvalid {
+				t = TypeInvalid
+			} else if !IsChan(xt) {
+				c.error(e.Pos(), "cannot receive from non-channel type %s", c.typStr(xt))
+				t = TypeInvalid
+			} else {
+				ci := c.info.Chans[xt]
+				if ci.Dir == ast.SEND {
+					c.error(e.Pos(), "cannot receive from send-only channel")
+					t = TypeInvalid
+				} else if c.allowMulti {
+					t = c.tupleOf([]Type{ci.Elem, TypeBool})
+				} else {
+					t = ci.Elem
+				}
 			}
 		default:
 			t = TypeInvalid
@@ -2386,11 +2570,11 @@ func (c *Checker) checkBinary(e *ast.BinaryExpr) Type {
 		if lt == TypeUntypedNil && rt == TypeUntypedNil {
 			return TypeBool
 		}
-		if lt == TypeUntypedNil && (isPointer(rt) || IsMap(rt)) {
+		if lt == TypeUntypedNil && (isPointer(rt) || IsMap(rt) || IsChan(rt)) {
 			c.record(e.X, rt)
 			return TypeBool
 		}
-		if rt == TypeUntypedNil && (isPointer(lt) || IsMap(lt)) {
+		if rt == TypeUntypedNil && (isPointer(lt) || IsMap(lt) || IsChan(lt)) {
 			c.record(e.Y, lt)
 			return TypeBool
 		}
@@ -2601,6 +2785,18 @@ func (c *Checker) checkCall(e *ast.CallExpr) Type {
 				}
 			}
 			return TypeVoid
+		case "மூடு":
+			if len(e.Args) != 1 {
+				c.error(e.Pos(), "மூடு takes exactly one channel")
+				return TypeVoid
+			}
+			ct := c.checkExpr(e.Args[0])
+			if ct != TypeInvalid && !IsChan(ct) {
+				c.error(e.Args[0].Pos(), "மூடு argument must be a தடம்")
+			} else if IsChan(ct) && c.info.Chans[ct].Dir == ast.RECV {
+				c.error(e.Args[0].Pos(), "cannot close receive-only channel")
+			}
+			return TypeVoid
 		case "திறன்":
 			if len(e.Args) != 1 {
 				c.error(e.Pos(), "திறன் takes exactly one argument")
@@ -2647,12 +2843,25 @@ func (c *Checker) checkCall(e *ast.CallExpr) Type {
 				}
 				return st
 			}
+			if IsChan(st) {
+				if len(e.Args) > 1 {
+					c.error(e.Pos(), "ஆக்கு(தடம்) takes an optional buffer size only")
+					return TypeInvalid
+				}
+				for _, a := range e.Args {
+					at := c.checkExpr(a)
+					if at != TypeInvalid && at != TypeInt {
+						c.error(a.Pos(), "ஆக்கு channel buffer size must be முழுஎண்")
+					}
+				}
+				return st
+			}
 			if len(e.Args) != 1 && len(e.Args) != 2 {
 				c.error(e.Pos(), "ஆக்கு takes type, length, and optional capacity")
 				return TypeInvalid
 			}
 			if st != TypeInvalid && !isSlice(st) {
-				c.error(e.TypeArg.Pos(), "ஆக்கு supports slice or அகராதி types")
+				c.error(e.TypeArg.Pos(), "ஆக்கு supports slice, அகராதி, or தடம் types")
 				st = TypeInvalid
 			}
 			for _, a := range e.Args {

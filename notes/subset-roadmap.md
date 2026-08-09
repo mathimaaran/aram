@@ -80,14 +80,15 @@ Out of scope for Tamil-0:
 - [x] Function literals / closures (capture by reference)
 - [x] Go 1.22+ per-iteration `சுழல்` / `ஒவ்வொரு` vars
 - [x] Method expressions `T.M` / `(*T).M`
+- [x] Concurrency on C (`இழை` / `தடம்` / `தடத்தேர்வு`)
 
 ## Later growth
 
-**Harden the language first** (before native backends):
+**Harden the language** (remaining gaps) alongside native backends:
 
 1. Other small gaps in [`deferred.md`](deferred.md)
 
-**Native backends (after language harden):**
+**Native backends:**
 
 5. NASM x86-64
 6. i386 Linux

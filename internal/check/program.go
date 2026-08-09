@@ -38,6 +38,7 @@ func CheckProgram(merged []*ast.File, entry string) (*ProgramInfo, []error) {
 		TupleElems:    map[Type][]Type{},
 		Arrays:        map[Type]ArrayInfo{},
 		Maps:          map[Type]MapInfo{},
+		Chans:         map[Type]ChanInfo{},
 		Funcs:         map[Type]FuncInfo{},
 		TypeParamName: map[Type]string{},
 		CallInst:      map[*ast.CallExpr]*MonoInst{},
@@ -60,6 +61,7 @@ func CheckProgram(merged []*ast.File, entry string) (*ProgramInfo, []error) {
 		nextMap:       typeMapStart,
 		nextTypeParam: typeParamStart,
 		nextFunc:      typeFuncStart,
+		nextChan:      typeChanStart,
 		pkgs:          map[string]*pkgState{},
 	}
 	for _, f := range merged {

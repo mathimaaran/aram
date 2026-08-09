@@ -33,7 +33,7 @@ Locked decisions for Phase 0. Change only with an explicit note and date.
 | Strings | UTF-8; Tamil string literals allowed |
 | Operators / braces | Keep ASCII operators and `{}()[]` for Phase 0–1 |
 | Semicolons | Go-like automatic semicolon insertion (lexer; Tamil-0.7) |
-| Goroutines / channels | Out of scope for early phases |
+| Goroutines / channels | Tamil-0.48 on C (pthread) |
 | GC | Out of scope while on C backend; revisit with native runtime |
 
 ## Non-goals (for now)
@@ -322,6 +322,24 @@ iteration values. See `constructs/closure.yaml`.
 Method expressions `T.M` and `(*T).M` as unbound function values on the
 `aram_fn` path. Method-set rules match Go (value receivers on `T`; value
 and pointer on `*T`). See `constructs/method-expr.yaml`.
+
+## Tamil-0.48 (2026-08-08)
+
+Concurrency on the **C** backend (pthread), not deferred to NASM:
+`இழை` (go), `தடம்` (chan), `தடத்தேர்வு`/`எனில்`/`மற்றபடி` (select),
+`மூடு` (close), ASCII `<-`. Select cases reuse `எனில்` (like `திசைவி`
+and Go `case`); provisional `சூழல்` was dropped as too close to `சுழல்`.
+Buffered and unbuffered channels; directional types. See
+`constructs/goroutine.yaml`.
+
+Parser hardening (same day): after a syntax error inside `{`…`}` loops,
+always make progress (`advancePastError`) or stay on a sync token
+(`}` / EOF / `;`). Select/switch/struct invalid corpus + 2s hang tests
+guard against unbounded parse loops.
+
+## Provisional concurrency keywords (2026-08-08)
+
+Superseded by Tamil-0.48 — keywords are in `keywords.yaml` and the lexer.
 
 ## Priority (2026-08-01)
 

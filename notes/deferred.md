@@ -13,7 +13,7 @@ Update when a subset ships (strike or move items) or when a construct card recor
 | Interfaces | Only if earned | method.yaml |
 | Generic types / constraints | After interfaces earn a place | generics.yaml |
 
-Shipped: 0.11–0.47 (through method expressions).
+Shipped: 0.11–0.48 (through concurrency on C).
 
 ## Struct & types
 
@@ -31,13 +31,14 @@ Shipped: 0.11–0.47 (through method expressions).
 | ~~function literals / closures~~ | Tamil-0.45 | closure.yaml |
 | ~~Go 1.22+ per-iteration loop vars~~ | Tamil-0.46 | closure.yaml |
 | ~~method expressions `T.M` / `(*T).M`~~ | Tamil-0.47 | method-expr.yaml |
+| ~~goroutines / channels / select~~ | Tamil-0.48 | goroutine.yaml |
 
 ## Packages, runtime, backends
 
 | Item | Notes | Source |
 |------|--------|--------|
 | GC / native heap | Arena only while on C | design-decisions |
-| Goroutines / channels | | design-decisions |
+| Goroutines / channels | Tamil-0.48 on C (pthread); see goroutine.yaml | goroutine.yaml |
 | panic / recover | | Tamil-0 out of scope |
 | NASM + custom IR | IR when NASM begins | design-decisions |
 | Windows / macOS primary targets | Linux-first | Non-goals |

@@ -1,12 +1,12 @@
 # Tamil keyword glossary
 
 status: active
-subset: Tamil-0.47
+subset: Tamil-0.48
 style: semantic Tamil
 note: >
-  Tamil-0 remains frozen as the base. Tamil-0.47 method expressions
-  T.M / (*T).M (no new keywords). Further breaking changes need
-  Tamil-0.48+ and a dated note in notes/design-decisions.md. ASCII
+  Tamil-0 remains frozen as the base. Tamil-0.48 concurrency on C
+  (இழை / தடம் / தடத்தேர்வு / மூடு; select cases reuse எனில்). Further breaking changes need
+  Tamil-0.49+ and a dated note in notes/design-decisions.md. ASCII
   operators and braces stay.
 
 keywords:
@@ -33,6 +33,7 @@ keywords:
   - go: if
     tamil: எனில்
     token: IF
+    notes: "Also திசைவி / தடத்தேர்வு case clauses (Go case)"
 
   - go: else
     tamil: இல்லையேல்
@@ -177,6 +178,28 @@ keywords:
     token: DEFER
     notes: "Tamil-0.37 — postpone call until function return (LIFO)"
 
+  - go: go
+    tamil: இழை
+    token: GO
+    notes: "Tamil-0.48 — start goroutine (pthread)"
+
+  - go: chan
+    tamil: தடம்
+    token: CHAN
+    notes: "Tamil-0.48 — channel type"
+
+  - go: select
+    tamil: தடத்தேர்வு
+    token: SELECT
+    notes: "Tamil-0.48 — multi-way channel wait"
+
+  - go: close
+    tamil: மூடு
+    token: CLOSE
+    notes: "Tamil-0.48 — close channel (builtin)"
+
+  # select case reuses எனில் (same as if / திசைவி case) — avoids சூழல்↔சுழல் confusion
+
 reserved_later: []
 
 builtins:
@@ -223,14 +246,21 @@ builtins:
     result: void
     effect: remove key from map; no-op if missing or map is இன்மை
 
+  - name: மூடு
+    arity: 1
+    args: [channel]
+    result: void
+    effect: close channel; further sends abort; recv gets zero + ok=false
+
 operators_ascii:
   - ["+", "-", "*", "/", "%"]
   - ["==", "!=", "<", "<=", ">", ">="]
   - ["=", ":=", ":"]
-  - ["!", "&", "{", "}", "(", ")", "[", "]", ",", ".", ";"]
+  - ["!", "&", "<-", "{", "}", "(", ")", "[", "]", ",", ".", ";"]
   notes: >
     * is multiply (binary) and pointer type / dereference (unary).
     & is address-of (unary) in Tamil-0.7; no bitwise-and yet.
+    <- is channel send/recv (Tamil-0.48).
 
 short_declaration:
   operator: ":="

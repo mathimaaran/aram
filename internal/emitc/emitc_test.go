@@ -1,11 +1,14 @@
 package emitc_test
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
+	"time"
 
 	"aram/internal/ast"
 	"aram/internal/check"
@@ -45,6 +48,10 @@ func compile(t *testing.T, name string) (*ast.File, *check.Info, string) {
 }
 
 func runC(t *testing.T, cSrc string) string {
+	return runCTimeout(t, cSrc, 10*time.Second)
+}
+
+func runCTimeout(t *testing.T, cSrc string, d time.Duration) string {
 	t.Helper()
 	cc, err := exec.LookPath("gcc")
 	if err != nil {
@@ -59,10 +66,15 @@ func runC(t *testing.T, cSrc string) string {
 	if err := os.WriteFile(cFile, []byte(cSrc), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if out, err := exec.Command(cc, "-std=c11", "-O0", cFile, "-o", bin).CombinedOutput(); err != nil {
+	if out, err := exec.Command(cc, "-std=c11", "-O0", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
 		t.Fatalf("cc: %v\n%s\n%s", err, out, cSrc)
 	}
-	out, err := exec.Command(bin).CombinedOutput()
+	ctx, cancel := context.WithTimeout(context.Background(), d)
+	defer cancel()
+	out, err := exec.CommandContext(ctx, bin).CombinedOutput()
+	if ctx.Err() == context.DeadlineExceeded {
+		t.Fatalf("program timed out after %s\nC:\n%s", d, cSrc)
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -444,6 +456,55 @@ func TestEmitAndRunLoopClosure(t *testing.T) {
 	_, _, cSrc := compile(t, "சுழல்_மூடுகை.aram")
 	got := runC(t, cSrc)
 	want := "0\n1\n2\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
+// Emit-only: structural checks without executing (kept for fast CI).
+func TestEmitSelectAndGo(t *testing.T) {
+	for _, name := range []string{"இழை.aram", "தடத்தேர்வு.aram"} {
+		t.Run(name, func(t *testing.T) {
+			_, _, cSrc := compile(t, name)
+			if !strings.Contains(cSrc, "aram_chan_make") {
+				t.Fatalf("%s: missing aram_chan_make", name)
+			}
+			if name == "இழை.aram" && !strings.Contains(cSrc, "aram_go(") {
+				t.Fatalf("இழை: missing aram_go")
+			}
+			if name == "தடத்தேர்வு.aram" {
+				if !strings.Contains(cSrc, "aram_select(") {
+					t.Fatalf("தடத்தேர்வு: missing aram_select")
+				}
+				if !strings.Contains(cSrc, "aram_sel_kick") {
+					t.Fatalf("தடத்தேர்வு: missing aram_sel_kick (cond wake)")
+				}
+				// has_def=1 → default sentinel is nComm (not mixed clause index)
+				if !strings.Contains(cSrc, "aram_select(__sc_0, 1, 1)") &&
+					!strings.Contains(cSrc, "aram_select(__sc_1, 1, 1)") {
+					// ids may be 0,1 depending on goID; accept any __sc_N with has_def 1
+					if !strings.Contains(cSrc, ", 1, 1)") {
+						t.Fatalf("தடத்தேர்வு: expected aram_select(..., nComm=1, has_def=1)\n%s", cSrc)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestEmitAndRunGo(t *testing.T) {
+	_, _, cSrc := compile(t, "இழை.aram")
+	got := runCTimeout(t, cSrc, 5*time.Second)
+	want := "வணக்கம்\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
+func TestEmitAndRunSelect(t *testing.T) {
+	_, _, cSrc := compile(t, "தடத்தேர்வு.aram")
+	got := runCTimeout(t, cSrc, 5*time.Second)
+	want := "7\n9\n"
 	if got != want {
 		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
 	}

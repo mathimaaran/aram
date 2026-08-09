@@ -1,0 +1,8 @@
+// invalid: garbage clause inside திசைவி (must parse-fail, not hang)
+தொகுப்பு தொடக்கம்
+
+செயல்பாடு தொடக்கம்() {
+    திசைவி 1 {
+        x
+    }
+}

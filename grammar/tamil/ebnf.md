@@ -2,7 +2,7 @@
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
-Status: **Tamil-0.47** (2026-08-08) — method expressions `T.M` / `(*T).M`.
+Status: **Tamil-0.48** (2026-08-08) — concurrency on C (`இழை` / `தடம்`).
 
 ```
 SourceFile    = PackageClause { ImportDecl } { TopLevelDecl } .
@@ -279,6 +279,12 @@ See `constructs/closure.yaml`.
 `Type.Method` and `(*Type).Method` yield unbound `செயல்பாடு` values with
 the receiver as the first parameter. Method-set rules match Go.
 See `constructs/method-expr.yaml`.
+
+## Concurrency (Tamil-0.48)
+
+`இழை`, `தடம்`, `<-`, `மூடு`, `தடத்தேர்வு` / `எனில்` / `மற்றபடி` on the C
+backend (pthread). Select cases reuse `எனில்` (same as `திசைவி`). See
+`constructs/goroutine.yaml`.
 
 ## Entry convention
 

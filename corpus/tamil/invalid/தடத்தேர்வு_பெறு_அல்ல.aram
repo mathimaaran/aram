@@ -1,0 +1,10 @@
+// invalid: எனில் clause is not send/recv (parse may succeed; check must fail)
+தொகுப்பு தொடக்கம்
+
+செயல்பாடு தொடக்கம்() {
+    தடத்தேர்வு {
+        எனில் 1 {
+            பதிப்பி(1)
+        }
+    }
+}
