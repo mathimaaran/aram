@@ -81,6 +81,10 @@ Out of scope for Tamil-0:
 - [x] Go 1.22+ per-iteration `சுழல்` / `ஒவ்வொரு` vars
 - [x] Method expressions `T.M` / `(*T).M`
 - [x] Concurrency on C (`இழை` / `தடம்` / `தடத்தேர்வு`)
+- [x] Panic / recover (`அலறு` / `மீள்`) on C (`setjmp` / `longjmp`)
+- [x] Panic / concurrency polish (typed `அலறு`, traces, unbuffered select)
+- [x] `ஒவ்வொரு` over `தடம்`
+- [x] Native heap + GC on C (STW conservative mark-sweep)
 
 ## Later growth
 

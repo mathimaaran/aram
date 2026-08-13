@@ -542,6 +542,9 @@ func (p *Parser) parseForStmt() ast.Stmt {
 	if p.tok.Kind == token.LBRACE {
 		return &ast.ForStmt{TokPos: pos, Body: p.parseBlock()}
 	}
+	if p.tok.Kind == token.RANGE {
+		return p.parseRangeAfter(pos, nil, false)
+	}
 
 	// RangeClause or ForClause / Condition — detect range after IdentList :=| =
 	if p.tok.Kind == token.IDENT {
@@ -606,12 +609,14 @@ func (p *Parser) parseRangeAfter(pos token.Pos, names []*ast.Ident, define bool)
 	x := p.parseExprNoComposite()
 	var key, val *ast.Ident
 	switch len(names) {
+	case 0:
+		// bare சுழல் ஒவ்வொரு x
 	case 1:
 		key = names[0]
 	case 2:
 		key, val = names[0], names[1]
 	default:
-		p.errorExpected("ஒவ்வொரு allows 1 or 2 identifiers")
+		p.errorExpected("ஒவ்வொரு allows at most 2 identifiers")
 		key = names[0]
 	}
 	return &ast.RangeStmt{
@@ -901,6 +906,7 @@ func startsExpr(k token.Kind) bool {
 		token.TYPE_INT, token.TYPE_BOOL, token.TYPE_STRING, token.TYPE_FLOAT,
 		token.TYPE_BYTE, token.TYPE_RUNE,
 		token.PRINT, token.LEN, token.APPEND, token.MAKE, token.COPY, token.CAP, token.DELETE, token.CLOSE,
+		token.PANIC, token.RECOVER,
 		token.LPAREN, token.LBRACK, token.MAP, token.CHAN,
 		token.SUB, token.NOT, token.MUL, token.AND, token.ARROW:
 		return true
@@ -1226,6 +1232,20 @@ func (p *Parser) parseOperand() ast.Expr {
 		pos := p.tok.Pos
 		p.next()
 		id := &ast.Ident{NamePos: pos, Name: "மூடு"}
+		call := p.parseCall(id, false)
+		call.Builtin = true
+		return call
+	case token.PANIC:
+		pos := p.tok.Pos
+		p.next()
+		id := &ast.Ident{NamePos: pos, Name: "அலறு"}
+		call := p.parseCall(id, false)
+		call.Builtin = true
+		return call
+	case token.RECOVER:
+		pos := p.tok.Pos
+		p.next()
+		id := &ast.Ident{NamePos: pos, Name: "மீள்"}
 		call := p.parseCall(id, false)
 		call.Builtin = true
 		return call

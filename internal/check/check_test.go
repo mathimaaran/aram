@@ -20,7 +20,7 @@ func root(t *testing.T) string {
 }
 
 func TestCheckValidCorpus(t *testing.T) {
-	names := []string{"வணக்கம்.aram", "எண்கணிதம்.aram", "நிபந்தனை.aram", "கூட்டு.aram", "பதிப்பு.aram", "சுழல்.aram", "சரம்.aram", "பட்டியல்.aram", "பலபட்டியல்.aram", "பட்டியல்_அமைப்பு.aram", "ஒவ்வொரு.aram", "சேர்.aram", "சேர்_வளர்.aram", "ஆக்கு.aram", "அகராதி.aram", "அகராதி_எழுத்து.aram", "அகராதி_விசை_வளர்.aram", "தள்ளிவை.aram", "தள்ளிவை_முறை.aram", "இருமி.aram", "பொதுவகை.aram", "பகாஎண்.aram", "பலமதிப்பு.aram", "பெயர்_முடிவு.aram", "பரிமாற்றம்.aram", "வகை_மாற்று.aram", "மிதவை.aram", "தமிழ்_இலக்கம்.aram", "மாற்றுதல்.aram", "மாற்றுதல்_மேல்.aram", "நிலையான.aram", "அமைப்பு.aram", "அமைப்பு_நிலை.aram", "சுட்டி.aram", "முறை.aram", "முறை_மதிப்பு.aram", "முறை_வெளிப்பாடு.aram", "மூடுகை.aram", "சுழல்_மூடுகை.aram", "இன்மை.aram", "வளர்_அமைப்பு.aram", "திசைவி.aram", "தொடக்கம்_நிபந்தனை.aram", "அமைப்பு_சமம்.aram", "பதிப்பி_அமைப்பு.aram", "இழை.aram", "தடத்தேர்வு.aram"}
+    names := []string{"வணக்கம்.aram", "எண்கணிதம்.aram", "நிபந்தனை.aram", "கூட்டு.aram", "பதிப்பு.aram", "சுழல்.aram", "சரம்.aram", "பட்டியல்.aram", "பலபட்டியல்.aram", "பட்டியல்_அமைப்பு.aram", "ஒவ்வொரு.aram", "சேர்.aram", "சேர்_வளர்.aram", "ஆக்கு.aram", "அகராதி.aram", "அகராதி_எழுத்து.aram", "அகராதி_விசை_வளர்.aram", "தள்ளிவை.aram", "தள்ளிவை_முறை.aram", "இருமி.aram", "பொதுவகை.aram", "பகாஎண்.aram", "பலமதிப்பு.aram", "பெயர்_முடிவு.aram", "பரிமாற்றம்.aram", "வகை_மாற்று.aram", "மிதவை.aram", "தமிழ்_இலக்கம்.aram", "மாற்றுதல்.aram", "மாற்றுதல்_மேல்.aram", "நிலையான.aram", "அமைப்பு.aram", "அமைப்பு_நிலை.aram", "சுட்டி.aram", "முறை.aram", "முறை_மதிப்பு.aram", "முறை_வெளிப்பாடு.aram", "மூடுகை.aram", "சுழல்_மூடுகை.aram", "இன்மை.aram", "வளர்_அமைப்பு.aram", "திசைவி.aram", "தொடக்கம்_நிபந்தனை.aram", "அமைப்பு_சமம்.aram", "பதிப்பி_அமைப்பு.aram", "இழை.aram", "தடத்தேர்வு.aram", "தடத்தேர்வு_காலி.aram", "தடத்தேர்வு_சந்திப்பு.aram", "அலறு.aram", "அலறு_இழை.aram", "அலறு_எண்.aram", "ஒவ்வொரு_தடம்.aram", "குவியல்.aram"}
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
 			path := filepath.Join(root(t), "corpus", "tamil", name)
@@ -203,6 +203,32 @@ func TestCheckInvalidConcurrency(t *testing.T) {
 	names := []string{
 		"தடம்_அனுப்பு.aram",
 		"தடத்தேர்வு_பெறு_அல்ல.aram",
+		"ஒவ்வொரு_தடம்_இரு.aram",
+		"ஒவ்வொரு_தடம்_அனுப்பு.aram",
+	}
+	for _, name := range names {
+		t.Run(name, func(t *testing.T) {
+			path := filepath.Join(root(t), "corpus", "tamil", "invalid", name)
+			src, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			file, perrs := parse.ParseFile(path, string(src))
+			if len(perrs) != 0 {
+				t.Fatalf("parse: %v", perrs)
+			}
+			_, errs := check.File(file)
+			if len(errs) == 0 {
+				t.Fatal("expected typecheck errors")
+			}
+		})
+	}
+}
+
+func TestCheckInvalidPanic(t *testing.T) {
+	names := []string{
+		"அலறு_தருமதிப்பு.aram",
+		"அலறு_பட்டியல்.aram",
 	}
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {

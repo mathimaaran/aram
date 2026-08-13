@@ -1,0 +1,34 @@
+id: gc
+status: codegen
+subset: Tamil-0.52
+go_inspired: |
+  # implicit allocation + GC; no free in the language
+tamil_keywords: {}
+tamil_ebnf: |
+  # no new syntax — runtime only
+semantics: >
+  Tamil-0.52 replaces the C bump arena with a malloc-backed stop-the-world
+  conservative mark-sweep heap. Allocation is still implicit (concat, சேர்,
+  ஆக்கு, closures, தடம், தள்ளிவை thunks). There is no free keyword.
+  Safe points: aram_gc_poll at function entry and loop back-edges, and
+  park around தடம் / தடத்தேர்வு cond-wait. Linux pthread stack bounds
+  (pthread_getattr_np). No new Tamil keywords. HTTP / sockets still later.
+examples:
+  - tamil: |
+      மாறி ச சரம் = ""
+      சுழல் i := 0; i < 3; i = i + 1 {
+          ச = ச + "அ"
+      }
+      பதிப்பி(நீளம்(ச))
+    go_equivalent: |
+      s := ""
+      for i := 0; i < 3; i++ {
+          s = s + "அ"
+      }
+      println(len(s))
+notes:
+  - "Locked 2026-08-13: STW conservative mark-sweep on C; not Boehm."
+  - "Runtime source: internal/emitc/gc_runtime.inc (embedded into generated C)."
+  - "aram_arena_alloc is a wrapper over aram_alloc (heap)."
+  - "Main thread: aram_heap_init / aram_heap_shutdown; இழை register/unregister."
+  - "No Tamil GC builtin; reclaim is automatic."

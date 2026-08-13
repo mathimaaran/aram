@@ -81,6 +81,36 @@ func runCTimeout(t *testing.T, cSrc string, d time.Duration) string {
 	return string(out)
 }
 
+func runCExpectFail(t *testing.T, cSrc string, d time.Duration) string {
+	t.Helper()
+	cc, err := exec.LookPath("gcc")
+	if err != nil {
+		cc, err = exec.LookPath("cc")
+		if err != nil {
+			t.Skip("gcc/cc not available")
+		}
+	}
+	dir := t.TempDir()
+	cFile := filepath.Join(dir, "out.c")
+	bin := filepath.Join(dir, "out")
+	if err := os.WriteFile(cFile, []byte(cSrc), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := exec.Command(cc, "-std=c11", "-O0", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
+		t.Fatalf("cc: %v\n%s\n%s", err, out, cSrc)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), d)
+	defer cancel()
+	out, err := exec.CommandContext(ctx, bin).CombinedOutput()
+	if ctx.Err() == context.DeadlineExceeded {
+		t.Fatalf("program timed out after %s\nC:\n%s", d, cSrc)
+	}
+	if err == nil {
+		t.Fatalf("expected non-zero exit, got %q\nC:\n%s", out, cSrc)
+	}
+	return string(out)
+}
+
 func TestEmitAndRunVanakkam(t *testing.T) {
 	_, _, cSrc := compile(t, "வணக்கம்.aram")
 	got := runC(t, cSrc)
@@ -130,6 +160,15 @@ func TestEmitAndRunRange(t *testing.T) {
 	_, _, cSrc := compile(t, "ஒவ்வொரு.aram")
 	got := runC(t, cSrc)
 	want := "0\n10\n1\n20\n2\n30\n10\n20\n30\n60\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
+func TestEmitAndRunRangeChan(t *testing.T) {
+	_, _, cSrc := compile(t, "ஒவ்வொரு_தடம்.aram")
+	got := runCTimeout(t, cSrc, 5*time.Second)
+	want := "1\n2\n3\n9\n"
 	if got != want {
 		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
 	}
@@ -507,5 +546,154 @@ func TestEmitAndRunSelect(t *testing.T) {
 	want := "7\n9\n"
 	if got != want {
 		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
+func TestEmitAndRunPanic(t *testing.T) {
+	_, _, cSrc := compile(t, "அலறு.aram")
+	if !strings.Contains(cSrc, "aram_panic(") {
+		t.Fatalf("அலறு: missing aram_panic\n%s", cSrc)
+	}
+	if !strings.Contains(cSrc, "aram_recover") {
+		t.Fatalf("அலறு: missing aram_recover\n%s", cSrc)
+	}
+	got := runCTimeout(t, cSrc, 5*time.Second)
+	want := "பிழை\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
+func TestEmitAndRunPanicInt(t *testing.T) {
+	_, _, cSrc := compile(t, "அலறு_எண்.aram")
+	got := runCTimeout(t, cSrc, 5*time.Second)
+	want := "42\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
+func TestEmitAndRunPanicGo(t *testing.T) {
+	_, _, cSrc := compile(t, "அலறு_இழை.aram")
+	got := runCTimeout(t, cSrc, 5*time.Second)
+	want := "இழை\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
+func TestEmitUncaughtPanicTrace(t *testing.T) {
+	src := `தொகுப்பு தொடக்கம்
+செயல்பாடு உள்() {
+    அலறு("x")
+}
+செயல்பாடு தொடக்கம்() {
+    உள்()
+}
+`
+	file, perrs := parse.ParseFile("அலறு_தடம்.aram", src)
+	if len(perrs) != 0 {
+		t.Fatal(perrs)
+	}
+	info, errs := check.File(file)
+	if len(errs) != 0 {
+		t.Fatal(errs)
+	}
+	cSrc, err := emitc.Emit(file, info)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := runCExpectFail(t, cSrc, 5*time.Second)
+	if !strings.Contains(out, "அலறு: x") {
+		t.Fatalf("missing panic message: %q\nC:\n%s", out, cSrc)
+	}
+	if !strings.Contains(out, "உள்") || !strings.Contains(out, "தொடக்கம்") {
+		t.Fatalf("missing stack frames: %q\nC:\n%s", out, cSrc)
+	}
+}
+
+func TestEmitAndRunSelectUnbufferedDefault(t *testing.T) {
+	_, _, cSrc := compile(t, "தடத்தேர்வு_காலி.aram")
+	got := runCTimeout(t, cSrc, 5*time.Second)
+	want := "1\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
+func TestEmitAndRunSelectUnbufferedRendezvous(t *testing.T) {
+	_, _, cSrc := compile(t, "தடத்தேர்வு_சந்திப்பு.aram")
+	got := runCTimeout(t, cSrc, 5*time.Second)
+	want := "7\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
+func TestEmitAndRunHeap(t *testing.T) {
+	_, _, cSrc := compile(t, "குவியல்.aram")
+	if !strings.Contains(cSrc, "aram_alloc") {
+		t.Fatalf("குவியல்: missing aram_alloc\n%s", cSrc)
+	}
+	if !strings.Contains(cSrc, "aram_gc_poll") {
+		t.Fatalf("குவியல்: missing aram_gc_poll\n%s", cSrc)
+	}
+	if !strings.Contains(cSrc, "aram_heap_init") {
+		t.Fatalf("குவியல்: missing aram_heap_init\n%s", cSrc)
+	}
+	got := runCTimeout(t, cSrc, 15*time.Second)
+	want := "2400\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
+func TestGCRuntimeReclaim(t *testing.T) {
+	cc, err := exec.LookPath("gcc")
+	if err != nil {
+		cc, err = exec.LookPath("cc")
+		if err != nil {
+			t.Skip("gcc/cc not available")
+		}
+	}
+	dir := t.TempDir()
+	srcPath := filepath.Join(root(t), "internal", "emitc", "gc_runtime.inc")
+	runtime, err := os.ReadFile(srcPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	driver := string(runtime) + `
+int main(void) {
+	aram_heap_init();
+	void *keep = aram_alloc(64);
+	(void)keep;
+	size_t base = aram_heap_live();
+	for (int i = 0; i < 100; i++) (void)aram_alloc(64);
+	size_t mid = aram_heap_live();
+	aram_gc();
+	size_t after = aram_heap_live();
+	aram_heap_shutdown();
+	if (mid <= base) return 2;
+	if (after >= mid) return 3;
+	if (after > base + 256) return 4;
+	return 0;
+}
+`
+	cFile := filepath.Join(dir, "gc_test.c")
+	bin := filepath.Join(dir, "gc_test")
+	if err := os.WriteFile(cFile, []byte(driver), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := exec.Command(cc, "-std=c11", "-O0", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
+		t.Fatalf("cc: %v\n%s", err, out)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	out, err := exec.CommandContext(ctx, bin).CombinedOutput()
+	if ctx.Err() == context.DeadlineExceeded {
+		t.Fatal("gc runtime test timed out")
+	}
+	if err != nil {
+		t.Fatalf("gc reclaim failed: %v\n%s", err, out)
 	}
 }

@@ -1,0 +1,58 @@
+id: panic
+status: codegen
+subset: Tamil-0.50
+go_inspired: |
+  panic("msg")
+  defer func() {
+      if r := recover(); r != nil {
+          println(r)
+      }
+  }()
+tamil_keywords:
+  panic: அலறு
+  recover: மீள்
+tamil_ebnf: |
+  PanicCall   = "அலறு" "(" Expression ")" .
+  RecoverCall = "மீள்" "(" ")" .
+semantics: >
+  அலறு aborts the current இழை's normal flow after running தள்ளிவை
+  calls (LIFO), then outer frames. Uncaught அலறு aborts the process
+  (like today's map/chan fatals). மீள் is only useful inside தள்ளிவை:
+  it stops the unwind and returns the panic value. Outside தள்ளிவை,
+  மீள்() is a no-op and yields the zero சரம் (Go recover() → nil).
+  Tamil-0.50: அலறு argument may be சரம், முழுஎண், மிதவைஎண், நிலை,
+  இருமி8, or இருமி32 (stringified). மீள்() still returns சரம்
+  ("" if no active panic). Uncaught dumps a function-name stack then
+  aborts. Panic state is per-இழை. No interface{} / any yet. Reserved
+  builtins (same treatment as மூடு / நீக்கு), not free identifiers.
+examples:
+  - tamil: |
+      செயல்பாடு தொடக்கம்() {
+          தள்ளிவை செயல்பாடு() {
+              ம := மீள்()
+              எனில் ம != "" {
+                  பதிப்பி(ம)
+              }
+          }()
+          அலறு("பிழை")
+          பதிப்பி("இல்லை")
+      }
+    go_equivalent: |
+      func main() {
+          defer func() {
+              if r := recover(); r != nil {
+                  println(r)
+              }
+          }()
+          panic("error")
+          println("never")
+      }
+notes:
+  - "Locked 2026-08-13: அலறு (cry out) / மீள் (return / come back)."
+  - "Rejected பீதி — too close to பதிப்பி."
+  - "Rejected வெருளி — too close to வெளி (export)."
+  - "Rejected எச்சரி — means warn, not abort."
+  - "Rejected வெடி / பிடி — superseded."
+  - "Builtins + reserved tokens, like மூடு."
+  - "Tamil-0.50: primitive அலறு args, per-இழை recover, uncaught stack dump."
+  - "interface{} / any panic values still deferred."

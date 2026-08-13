@@ -198,6 +198,15 @@ func isDefined(t Type) bool {
 	return t >= typeDefinedStart && t < typePointerStart
 }
 
+func isPanicArgType(t Type) bool {
+	switch t {
+	case TypeString, TypeInt, TypeFloat, TypeBool, TypeByte, TypeRune:
+		return true
+	default:
+		return false
+	}
+}
+
 func isPointer(t Type) bool {
 	return t >= typePointerStart && t < typeSliceStart
 }
@@ -1889,6 +1898,7 @@ func isBlank(id *ast.Ident) bool {
 func (c *Checker) checkRange(s *ast.RangeStmt) {
 	xt := c.checkExpr(s.X)
 	var keyT, elem Type
+	chanRange := false
 	switch {
 	case isSlice(xt):
 		keyT = TypeInt
@@ -1903,11 +1913,22 @@ func (c *Checker) checkRange(s *ast.RangeStmt) {
 		mi := c.info.Maps[xt]
 		keyT = mi.Key
 		elem = mi.Elem
+	case IsChan(xt):
+		ci := c.info.Chans[xt]
+		if ci.Dir == ast.SEND {
+			c.error(s.X.Pos(), "cannot ஒவ்வொரு over send-only தடம்")
+		}
+		if s.Value != nil {
+			c.error(s.Pos(), "ஒவ்வொரு over தடம் allows at most one variable")
+		}
+		chanRange = true
+		keyT = ci.Elem // single ident is the element (Go: for v := range ch)
+		elem = TypeInvalid
 	case xt == TypeInvalid:
 		keyT = TypeInvalid
 		elem = TypeInvalid
 	default:
-		c.error(s.X.Pos(), "ஒவ்வொரு requires a slice, array, சரம், or அகராதி, got %s", c.typStr(xt))
+		c.error(s.X.Pos(), "ஒவ்வொரு requires a slice, array, சரம், அகராதி, or தடம், got %s", c.typStr(xt))
 		xt = TypeInvalid
 		keyT = TypeInvalid
 		elem = TypeInvalid
@@ -1918,7 +1939,7 @@ func (c *Checker) checkRange(s *ast.RangeStmt) {
 		if s.Key != nil && !isBlank(s.Key) {
 			c.scope.declare(s.Key.Name, keyT, s.Key.Pos(), &c.errs)
 		}
-		if s.Value != nil && !isBlank(s.Value) {
+		if s.Value != nil && !isBlank(s.Value) && !chanRange {
 			if elem == TypeInvalid {
 				c.scope.declare(s.Value.Name, TypeInvalid, s.Value.Pos(), &c.errs)
 			} else {
@@ -1934,12 +1955,12 @@ func (c *Checker) checkRange(s *ast.RangeStmt) {
 				c.error(s.Key.Pos(), "range key variable type %s does not match %s", kt, c.typStr(keyT))
 			}
 		}
-		if s.Value != nil && !isBlank(s.Value) {
+		if s.Value != nil && !isBlank(s.Value) && !chanRange {
 			vt, ok := c.scope.lookup(s.Value.Name)
 			if !ok {
 				c.error(s.Value.Pos(), "undeclared variable: %s", s.Value.Name)
 			} else if elem != TypeInvalid && vt != TypeInvalid && vt != elem {
-				c.error(s.Value.Pos(), "range value variable type %s does not match element %s", vt, elem)
+				c.error(s.Value.Pos(), "range value variable type %s does not match element %s", vt, c.typStr(elem))
 			}
 		}
 	}
@@ -2797,6 +2818,25 @@ func (c *Checker) checkCall(e *ast.CallExpr) Type {
 				c.error(e.Args[0].Pos(), "cannot close receive-only channel")
 			}
 			return TypeVoid
+		case "அலறு":
+			if len(e.Args) != 1 {
+				c.error(e.Pos(), "அலறு takes exactly one argument")
+				return TypeVoid
+			}
+			t := c.checkExpr(e.Args[0])
+			u := c.underlying(t)
+			if t != TypeInvalid && !isPanicArgType(u) {
+				c.error(e.Args[0].Pos(), "அலறு argument must be சரம், முழுஎண், மிதவைஎண், நிலை, இருமி8, or இருமி32")
+			}
+			return TypeVoid
+		case "மீள்":
+			if len(e.Args) != 0 {
+				c.error(e.Pos(), "மீள் takes no arguments")
+			}
+			for _, a := range e.Args {
+				c.checkExpr(a)
+			}
+			return TypeString
 		case "திறன்":
 			if len(e.Args) != 1 {
 				c.error(e.Pos(), "திறன் takes exactly one argument")

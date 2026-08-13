@@ -13,7 +13,7 @@ Update when a subset ships (strike or move items) or when a construct card recor
 | Interfaces | Only if earned | method.yaml |
 | Generic types / constraints | After interfaces earn a place | generics.yaml |
 
-Shipped: 0.11–0.48 (through concurrency on C).
+Shipped: 0.11–0.52 (through native heap + GC).
 
 ## Struct & types
 
@@ -32,14 +32,16 @@ Shipped: 0.11–0.48 (through concurrency on C).
 | ~~Go 1.22+ per-iteration loop vars~~ | Tamil-0.46 | closure.yaml |
 | ~~method expressions `T.M` / `(*T).M`~~ | Tamil-0.47 | method-expr.yaml |
 | ~~goroutines / channels / select~~ | Tamil-0.48 | goroutine.yaml |
+| ~~panic / recover~~ | Tamil-0.49 (`அலறு` / `மீள்`) on C | panic.yaml |
+| ~~panic / concurrency polish~~ | Tamil-0.50 primitives, traces, unbuffered select | panic.yaml / goroutine.yaml |
+| ~~range over channels~~ | Tamil-0.51 `ஒவ்வொரு` over `தடம்` | range.yaml / goroutine.yaml |
 
 ## Packages, runtime, backends
 
 | Item | Notes | Source |
 |------|--------|--------|
-| GC / native heap | Arena only while on C | design-decisions |
+| ~~GC / native heap~~ | Tamil-0.52 STW conservative mark-sweep on C | gc.yaml |
 | Goroutines / channels | Tamil-0.48 on C (pthread); see goroutine.yaml | goroutine.yaml |
-| panic / recover | | Tamil-0 out of scope |
 | NASM + custom IR | IR when NASM begins | design-decisions |
 | Windows / macOS primary targets | Linux-first | Non-goals |
 

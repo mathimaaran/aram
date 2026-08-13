@@ -389,10 +389,12 @@ func (e *emitter) ensureClosure(ci *check.ClosureInfo) {
 	e.fnHasDefer = hasDeferStmt(ci.Lit.Body)
 	if e.fnHasDefer {
 		e.needDefer = true
-		tb.WriteString("\taram_defer_frame *_defers = NULL;\n")
+		e.needArena = true
 	}
+	e.writeUnwindPrologue(&tb, e.curFn, "செயல்பாடு")
+	e.writeGCPoll(&tb, 1)
 	e.writeBlock(&tb, ci.Lit.Body, 1)
-	if e.fnHasDefer {
+	if e.fnHasUnwind() {
 		e.writeDeferEpilogue(&tb, e.curFn)
 	}
 	e.curFn = prevFn
@@ -435,6 +437,42 @@ func captureHas(ci *check.ClosureInfo, name string) bool {
 		}
 	}
 	return false
+}
+
+// writeDeferredFnValue calls a captured aram_fn from a தள்ளிவை thunk
+// (e.g. தள்ளிவை செயல்பாடு() { மீள்() }()).
+func (e *emitter) writeDeferredFnValue(b *strings.Builder, call *ast.CallExpr, fields []deferField) {
+	ft := e.typeOf(call.Fun)
+	var fi check.FuncInfo
+	ok := false
+	if e.info != nil {
+		fi, ok = e.info.Funcs[ft]
+	}
+	ret := "void"
+	if ok && len(fi.Results) == 1 {
+		ret = e.cTypeFrom(fi.Results[0])
+	} else if ok && len(fi.Results) > 1 {
+		ret = e.retCName(fi.Results)
+	}
+	b.WriteString("(void)((")
+	b.WriteString(ret)
+	b.WriteString("(*)(void *")
+	if ok {
+		for _, p := range fi.Params {
+			b.WriteString(", ")
+			b.WriteString(e.cTypeFrom(p))
+		}
+	}
+	b.WriteString("))c->fn.fn)(c->fn.env")
+	start := 0
+	if len(fields) > 0 && fields[0].name == "fn" {
+		start = 1
+	}
+	for i := start; i < len(fields); i++ {
+		b.WriteString(", ")
+		b.WriteString("c->" + fields[i].name)
+	}
+	b.WriteByte(')')
 }
 
 func (e *emitter) writeFuncLit(b *strings.Builder, lit *ast.FuncLit) {

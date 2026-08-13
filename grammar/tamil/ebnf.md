@@ -2,7 +2,7 @@
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
-Status: **Tamil-0.48** (2026-08-08) — concurrency on C (`இழை` / `தடம்`).
+Status: **Tamil-0.52** (2026-08-13) — native heap + GC (no new syntax).
 
 ```
 SourceFile    = PackageClause { ImportDecl } { TopLevelDecl } .
@@ -61,7 +61,7 @@ CaseClause = "எனில்" ExpressionList Block | "மற்றபடி" Bl
 ForStmt     = "சுழல்" [ Condition | ForClause | RangeClause ] Block .
 Condition   = Expression .
 ForClause   = [ SimpleStmt ] ";" [ Expression ] ";" [ SimpleStmt ] .
-RangeClause = IdentifierList ( ":=" | "=" ) "ஒவ்வொரு" Expression .
+RangeClause = [ IdentifierList ( ":=" | "=" ) ] "ஒவ்வொரு" Expression .
 
 BreakStmt = "முறி" .
 ContinueStmt = "தொடர்" .
@@ -280,11 +280,24 @@ See `constructs/closure.yaml`.
 the receiver as the first parameter. Method-set rules match Go.
 See `constructs/method-expr.yaml`.
 
-## Concurrency (Tamil-0.48)
+## Concurrency (Tamil-0.48–0.51)
 
 `இழை`, `தடம்`, `<-`, `மூடு`, `தடத்தேர்வு` / `எனில்` / `மற்றபடி` on the C
-backend (pthread). Select cases reuse `எனில்` (same as `திசைவி`). See
-`constructs/goroutine.yaml`.
+backend (pthread). Select cases reuse `எனில்` (same as `திசைவி`).
+Tamil-0.51: `சுழல் ஒவ்வொரு` over `தடம்` (recv until `மூடு`). See
+`constructs/goroutine.yaml`, `range.yaml`.
+
+## Panic / recover (Tamil-0.49–0.50)
+
+Builtins `அலறு(…)` and `மீள்()` (returns `சரம்`). Unwind runs
+`தள்ளிவை` first. Tamil-0.50: primitive `அலறு` args, uncaught stack
+dump, per-`இழை` state. See `constructs/panic.yaml`. C backend:
+`setjmp` / `longjmp`.
+
+## Heap / GC (Tamil-0.52)
+
+No new syntax. C backend uses a stop-the-world conservative mark-sweep
+heap instead of a bump arena. See `constructs/gc.yaml`.
 
 ## Entry convention
 

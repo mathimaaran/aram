@@ -1,6 +1,6 @@
 id: range
 status: codegen
-subset: Tamil-0.5
+subset: Tamil-0.51
 go_inspired: |
   for i, v := range xs { }
   for i, r := range s { }  # string → rune
@@ -8,14 +8,17 @@ tamil_keywords:
   range: ஒவ்வொரு
 tamil_ebnf: |
   ForStmt     = "சுழல்" [ Condition | ForClause | RangeClause ] Block .
-  RangeClause = IdentifierList ( ":=" | "=" ) "ஒவ்வொரு" Expression .
+  RangeClause = [ IdentifierList ( ":=" | "=" ) ] "ஒவ்வொரு" Expression .
 ast:
   type: RangeStmt
   fields: [key, value, define, x, body]
 semantics: >
-  Iterates over a slice or சரம். For slices: index is முழுஎண், value is the element.
-  For சரம்: index is the byte offset; value is the Unicode code point as முழுஎண் (Go rune).
-  Blank "_" skips a binding. := declares; = assigns to existing variables.
+  Iterates over a slice, array, சரம், அகராதி, or தடம். For slices/arrays: index is
+  முழுஎண், value is the element. For சரம்: index is the byte offset; value is the
+  Unicode code point as முழுஎண் (Go rune). For தடம்: at most one variable (the
+  element); loop receives until மூடு (and drain). Send-only தடம் is an error.
+  Bare சுழல் ஒவ்வொரு x is allowed. Blank "_" skips a binding. := declares;
+  = assigns to existing variables.
 examples:
   - tamil: |
       சுழல் i, v := ஒவ்வொரு எண்கள் {
@@ -30,3 +33,4 @@ examples:
 notes:
   - "Name locked 2026-08-01: ஒவ்வொரு (explicit 'each')."
   - "Tamil-0.5: ranging over சரம் uses UTF-8 rune decoding."
+  - "Tamil-0.51: ஒவ்வொரு over தடம் (and bare சுழல் ஒவ்வொரு x)."

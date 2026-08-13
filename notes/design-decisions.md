@@ -34,7 +34,7 @@ Locked decisions for Phase 0. Change only with an explicit note and date.
 | Operators / braces | Keep ASCII operators and `{}()[]` for Phase 0–1 |
 | Semicolons | Go-like automatic semicolon insertion (lexer; Tamil-0.7) |
 | Goroutines / channels | Tamil-0.48 on C (pthread) |
-| GC | Out of scope while on C backend; revisit with native runtime |
+| GC | Tamil-0.52 STW conservative mark-sweep on C (native heap) |
 
 ## Non-goals (for now)
 
@@ -337,9 +337,42 @@ always make progress (`advancePastError`) or stay on a sync token
 (`}` / EOF / `;`). Select/switch/struct invalid corpus + 2s hang tests
 guard against unbounded parse loops.
 
-## Provisional concurrency keywords (2026-08-08)
+## Tamil-0.49 (2026-08-13)
 
-Superseded by Tamil-0.48 — keywords are in `keywords.yaml` and the lexer.
+Panic / recover: **அலறு** / **மீள்**, C `setjmp`/`longjmp` + `தள்ளிவை`
+unwind (`__thread` state per `இழை`). Reserved builtins like `மூடு`.
+MVP: `அலறு` takes `சரம்`; `மீள்()` returns `சரம்` (`""` if none).
+Rejected **பீதி** (≈ பதிப்பி), **வெருளி** (≈ வெளி), **எச்சரி** (warn ≠ abort).
+See `constructs/panic.yaml`.
+
+## Tamil-0.50 (2026-08-13)
+
+Panic / concurrency polish (no new keywords):
+- `அலறு` accepts primitives (`முழுஎண்`, `மிதவைஎண்`, `நிலை`, `இருமி8`,
+  `இருமி32`) and stringifies them; `மீள்` still returns `சரம்`.
+- Uncaught `அலறு` dumps a function-name stack, then aborts.
+- Panic / recover is per-`இழை` (recover in one thread does not see
+  another).
+- Unbuffered `தடத்தேர்வு` send only succeeds if a receiver is waiting
+  (Go select); default is taken otherwise.
+See `constructs/panic.yaml`, `goroutine.yaml`.
+
+## Tamil-0.51 (2026-08-13)
+
+`ஒவ்வொரு` over `தடம்`: at most one variable (the element); loop receives
+until `மூடு` (and drain). Send-only channels are an error. Bare
+`சுழல் ஒவ்வொரு x` is allowed (also for slices/maps). See `range.yaml`.
+
+## Tamil-0.52 (2026-08-13)
+
+Native heap + GC on the C backend (no new keywords):
+- Replace bump arena with malloc-backed stop-the-world conservative
+  mark-sweep (`aram_alloc`).
+- Safe points: poll at function entry / loop back-edges; park around
+  `தடம்` / `தடத்தேர்வு` cond-wait.
+- Thread registry + Linux `pthread_getattr_np` stack bounds.
+- `இழை` register/unregister; `aram_arena_alloc` is a wrapper.
+See `constructs/gc.yaml`. HTTP / sockets still later.
 
 ## Priority (2026-08-01)
 
@@ -392,3 +425,5 @@ Phase 1 progress: lexer, parser, typecheck, C emit (`emit`/`build`/`run`). NASM 
 | map | அகராதி | Tamil-0.35 |
 | delete | நீக்கு | Tamil-0.35 |
 | defer | தள்ளிவை | Tamil-0.37 |
+| panic | அலறு | Tamil-0.49 |
+| recover | மீள் | Tamil-0.49 |

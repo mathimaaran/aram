@@ -52,7 +52,9 @@ const (
 	GO          // இழை
 	CHAN        // தடம்
 	SELECT      // தடத்தேர்வு
-	CLOSE // மூடு (builtin; reserved)
+	CLOSE   // மூடு (builtin; reserved)
+	PANIC   // அலறு (builtin; reserved)
+	RECOVER // மீள் (builtin; reserved)
 
 	ADD // +
 	SUB // -
@@ -130,7 +132,9 @@ var kindNames = [...]string{
 	GO:          "GO",
 	CHAN:        "CHAN",
 	SELECT:      "SELECT",
-	CLOSE: "CLOSE",
+	CLOSE:   "CLOSE",
+	PANIC:   "PANIC",
+	RECOVER: "RECOVER",
 
 	ADD: "ADD",
 	SUB: "SUB",
@@ -209,6 +213,8 @@ var Keywords = map[string]Kind{
 	"தடம்":     CHAN,
 	"தடத்தேர்வு": SELECT,
 	"மூடு": CLOSE,
+	"அலறு": PANIC,
+	"மீள்":  RECOVER,
 }
 
 // LookupIdent returns the keyword kind or IDENT.

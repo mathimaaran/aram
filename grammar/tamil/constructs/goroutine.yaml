@@ -1,6 +1,6 @@
 id: goroutine
 status: codegen
-subset: Tamil-0.48
+subset: Tamil-0.51
 go_inspired: |
   go f()
   ch := make(chan bool)
@@ -30,7 +30,7 @@ semantics: >
   இழை before exit. தடம் T is a channel; ஆக்கு(தடம் T) unbuffered,
   ஆக்கு(தடம் T, n) buffered. <- send/recv; மூடு closes. தடத்தேர்வு
   with எனில் / மற்றபடி. Directional types தடம்<- T and <-தடம் T.
-  C backend. Range over channels deferred.
+  C backend. ஒவ்வொரு over தடம்: Tamil-0.51.
 examples:
   - tamil: |
       ச := ஆக்கு(தடம் சரம்)
@@ -48,3 +48,5 @@ notes:
   - "Select default reuses மற்றபடி."
   - "Send on closed channel aborts (fatal)."
   - "Recv on closed channel is always ready (zero value); மற்றபடி will not run."
+  - "Tamil-0.50: unbuffered தடத்தேர்வு send only if a recv waiter exists."
+  - "Tamil-0.51: சுழல் ஒவ்வொரு தடம் — recv until மூடு; at most one variable."
