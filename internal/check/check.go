@@ -12,32 +12,32 @@ import (
 type Type int
 
 const (
-	TypeInvalid Type = iota
-	TypeInt          // முழுஎண்
-	TypeBool         // நிலை
-	TypeString       // சரம்
-	TypeFloat        // மிதவைஎண்
-	TypeByte         // இருமி8
-	TypeRune         // இருமி32
-	TypeVoid         // no result
-	TypeSliceInt     // []முழுஎண்
-	TypeSliceBool    // []நிலை
-	TypeSliceStr     // []சரம்
-	TypeSliceFloat   // []மிதவைஎண்
-	TypeSliceByte    // []இருமி8
-	TypeSliceRune    // []இருமி32
-	TypeUntypedNil   // இன்மை before pointer context
+	TypeInvalid    Type = iota
+	TypeInt             // முழுஎண்
+	TypeBool            // நிலை
+	TypeString          // சரம்
+	TypeFloat           // மிதவைஎண்
+	TypeByte            // இருமி8
+	TypeRune            // இருமி32
+	TypeVoid            // no result
+	TypeSliceInt        // []முழுஎண்
+	TypeSliceBool       // []நிலை
+	TypeSliceStr        // []சரம்
+	TypeSliceFloat      // []மிதவைஎண்
+	TypeSliceByte       // []இருமி8
+	TypeSliceRune       // []இருமி32
+	TypeUntypedNil      // இன்மை before pointer context
 
-	typeNamedStart    = 100   // user-defined named structs
-	typeDefinedStart  = 5000  // defined non-struct named types (வகை T U)
-	typePointerStart  = 10000 // interned pointer types (*T)
-	typeSliceStart    = 20000 // interned nested slice types ([][]T, …)
-	typeTupleStart    = 30000 // multi-value return tuples
-	typeArrayStart    = 40000 // fixed arrays [N]T
-	typeMapStart      = 50000 // maps அகராதி[K]V
-	typeParamStart    = 60000 // function type parameters (generics)
-	typeFuncStart     = 70000 // function types செயல்பாடு(…) (Tamil-0.44)
-	typeChanStart     = 80000 // channels தடம் T (Tamil-0.48)
+	typeNamedStart   = 100   // user-defined named structs
+	typeDefinedStart = 5000  // defined non-struct named types (வகை T U)
+	typePointerStart = 10000 // interned pointer types (*T)
+	typeSliceStart   = 20000 // interned nested slice types ([][]T, …)
+	typeTupleStart   = 30000 // multi-value return tuples
+	typeArrayStart   = 40000 // fixed arrays [N]T
+	typeMapStart     = 50000 // maps அகராதி[K]V
+	typeParamStart   = 60000 // function type parameters (generics)
+	typeFuncStart    = 70000 // function types செயல்பாடு(…) (Tamil-0.44)
+	typeChanStart    = 80000 // channels தடம் T (Tamil-0.48)
 )
 
 func (t Type) String() string {
@@ -158,10 +158,10 @@ type MethodValueInfo struct {
 
 // MethodExprInfo records a method expression T.M or (*T).M (Tamil-0.47).
 type MethodExprInfo struct {
-	Method       *MethodInfo
-	Struct       *StructInfo
-	ExprRecvPtr  bool // true for (*T).M; false for T.M
-	RecvType     Type // T or *T as written (first param of the func value)
+	Method      *MethodInfo
+	Struct      *StructInfo
+	ExprRecvPtr bool // true for (*T).M; false for T.M
+	RecvType    Type // T or *T as written (first param of the func value)
 }
 
 // PkgFuncValueInfo records a package function used as a value.
@@ -336,7 +336,7 @@ type funcSig struct {
 	results        []Type // empty = void
 	exported       bool
 	decl           *ast.FuncDecl
-	typeParams     []Type  // schematic type-parameter ids (ordered)
+	typeParams     []Type // schematic type-parameter ids (ordered)
 	typeParamNames []string
 }
 
@@ -386,19 +386,19 @@ type litFrame struct {
 
 // Checker holds check state.
 type Checker struct {
-	errs         []error
-	scope        *scope
-	curFn        *funcSig
-	enclosingFn  *ast.FuncDecl
-	litStack     []litFrame
-	nextClosure  int
-	loopDepth    int
-	info         *Info
-	nextNamed    Type
-	nextDefined  Type
-	nextPtr      Type
-	nextSlice    Type
-	nextTuple    Type
+	errs          []error
+	scope         *scope
+	curFn         *funcSig
+	enclosingFn   *ast.FuncDecl
+	litStack      []litFrame
+	nextClosure   int
+	loopDepth     int
+	info          *Info
+	nextNamed     Type
+	nextDefined   Type
+	nextPtr       Type
+	nextSlice     Type
+	nextTuple     Type
 	nextArray     Type
 	nextMap       Type
 	nextTypeParam Type
@@ -406,9 +406,10 @@ type Checker struct {
 	nextChan      Type
 	typeParamEnv  map[string]Type // active while checking a generic function
 	allowMulti    bool            // true while unpacking a multi-value call
+	discardMulti  bool            // true while a statement discards a call's results
 	pkgs          map[string]*pkgState
 	cur           *pkgState
-	isEntry      bool
+	isEntry       bool
 }
 
 // File type-checks a single source file (as the entry package).
@@ -1442,7 +1443,10 @@ func (c *Checker) checkStmt(s ast.Stmt) {
 	case *ast.AssignStmt:
 		c.checkAssign(s)
 	case *ast.ExprStmt:
+		prev := c.discardMulti
+		c.discardMulti = true // Go permits discarding any function result(s).
 		c.checkExpr(s.X)
+		c.discardMulti = prev
 	case *ast.IfStmt:
 		c.checkIf(s)
 	case *ast.SwitchStmt:
@@ -2057,7 +2061,7 @@ func (c *Checker) checkExpr(e ast.Expr) Type {
 						t = c.funcOf(sig.params, sig.results)
 						c.info.PkgFuncValues[e] = &PkgFuncValueInfo{
 							Pkg: c.cur.name, Name: e.Name,
-							Params: append([]Type(nil), sig.params...),
+							Params:  append([]Type(nil), sig.params...),
 							Results: append([]Type(nil), sig.results...),
 						}
 					}
@@ -2320,7 +2324,7 @@ func (c *Checker) checkSelectorExpr(e *ast.SelectorExpr) Type {
 				ft := c.funcOf(sig.params, sig.results)
 				c.info.PkgFuncValues[e] = &PkgFuncValueInfo{
 					Pkg: imp.name, Name: e.Sel.Name,
-					Params: append([]Type(nil), sig.params...),
+					Params:  append([]Type(nil), sig.params...),
 					Results: append([]Type(nil), sig.results...),
 				}
 				return ft
@@ -3080,7 +3084,7 @@ func (c *Checker) explicitTypeArgs(e *ast.CallExpr) []Type {
 
 func (c *Checker) finishCallResult(e *ast.CallExpr, results []Type) Type {
 	t := c.typeFromResultList(results)
-	if IsTuple(t) && !c.allowMulti {
+	if IsTuple(t) && !c.allowMulti && !c.discardMulti {
 		c.error(e.Pos(), "multiple-value in single-value context")
 		return TypeInvalid
 	}

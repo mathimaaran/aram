@@ -75,46 +75,58 @@ func EmitProgram(pi *check.ProgramInfo) (string, error) {
 }
 
 type emitter struct {
-	info        *check.Info
-	pkg         string // current package while emitting funcs
-	entry       string
-	importLocal map[string]string // local qualifier → real package
-	curFn       *ast.FuncDecl     // function being emitted (for naked return)
-	fnHasDefer  bool              // current function contains தள்ளிவை
-	typeSubst   map[string]check.Type
-	monoName    string // override C name when emitting a monomorphized function
-	needConcat  bool
-	needSlice   bool
-	needAppend  bool
-	needMake    bool
-	needCopy    bool
-	needMap     bool
-	needDefer   bool
-	needFunc    bool // function values (Tamil-0.44)
-	needChan    bool // channels (Tamil-0.48)
-	needGo      bool // இழை (Tamil-0.48)
-	needPanic   bool // அலறு / மீள் (Tamil-0.49)
-	needNet     bool // வலை TCP sockets (Tamil-0.53)
-	needHttp    bool // பரிமாற்றம் HTTP (Tamil-0.54)
-	needArena   bool
-	needUTF8    bool
-	needRuneStr  bool // சரம்(rune) conversion helper
-	needStrBytes bool // சரம் ↔ []இருமி8 / []இருமி32 helpers
-	swID         int  // unique temps for திசைவி
-	deferID      int  // unique deferred-call thunk ids
-	goID         int  // unique temps for இழை / select / send
-	deferThunks  strings.Builder
-	funcTramps   strings.Builder
+	info          *check.Info
+	pkg           string // current package while emitting funcs
+	entry         string
+	importLocal   map[string]string // local qualifier → real package
+	curFn         *ast.FuncDecl     // function being emitted (for naked return)
+	fnHasDefer    bool              // current function contains தள்ளிவை
+	typeSubst     map[string]check.Type
+	monoName      string // override C name when emitting a monomorphized function
+	needConcat    bool
+	needSlice     bool
+	needAppend    bool
+	needMake      bool
+	needCopy      bool
+	needMap       bool
+	needDefer     bool
+	needFunc      bool // function values (Tamil-0.44)
+	needChan      bool // channels (Tamil-0.48)
+	needGo        bool // இழை (Tamil-0.48)
+	needPanic     bool // அலறு / மீள் (Tamil-0.49)
+	needNet       bool // வலை TCP sockets (Tamil-0.53)
+	needHttp      bool // பரிமாற்றம் HTTP (Tamil-0.54)
+	needArena     bool
+	needUTF8      bool
+	needRuneStr   bool // சரம்(rune) conversion helper
+	needStrBytes  bool // சரம் ↔ []இருமி8 / []இருமி32 helpers
+	swID          int  // unique temps for திசைவி
+	deferID       int  // unique deferred-call thunk ids
+	goID          int  // unique temps for இழை / select / send
+	deferThunks   strings.Builder
+	funcTramps    strings.Builder
 	funcTrampDone map[string]bool
 	funcCallDone  map[string]bool
 	promoted      map[string]check.Type // arena-promoted locals in current frame
 	loopIter      map[string]string     // Tamil-0.46: source name → __it_* in for cond/post
 	structsDone   bool                  // full struct bodies already emitted (before []Struct helpers)
+	tupleDecls    [][]check.Type        // declared multi-result function shapes
 }
 
 func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 	e.markSliceNeedsFromStructs()
 	e.markPanicNeeds(pkgs)
+	for _, p := range pkgs {
+		e.pkg = p.Name
+		e.importLocal = p.ImportLocal
+		for _, d := range p.File.Decls {
+			if fn, ok := d.(*ast.FuncDecl); ok {
+				if results := e.resultTypes(fn); len(results) > 1 {
+					e.tupleDecls = append(e.tupleDecls, results)
+				}
+			}
+		}
+	}
 	var pkgNames []string
 	for _, p := range pkgs {
 		pkgNames = append(pkgNames, p.Name)
@@ -2058,7 +2070,7 @@ func (e *emitter) writeArrayTypedefs(b *strings.Builder) {
 }
 
 func (e *emitter) writeTupleTypedefs(b *strings.Builder) {
-	if e.info == nil || len(e.info.TupleElems) == 0 {
+	if e.info == nil {
 		return
 	}
 	var keys []check.Type
@@ -2075,6 +2087,42 @@ func (e *emitter) writeTupleTypedefs(b *strings.Builder) {
 	seen := map[string]bool{}
 	for _, t := range keys {
 		elems := e.info.TupleElems[t]
+		name := e.retCName(elems)
+		if seen[name] {
+			continue
+		}
+		seen[name] = true
+		b.WriteString("typedef struct { ")
+		for i, el := range elems {
+			if check.IsSlice(el) {
+				e.needSlice = true
+			}
+			fmt.Fprintf(b, "%s r%d; ", e.cTypeFrom(el), i)
+		}
+		fmt.Fprintf(b, "} %s;\n", name)
+	}
+	// Imported intrinsic declarations may never appear as an expression tuple
+	// in the entry package, but their emitted C signatures still need a tuple
+	// typedef. Emit every declared multi-result function shape as well.
+	for _, fi := range e.info.Funcs {
+		if len(fi.Results) < 2 {
+			continue
+		}
+		name := e.retCName(fi.Results)
+		if seen[name] {
+			continue
+		}
+		seen[name] = true
+		b.WriteString("typedef struct { ")
+		for i, el := range fi.Results {
+			if check.IsSlice(el) {
+				e.needSlice = true
+			}
+			fmt.Fprintf(b, "%s r%d; ", e.cTypeFrom(el), i)
+		}
+		fmt.Fprintf(b, "} %s;\n", name)
+	}
+	for _, elems := range e.tupleDecls {
 		name := e.retCName(elems)
 		if seen[name] {
 			continue

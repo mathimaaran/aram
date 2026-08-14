@@ -40,16 +40,17 @@ func (e *emitter) writeHttpIntrinsic(b *strings.Builder, fn *ast.FuncDecl) bool 
 	if e.pkg != "பரிமாற்றம்" || fn == nil || fn.Name == nil || fn.Recv != nil {
 		return false
 	}
+	errType := cPkgIdent("வலை", "பிழை") + " *"
 	var call string
 	switch fn.Name.Name {
 	case "எழுது":
-		call = "\taram_http_write(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", " + cIdent("உடல்") + ".data, " + cIdent("உடல்") + ".len);\n"
+		call = "\treturn (" + errType + ")aram_http_write(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", " + cIdent("உடல்") + ".data, " + cIdent("உடல்") + ".len);\n"
 	case "எழுதுசரம்":
-		call = "\taram_http_write_str(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", " + cIdent("உடல்") + ");\n"
+		call = "\treturn (" + errType + ")aram_http_write_str(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", " + cIdent("உடல்") + ");\n"
 	case "சேவைஒன்று":
-		call = "\taram_http_serve_one(" + cIdent("கேட்பி") + ", " + cIdent("க") + ");\n"
+		call = "\treturn (" + errType + ")aram_http_serve_one(" + cIdent("கேட்பி") + ", " + cIdent("க") + ");\n"
 	case "கேட்டுசேவை":
-		call = "\taram_http_listen_and_serve(" + cIdent("முகவரி") + ", " + cIdent("க") + ");\n"
+		call = "\treturn (" + errType + ")aram_http_listen_and_serve(" + cIdent("முகவரி") + ", " + cIdent("க") + ");\n"
 	default:
 		return false
 	}

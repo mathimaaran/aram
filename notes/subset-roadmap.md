@@ -87,6 +87,7 @@ Out of scope for Tamil-0:
 - [x] Native heap + GC on C (STW conservative mark-sweep)
 - [x] TCP sockets (`கொணர் "வலை"`) on C/Linux
 - [x] HTTP server (`கொணர் "பரிமாற்றம்"`) on C/Linux
+- [x] Net / HTTP error returns (`*வலை.பிழை`)
 
 ## Later growth
 

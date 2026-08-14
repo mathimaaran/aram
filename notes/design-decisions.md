@@ -391,6 +391,14 @@ body. See `constructs/http.yaml`. Client / mux / TLS later.
 Also: string escapes `\n` `\r` `\t` `\\` `\"` are now interpreted in the lexer
 (needed for HTTP request lines).
 
+## Tamil-0.55 (2026-08-14)
+
+Network and HTTP operational failures return `*வலை.பிழை` rather than aborting.
+`பிழை` has numeric `குறியீடு` and text `செய்தி`; `இன்மை` means success.
+TCP constructors and I/O return `(value, *பிழை)`, while close, listener close,
+and HTTP operations return `*பிழை`. EOF remains `(0, இன்மை)`. Runtime
+invariant and allocation failures still abort.
+
 ## Priority (2026-08-01)
 
 Harden the language (other gaps) **before** starting the NASM x86-64

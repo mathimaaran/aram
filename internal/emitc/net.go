@@ -35,24 +35,26 @@ func (e *emitter) writeNetIntrinsic(b *strings.Builder, fn *ast.FuncDecl) bool {
 	if e.pkg != "வலை" || fn == nil || fn.Name == nil || fn.Recv != nil {
 		return false
 	}
+	errType := cPkgIdent("வலை", "பிழை") + " *"
+	ret := e.retCName(e.resultTypes(fn))
 	var call string
 	switch fn.Name.Name {
 	case "கேள்":
-		call = "\treturn aram_net_listen(" + cIdent("முகவரி") + ");\n"
+		call = "\taram_net_i64_result r = aram_net_listen(" + cIdent("முகவரி") + ");\n\treturn (" + ret + "){ r.value, (" + errType + ")r.err };\n"
 	case "ஏற்று":
-		call = "\treturn aram_net_accept(" + cIdent("க") + ");\n"
+		call = "\taram_net_i64_result r = aram_net_accept(" + cIdent("க") + ");\n\treturn (" + ret + "){ r.value, (" + errType + ")r.err };\n"
 	case "இணை":
-		call = "\treturn aram_net_dial(" + cIdent("முகவரி") + ");\n"
+		call = "\taram_net_i64_result r = aram_net_dial(" + cIdent("முகவரி") + ");\n\treturn (" + ret + "){ r.value, (" + errType + ")r.err };\n"
 	case "படி":
-		call = "\treturn aram_net_read(" + cIdent("இ") + ", " + cIdent("இடம்") + ".data, " + cIdent("இடம்") + ".len);\n"
+		call = "\taram_net_i64_result r = aram_net_read(" + cIdent("இ") + ", " + cIdent("இடம்") + ".data, " + cIdent("இடம்") + ".len);\n\treturn (" + ret + "){ r.value, (" + errType + ")r.err };\n"
 	case "எழுது":
-		call = "\treturn aram_net_write(" + cIdent("இ") + ", " + cIdent("தரவு") + ".data, " + cIdent("தரவு") + ".len);\n"
+		call = "\taram_net_i64_result r = aram_net_write(" + cIdent("இ") + ", " + cIdent("தரவு") + ".data, " + cIdent("தரவு") + ".len);\n\treturn (" + ret + "){ r.value, (" + errType + ")r.err };\n"
 	case "விடு":
-		call = "\taram_net_close(" + cIdent("இ") + ");\n"
+		call = "\treturn (" + errType + ")aram_net_close(" + cIdent("இ") + ");\n"
 	case "நிறுத்து":
-		call = "\taram_net_close(" + cIdent("க") + ");\n"
+		call = "\treturn (" + errType + ")aram_net_close(" + cIdent("க") + ");\n"
 	case "முகவரி":
-		call = "\treturn aram_net_addr(" + cIdent("க") + ");\n"
+		call = "\taram_net_str_result r = aram_net_addr(" + cIdent("க") + ");\n\treturn (" + ret + "){ r.value, (" + errType + ")r.err };\n"
 	default:
 		return false
 	}

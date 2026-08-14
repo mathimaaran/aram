@@ -1,6 +1,6 @@
 id: http
 status: codegen
-subset: Tamil-0.54
+subset: Tamil-0.55
 go_inspired: |
   http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
       w.Header().Set("Content-Type", "text/plain")
@@ -10,18 +10,19 @@ tamil_keywords: {}
 tamil_ebnf: |
   # no new syntax — stdlib package பரிமாற்றம் (கொணர் "பரிமாற்றம்")
 semantics: >
-  Tamil-0.54 adds a minimal HTTP/1.0 server via stdlib package பரிமாற்றம்
+  Tamil-0.55 adds a minimal HTTP/1.0 server via stdlib package பரிமாற்றம்
   (Go net/http shaped; no Handler interface yet). Types: கோரிக்கை (method/
   path/body), பதிலளிப்பு (response writer = conn fd), கையாளு = function
   type செயல்பாடு(கோரிக்கை, பதிலளிப்பு). எழுது / எழுதுசரம் write status +
   Content-Type + body. சேவைஒன்று(listener, handler) accepts one connection.
   கேட்டுசேவை(addr, handler) listens forever and handles each conn on a
-  new thread. Parsing is request-line + Content-Length body only. Failures
-  abort. No new keywords. Mux / headers map / client / TLS later.
+  new thread. Parsing is request-line + Content-Length body only. எழுது,
+  எழுதுசரம், சேவைஒன்று, and கேட்டுசேவை return *வலை.பிழை; success is இன்மை.
+  No new keywords. Mux / headers map / client / TLS later.
 examples:
   - tamil: |
       கொணர் "பரிமாற்றம்"
-      பரிமாற்றம்.கேட்டுசேவை(":8080", செயல்பாடு(கோ பரிமாற்றம்.கோரிக்கை, ப பரிமாற்றம்.பதிலளிப்பு) {
+      பிழை := பரிமாற்றம்.கேட்டுசேவை(":8080", செயல்பாடு(கோ பரிமாற்றம்.கோரிக்கை, ப பரிமாற்றம்.பதிலளிப்பு) {
           பரிமாற்றம்.எழுதுசரம்(ப, 200, "text/plain; charset=utf-8", "வணக்கம்")
       })
     go_equivalent: |
@@ -33,3 +34,4 @@ notes:
   - "கையாளு is a function value, not an interface."
   - "முறைமை = HTTP method (முறை is already struct methods)."
   - "Depends on வலை (Tamil-0.53); blocking I/O parks for GC."
+  - "Tamil-0.55: uses *வலை.பிழை for operational failures."

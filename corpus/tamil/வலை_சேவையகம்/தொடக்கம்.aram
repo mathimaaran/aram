@@ -17,7 +17,7 @@
                 "<!DOCTYPE html><html lang=\"ta\"><head><meta charset=\"utf-8\"><title>அறம்</title></head>"+
                     "<body style=\"font-family:sans-serif;margin:3rem\">"+
                     "<h1>வணக்கம், அறம்!</h1>"+
-                    "<p>Tamil-0.54 HTTP சேவையகம்</p>"+
+                    "<p>Tamil-0.55 HTTP சேவையகம்</p>"+
                     "<p><a href=\"/api\">/api</a></p>"+
                     "</body></html>")
             திருப்பு
