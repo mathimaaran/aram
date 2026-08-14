@@ -19,6 +19,8 @@ Corpus programs are part of the frozen snapshot; treat changes as subset bumps u
 | `வலைபரிமாற்றம்/` | Tamil-0.56 | HTTP request headers + exact-path mux |
 | `வலைபரிமாற்றம்_html/` | Tamil-0.54 | HTTP HTML response |
 | `வலை_பிழை/` | Tamil-0.55 | TCP error result (`*வலை.பிழை`) |
+| `வலை_வாடிக்கையாளர்/` | Tamil-0.57 | HTTP client + custom response headers |
+| `வலை_வாடிக்கையாளர்_பிழை/` | Tamil-0.57 | HTTPS/URL/reserved-header errors |
 
 ## Invalid (`invalid/`)
 

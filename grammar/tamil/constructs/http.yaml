@@ -1,41 +1,41 @@
 id: http
 status: codegen
-subset: Tamil-0.56
+subset: Tamil-0.57
 go_inspired: |
-  http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-      w.Header().Set("Content-Type", "text/plain")
-      w.Write([]byte("hi"))
-  }))
+  resp, err := http.Post("http://127.0.0.1:8080/echo", "text/plain", body)
+  w.Header().Set("X-Echo", "ok")
+  w.Write([]byte("hi"))
 tamil_keywords: {}
 tamil_ebnf: |
   # no new syntax — stdlib package பரிமாற்றம் (கொணர் "பரிமாற்றம்")
 semantics: >
-  Tamil-0.56 provides a minimal HTTP/1.0 server via stdlib package பரிமாற்றம்
-  (Go net/http shaped; no Handler interface yet). Types: கோரிக்கை (method/
-  path/body/headers), பதிலளிப்பு (response writer = conn fd), கையாளு = function
-  type செயல்பாடு(கோரிக்கை, பதிலளிப்பு). எழுது / எழுதுசரம் write status +
-  Content-Type + body. சேவைஒன்று(listener, handler) accepts one connection.
-  கேட்டுசேவை(addr, handler) listens forever and handles each conn on a
-  new thread. Parsing is request-line + Content-Length body only. எழுது,
-  எழுதுசரம், சேவைஒன்று, and கேட்டுசேவை return *வலை.பிழை; success is இன்மை.
-  கோரிக்கை.தலைப்புகள் is an அகராதி[சரம்]சரம் with lowercase names and
-  last-value-wins duplicates. URL queries are removed from கோரிக்கை.பாதை.
-  வழிப்படுத்தி provides exact-path பதிவு plus one-shot/long-running
-  வழிசேவை; registering a path again replaces its handler, and misses return
-  404. Register routes before serving. No new keywords. Client / TLS later.
+  Tamil-0.57 extends பரிமாற்றம் with a synchronous HTTP/1.0 client and
+  custom response-header writes. Server types and mux from 0.56 remain.
+  பதில் has குறியீடு, விளக்கம் (status text; நிலை is the bool keyword),
+  தலைப்புகள், and உடல். Client APIs: பெறு(url), பதிவிடு(url, contentType,
+  body), and கோரு(method, url, headers, body) return (பதில், *வலை.பிழை).
+  Only http:// host[:port]/path][?query] is supported (default port 80,
+  fragment stripped, IPv4 via வலை). HTTPS, redirects, chunked bodies,
+  timeouts, TLS, and pooling are out of scope. Response writers
+  எழுதுதலைப்புகள் / எழுதுசரந்தலைப்புகள் take an optional header map while
+  உள்ளடக்கம் remains authoritative Content-Type. User headers may not set
+  Host, Content-Length, Connection, Transfer-Encoding, or Content-Type;
+  CR/LF/NUL in names/values return *வலை.பிழை. Header maps are last-wins;
+  response request maps lowercase names on read. Header/body limits match
+  the server (64 KiB / 1 MiB).
 examples:
   - tamil: |
       கொணர் "பரிமாற்றம்"
-      வழி := பரிமாற்றம்.புதியவழிப்படுத்தி()
-      பரிமாற்றம்.பதிவு(வழி, "/", செயல்பாடு(கோ பரிமாற்றம்.கோரிக்கை, ப பரிமாற்றம்.பதிலளிப்பு) {
-          பரிமாற்றம்.எழுதுசரம்(ப, 200, "text/plain; charset=utf-8",
-              கோ.தலைப்புகள்["user-agent"])
-      })
-      பிழை := பரிமாற்றம்.வழிசேவை(":8080", வழி)
+      தலை := அகராதி[சரம்]சரம்{"X-Aram": "வணக்கம்"}
+      பதில், பிழை := பரிமாற்றம்.கோரு("POST", "http://127.0.0.1:8080/echo", தலை, []இருமி8("hi"))
+      எனில் பிழை == இன்மை {
+          பதிப்பி(பதில்.குறியீடு)
+          பதிப்பி(பதில்.தலைப்புகள்["x-echo"])
+      }
     go_equivalent: |
-      http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-          w.Write([]byte("வணக்கம்"))
-      }))
+      req, _ := http.NewRequest("POST", "http://127.0.0.1:8080/echo", bytes.NewReader([]byte("hi")))
+      req.Header.Set("X-Aram", "வணக்கம்")
+      resp, _ := http.DefaultClient.Do(req)
 notes:
   - "Locked 2026-08-13: package பரிமாற்றம் (transfer / exchange)."
   - "கையாளு is a function value, not an interface."
@@ -43,3 +43,4 @@ notes:
   - "Depends on வலை (Tamil-0.53); blocking I/O parks for GC."
   - "Tamil-0.55: uses *வலை.பிழை for operational failures."
   - "Tamil-0.56: lowercase request headers + opaque exact-path வழிப்படுத்தி."
+  - "Tamil-0.57: client பெறு/பதிவிடு/கோரு + எழுதுதலைப்புகள்; status text field is விளக்கம்."

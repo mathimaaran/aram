@@ -89,6 +89,7 @@ Out of scope for Tamil-0:
 - [x] HTTP server (`கொணர் "பரிமாற்றம்"`) on C/Linux
 - [x] Net / HTTP error returns (`*வலை.பிழை`)
 - [x] HTTP request headers + exact-path mux
+- [x] HTTP client + custom response headers
 
 ## Later growth
 

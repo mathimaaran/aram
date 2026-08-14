@@ -383,3 +383,104 @@ func TestHttpHTML(t *testing.T) {
 		t.Fatalf("missing html body: %q", out)
 	}
 }
+
+func TestHttpClientAndResponseHeaders(t *testing.T) {
+	dir := filepath.Join(root(t), "corpus", "tamil", "வலை_வாடிக்கையாளர்")
+	prog, lerrs := load.LoadProgram([]string{dir})
+	if len(lerrs) != 0 {
+		t.Fatal(lerrs)
+	}
+	merged, merrs := prog.MergedFiles()
+	if len(merrs) != 0 {
+		t.Fatal(merrs)
+	}
+	pi, errs := check.CheckProgram(merged, prog.Entry.Name)
+	if len(errs) != 0 {
+		t.Fatal(errs)
+	}
+	cSrc, err := emitc.EmitProgram(pi)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(cSrc, "aram_http_do") {
+		t.Fatalf("missing HTTP client runtime\n%s", cSrc)
+	}
+	if !strings.Contains(cSrc, "aram_http_headers_each") {
+		t.Fatalf("missing header foreach bridge\n%s", cSrc)
+	}
+	cc, err := exec.LookPath("gcc")
+	if err != nil {
+		cc, err = exec.LookPath("cc")
+		if err != nil {
+			t.Skip("gcc/cc not available")
+		}
+	}
+	tmp := t.TempDir()
+	cFile := filepath.Join(tmp, "out.c")
+	bin := filepath.Join(tmp, "out")
+	if err := os.WriteFile(cFile, []byte(cSrc), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := exec.Command(cc, "-std=c11", "-O0", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
+		t.Fatalf("cc: %v\n%s\n%s", err, out, cSrc)
+	}
+	got, err := exec.Command(bin).CombinedOutput()
+	if err != nil {
+		t.Fatalf("run: %v\n%s\nC:\n%s", err, got, cSrc)
+	}
+	out := string(got)
+	for _, want := range []string{"200\n", "200 OK\n", "ok\n", "அறம்\n", "hello\n"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("missing %q in %q\nC:\n%s", want, out, cSrc)
+		}
+	}
+}
+
+func TestHttpClientErrors(t *testing.T) {
+	dir := filepath.Join(root(t), "corpus", "tamil", "வலை_வாடிக்கையாளர்_பிழை")
+	prog, lerrs := load.LoadProgram([]string{dir})
+	if len(lerrs) != 0 {
+		t.Fatal(lerrs)
+	}
+	merged, merrs := prog.MergedFiles()
+	if len(merrs) != 0 {
+		t.Fatal(merrs)
+	}
+	pi, errs := check.CheckProgram(merged, prog.Entry.Name)
+	if len(errs) != 0 {
+		t.Fatal(errs)
+	}
+	cSrc, err := emitc.EmitProgram(pi)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cc, err := exec.LookPath("gcc")
+	if err != nil {
+		cc, err = exec.LookPath("cc")
+		if err != nil {
+			t.Skip("gcc/cc not available")
+		}
+	}
+	tmp := t.TempDir()
+	cFile := filepath.Join(tmp, "out.c")
+	bin := filepath.Join(tmp, "out")
+	if err := os.WriteFile(cFile, []byte(cSrc), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := exec.Command(cc, "-std=c11", "-O0", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
+		t.Fatalf("cc: %v\n%s\n%s", err, out, cSrc)
+	}
+	got, err := exec.Command(bin).CombinedOutput()
+	if err != nil {
+		t.Fatalf("run: %v\n%s\nC:\n%s", err, got, cSrc)
+	}
+	out := string(got)
+	for _, want := range []string{"HTTPS not supported", "invalid HTTP URL", "reserved HTTP header"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("missing %q in %q\nC:\n%s", want, out, cSrc)
+		}
+	}
+	if strings.Contains(out, "\nleak\n") || strings.HasSuffix(out, "leak\n") {
+		t.Fatalf("reserved header write still sent body: %q", out)
+	}
+}

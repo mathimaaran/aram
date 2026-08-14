@@ -411,6 +411,20 @@ write 404 for misses. Routes are registered before serving. The opaque
 runtime table is necessary because function values are not valid struct
 fields in the current language subset.
 
+## Tamil-0.57 (2026-08-14)
+
+Synchronous HTTP/1.0 client in `பரிமாற்றம்`: `பெறு`, `பதிவிடு`, and
+`கோரு` return `(பதில், *வலை.பிழை)`. `பதில்` fields are `குறியீடு`,
+`விளக்கம்` (status text — `நிலை` is the bool keyword), `தலைப்புகள்`,
+and `உடல்`. Only `http://` IPv4 URLs; HTTPS/chunked/redirects/TLS out of
+scope.
+
+Custom response headers via additive `எழுதுதலைப்புகள்` /
+`எழுதுசரந்தலைப்புகள்` (map-passing; `பதிலளிப்பு` stays a conn fd).
+`உள்ளடக்கம்` owns Content-Type. User maps may not set Host,
+Content-Length, Connection, Transfer-Encoding, or Content-Type; CR/LF
+injection returns `*வலை.பிழை`.
+
 ## Priority (2026-08-01)
 
 Harden the language (other gaps) **before** starting the NASM x86-64
