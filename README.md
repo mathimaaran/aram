@@ -31,6 +31,7 @@ notes/           design decisions, roadmap, Unicode, Tamil fonts
 grammar/go/      frozen Go reference (inspiration, not a checklist)
 grammar/tamil/   Aram grammar, keywords, construct cards
 corpus/tamil/    example and test programs
+stdlib/          compiler stdlib (வலை, பரிமாற்றம்)
 tools/           experiments (empty in Phase 0)
 ```
 

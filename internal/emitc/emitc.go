@@ -94,6 +94,8 @@ type emitter struct {
 	needChan    bool // channels (Tamil-0.48)
 	needGo      bool // இழை (Tamil-0.48)
 	needPanic   bool // அலறு / மீள் (Tamil-0.49)
+	needNet     bool // வலை TCP sockets (Tamil-0.53)
+	needHttp    bool // பரிமாற்றம் HTTP (Tamil-0.54)
 	needArena   bool
 	needUTF8    bool
 	needRuneStr  bool // சரம்(rune) conversion helper
@@ -113,6 +115,12 @@ type emitter struct {
 func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 	e.markSliceNeedsFromStructs()
 	e.markPanicNeeds(pkgs)
+	var pkgNames []string
+	for _, p := range pkgs {
+		pkgNames = append(pkgNames, p.Name)
+	}
+	e.markNetNeeds(pkgNames)
+	e.markHttpNeeds(pkgNames)
 
 	var body strings.Builder
 	for _, p := range pkgs {
@@ -143,7 +151,7 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 		e.needFunc = true
 	}
 	e.markChanNeeds()
-	if e.needArena || e.needConcat || e.needAppend || e.needSlice || e.needMake || e.needRuneStr || e.needStrBytes || e.needMap || e.needDefer || e.needFunc || e.needChan || e.needGo {
+	if e.needArena || e.needConcat || e.needAppend || e.needSlice || e.needMake || e.needRuneStr || e.needStrBytes || e.needMap || e.needDefer || e.needFunc || e.needChan || e.needGo || e.needNet || e.needHttp {
 		e.needArena = true
 	}
 
@@ -183,6 +191,7 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 
 	e.writeFuncTypedef(&b)
 	e.writeGCRuntime(&b)
+	e.writeNetRuntime(&b)
 	e.writeChanRuntime(&b)
 	e.writePanicRuntime(&b)
 	if e.needConcat {
@@ -438,6 +447,7 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 		b.WriteString("\tfor (int64_t k = 0; k < n; k++) d[k] = (int32_t)aram_utf8_next(s, &i);\n")
 		b.WriteString("\treturn (aram_slice_i32){ d, n, n };\n}\n")
 	}
+	e.writeHttpRuntime(&b)
 	b.WriteByte('\n')
 
 	// Named structs: bodies (if not already for []Struct), then eq/print.
@@ -1363,6 +1373,10 @@ func (e *emitter) resolveTypeExpr(te ast.TypeExpr) check.Type {
 			return check.TypeString
 		case "மிதவைஎண்":
 			return check.TypeFloat
+		case "இருமி8":
+			return check.TypeByte
+		case "இருமி32":
+			return check.TypeRune
 		}
 		return check.TypeInvalid
 	case *ast.SliceType:
@@ -2164,6 +2178,12 @@ func (e *emitter) cFuncSig(fn *ast.FuncDecl) string {
 }
 
 func (e *emitter) writeFunc(b *strings.Builder, fn *ast.FuncDecl) {
+	if e.writeNetIntrinsic(b, fn) {
+		return
+	}
+	if e.writeHttpIntrinsic(b, fn) {
+		return
+	}
 	prev := e.curFn
 	prevDefer := e.fnHasDefer
 	prevPromo := e.promoted
@@ -4630,6 +4650,8 @@ func escapeCString(s string) string {
 			b.WriteString(`\"`)
 		case '\n':
 			b.WriteString(`\n`)
+		case '\r':
+			b.WriteString(`\r`)
 		case '\t':
 			b.WriteString(`\t`)
 		default:

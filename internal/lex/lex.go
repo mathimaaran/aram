@@ -3,6 +3,7 @@ package lex
 
 import (
 	"fmt"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 
@@ -213,33 +214,46 @@ func (l *Lexer) readFloatFrac(start token.Pos) token.Token {
 func (l *Lexer) readString(start token.Pos) token.Token {
 	// consume opening "
 	l.next()
-	beg := l.off
+	var b strings.Builder
 	for {
 		r := l.peek()
 		if r < 0 {
 			l.errf(start, "unterminated string literal")
-			return token.Token{Kind: token.ILLEGAL, Lit: l.src[beg:l.off], Pos: start}
+			return token.Token{Kind: token.ILLEGAL, Lit: b.String(), Pos: start}
 		}
 		if r == '\n' {
 			l.errf(start, "newline in string literal")
-			return token.Token{Kind: token.ILLEGAL, Lit: l.src[beg:l.off], Pos: start}
+			return token.Token{Kind: token.ILLEGAL, Lit: b.String(), Pos: start}
 		}
 		if r == '\\' {
 			l.next()
 			esc := l.peek()
 			if esc < 0 {
 				l.errf(start, "unterminated string escape")
-				return token.Token{Kind: token.ILLEGAL, Lit: l.src[beg:l.off], Pos: start}
+				return token.Token{Kind: token.ILLEGAL, Lit: b.String(), Pos: start}
 			}
-			// Tamil-0: allow common escapes; store raw including backslash
 			l.next()
+			switch esc {
+			case 'n':
+				b.WriteByte('\n')
+			case 'r':
+				b.WriteByte('\r')
+			case 't':
+				b.WriteByte('\t')
+			case '\\':
+				b.WriteByte('\\')
+			case '"':
+				b.WriteByte('"')
+			default:
+				l.errf(start, "unknown escape \\%c", esc)
+			}
 			continue
 		}
 		if r == '"' {
-			lit := l.src[beg:l.off]
 			l.next() // closing quote
-			return token.Token{Kind: token.STRING, Lit: lit, Pos: start}
+			return token.Token{Kind: token.STRING, Lit: b.String(), Pos: start}
 		}
+		b.WriteRune(r)
 		l.next()
 	}
 }

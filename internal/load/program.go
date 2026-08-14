@@ -87,7 +87,11 @@ func LoadProgram(args []string) (*Program, []error) {
 					errs = append(errs, fmt.Errorf("%s: empty import path", f.Path))
 					continue
 				}
-				dir := filepath.Clean(filepath.Join(base, rel))
+				dir, rerr := resolveImportDir(base, rel)
+				if rerr != nil {
+					errs = append(errs, fmt.Errorf("%s: கொணர் %q: %v", f.Path, rel, rerr))
+					continue
+				}
 				if dep := byDir[dir]; dep != nil {
 					bindImport(im, dep.Name)
 				}
@@ -103,8 +107,10 @@ func LoadProgram(args []string) (*Program, []error) {
 				for _, f := range pkg.Files {
 					base := filepath.Dir(f.Path)
 					for _, im := range f.Imports {
-						if im.Path != nil && filepath.Clean(filepath.Join(base, im.Path.Value)) == job.dir {
-							bindImport(im, dep.Name)
+						if im.Path != nil {
+							if d, err := resolveImportDir(base, im.Path.Value); err == nil && d == job.dir {
+								bindImport(im, dep.Name)
+							}
 						}
 					}
 				}
@@ -137,8 +143,10 @@ func LoadProgram(args []string) (*Program, []error) {
 			for _, f := range pkg.Files {
 				base := filepath.Dir(f.Path)
 				for _, im := range f.Imports {
-					if im.Path != nil && filepath.Clean(filepath.Join(base, im.Path.Value)) == job.dir {
-						bindImport(im, name)
+					if im.Path != nil {
+						if d, err := resolveImportDir(base, im.Path.Value); err == nil && d == job.dir {
+							bindImport(im, name)
+						}
 					}
 				}
 			}

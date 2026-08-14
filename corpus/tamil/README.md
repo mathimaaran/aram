@@ -15,6 +15,9 @@ Corpus programs are part of the frozen snapshot; treat changes as subset bumps u
 | `சுழல்.aram` | Tamil-0.1 | `சுழல்` C-style + while-like loops |
 | `பல்கோப்பு/` | Tamil-0.9 | same-package multi-file (`aram பல்கோப்பு`) |
 | `கொணர்_எடு/` | Tamil-0.10 | `கொணர் "கணிதம்"` + `கணிதம்.கூட்டு` |
+| `வலை_எதிரொலி/` | Tamil-0.53 | TCP echo via `கொணர் "வலை"` |
+| `வலைபரிமாற்றம்/` | Tamil-0.54 | HTTP plain response |
+| `வலைபரிமாற்றம்_html/` | Tamil-0.54 | HTTP HTML response |
 
 ## Invalid (`invalid/`)
 

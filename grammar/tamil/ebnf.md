@@ -2,7 +2,7 @@
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
-Status: **Tamil-0.52** (2026-08-13) — native heap + GC (no new syntax).
+Status: **Tamil-0.54** (2026-08-13) — HTTP via `கொணர் "பரிமாற்றம்"` (no new syntax).
 
 ```
 SourceFile    = PackageClause { ImportDecl } { TopLevelDecl } .
@@ -298,6 +298,18 @@ dump, per-`இழை` state. See `constructs/panic.yaml`. C backend:
 
 No new syntax. C backend uses a stop-the-world conservative mark-sweep
 heap instead of a bump arena. See `constructs/gc.yaml`.
+
+## TCP sockets (Tamil-0.53)
+
+No new syntax. Stdlib package `வலை` (`கொணர் "வலை"`): `கேள்` / `ஏற்று` /
+`இணை` / `படி` / `எழுது` / `விடு` / `நிறுத்து` / `முகவரி`. TCP IPv4, Linux
+C backend. See `constructs/net.yaml`.
+
+## HTTP (Tamil-0.54)
+
+No new syntax. Stdlib package `பரிமாற்றம்` (`கொணர் "பரிமாற்றம்"`):
+`கோரிக்கை` / `பதிலளிப்பு` / `கையாளு`, `எழுது` / `எழுதுசரம்`,
+`சேவைஒன்று` / `கேட்டுசேவை`. See `constructs/http.yaml`.
 
 ## Entry convention
 

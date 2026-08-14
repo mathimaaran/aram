@@ -85,6 +85,8 @@ Out of scope for Tamil-0:
 - [x] Panic / concurrency polish (typed `அலறு`, traces, unbuffered select)
 - [x] `ஒவ்வொரு` over `தடம்`
 - [x] Native heap + GC on C (STW conservative mark-sweep)
+- [x] TCP sockets (`கொணர் "வலை"`) on C/Linux
+- [x] HTTP server (`கொணர் "பரிமாற்றம்"`) on C/Linux
 
 ## Later growth
 

@@ -12,7 +12,7 @@ semantics: >
   ஆக்கு, closures, தடம், தள்ளிவை thunks). There is no free keyword.
   Safe points: aram_gc_poll at function entry and loop back-edges, and
   park around தடம் / தடத்தேர்வு cond-wait. Linux pthread stack bounds
-  (pthread_getattr_np). No new Tamil keywords. HTTP / sockets still later.
+  (pthread_getattr_np). No new Tamil keywords.   Sockets: Tamil-0.53 (`வலை`). HTTP: Tamil-0.54 (`பரிமாற்றம்`).
 examples:
   - tamil: |
       மாறி ச சரம் = ""

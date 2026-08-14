@@ -1,0 +1,36 @@
+id: net
+status: codegen
+subset: Tamil-0.53
+go_inspired: |
+  ln, _ := net.Listen("tcp", ":0")
+  c, _ := net.Dial("tcp", ln.Addr().String())
+  c.Write([]byte("hi"))
+  n, _ := c.Read(buf)
+  c.Close()
+  ln.Close()
+tamil_keywords: {}
+tamil_ebnf: |
+  # no new syntax — stdlib package வலை (கொணர் "வலை")
+semantics: >
+  Tamil-0.53 adds TCP sockets via stdlib package வலை (Go net, TCP only).
+  கொணர் "வலை" resolves to the compiler stdlib (not a relative directory).
+  Types கேட்பி (listener) and இணைப்பு (conn) are defined முழுஎண் (fds).
+  கேள்(addr) listens (":port" or "host:port"); ஏற்று accepts; இணை dials;
+  படி/எழுது use []இருமி8 (படி returns 0 on EOF); விடு closes a conn;
+  நிறுத்து closes a listener; முகவரி returns "host:port" (0.0.0.0 → 127.0.0.1).
+  Failures abort. Blocking I/O parks so GC can run. No new keywords. UDP / TLS
+  later; HTTP is Tamil-0.54 (`பரிமாற்றம்`).
+examples:
+  - tamil: |
+      கொணர் "வலை"
+      க := வலை.கேள்(":0")
+      இ := வலை.இணை(வலை.முகவரி(க))
+    go_equivalent: |
+      import "net"
+      ln, _ := net.Listen("tcp", ":0")
+      c, _ := net.Dial("tcp", ln.Addr().String())
+notes:
+  - "Locked 2026-08-13: package வலை; TCP IPv4; abort on error."
+  - "விடு = close conn; நிறுத்து = stop listener (மூடு is the chan keyword)."
+  - "கேள் = listen; ஏற்று = accept; இணை = dial/connect; படி/எழுது = read/write."
+  - "Stdlib path: stdlib/வலை/; dummy .aram signatures, C intrinsics in emitc."

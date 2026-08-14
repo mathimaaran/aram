@@ -374,6 +374,23 @@ Native heap + GC on the C backend (no new keywords):
 - `இழை` register/unregister; `aram_arena_alloc` is a wrapper.
 See `constructs/gc.yaml`. HTTP / sockets still later.
 
+## Tamil-0.53 (2026-08-13)
+
+TCP sockets on the C/Linux backend via stdlib package **வலை** (no new
+keywords). `கொணர் "வலை"` resolves to `stdlib/வலை`. Listen/accept/dial,
+read/write `[]இருமி8`, close, local `முகவரி`. Blocking I/O parks for GC.
+Failures abort. UDP / TLS / HTTP later. See `constructs/net.yaml`.
+
+## Tamil-0.54 (2026-08-13)
+
+Minimal HTTP/1.0 server via stdlib package **பரிமாற்றம்** (no new keywords).
+Handler is a function value (`கையாளு`), not an interface. `சேவைஒன்று` for
+one request; `கேட்டுசேவை` listen loop with per-conn threads. Write status +
+Content-Type + body (`எழுது` / `எழுதுசரம்`). Request exposes method, path,
+body. See `constructs/http.yaml`. Client / mux / TLS later.
+Also: string escapes `\n` `\r` `\t` `\\` `\"` are now interpreted in the lexer
+(needed for HTTP request lines).
+
 ## Priority (2026-08-01)
 
 Harden the language (other gaps) **before** starting the NASM x86-64

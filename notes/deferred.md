@@ -13,7 +13,7 @@ Update when a subset ships (strike or move items) or when a construct card recor
 | Interfaces | Only if earned | method.yaml |
 | Generic types / constraints | After interfaces earn a place | generics.yaml |
 
-Shipped: 0.11–0.52 (through native heap + GC).
+Shipped: 0.11–0.54 (through HTTP / பரிமாற்றம்).
 
 ## Struct & types
 
@@ -41,6 +41,8 @@ Shipped: 0.11–0.52 (through native heap + GC).
 | Item | Notes | Source |
 |------|--------|--------|
 | ~~GC / native heap~~ | Tamil-0.52 STW conservative mark-sweep on C | gc.yaml |
+| ~~TCP sockets~~ | Tamil-0.53 `கொணர் "வலை"` (listen/dial/read/write) | net.yaml |
+| ~~HTTP server~~ | Tamil-0.54 `கொணர் "பரிமாற்றம்"` (handler func values) | http.yaml |
 | Goroutines / channels | Tamil-0.48 on C (pthread); see goroutine.yaml | goroutine.yaml |
 | NASM + custom IR | IR when NASM begins | design-decisions |
 | Windows / macOS primary targets | Linux-first | Non-goals |
