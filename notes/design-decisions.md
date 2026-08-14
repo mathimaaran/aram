@@ -399,6 +399,18 @@ TCP constructors and I/O return `(value, *பிழை)`, while close, listener 
 and HTTP operations return `*பிழை`. EOF remains `(0, இன்மை)`. Runtime
 invariant and allocation failures still abort.
 
+## Tamil-0.56 (2026-08-14)
+
+HTTP requests expose `தலைப்புகள் அகராதி[சரம்]சரம்`. Header names are
+lowercased, surrounding value whitespace is trimmed, and repeated names use
+the last value. `பாதை` excludes the URL query.
+
+`பரிமாற்றம்.வழிப்படுத்தி` is an opaque exact-path mux. `பதிவு` adds or
+replaces a handler; `வழிசேவைஒன்று` and `வழிசேவை` dispatch requests and
+write 404 for misses. Routes are registered before serving. The opaque
+runtime table is necessary because function values are not valid struct
+fields in the current language subset.
+
 ## Priority (2026-08-01)
 
 Harden the language (other gaps) **before** starting the NASM x86-64

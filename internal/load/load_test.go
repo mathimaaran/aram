@@ -296,8 +296,11 @@ func TestHttpServeOne(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(cSrc, "aram_http_serve_one") {
-		t.Fatalf("missing aram_http_serve_one\n%s", cSrc)
+	if !strings.Contains(cSrc, "aram_http_mux_serve_one") {
+		t.Fatalf("missing HTTP mux serve runtime\n%s", cSrc)
+	}
+	if !strings.Contains(cSrc, "aram_http_headers_set") {
+		t.Fatalf("missing request-header map bridge\n%s", cSrc)
 	}
 	cc, err := exec.LookPath("gcc")
 	if err != nil {
@@ -325,6 +328,12 @@ func TestHttpServeOne(t *testing.T) {
 	}
 	if !strings.Contains(out, "வணக்கம்") {
 		t.Fatalf("missing body: %q\nC:\n%s", out, cSrc)
+	}
+	if !strings.Contains(out, "HTTP/1.0 404") || !strings.Contains(out, "காணவில்லை") {
+		t.Fatalf("missing mux 404: %q\nC:\n%s", out, cSrc)
+	}
+	if strings.Contains(out, "பழையது") {
+		t.Fatalf("duplicate route did not replace handler: %q\nC:\n%s", out, cSrc)
 	}
 }
 

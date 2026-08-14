@@ -13,7 +13,7 @@ Update when a subset ships (strike or move items) or when a construct card recor
 | Interfaces | Only if earned | method.yaml |
 | Generic types / constraints | After interfaces earn a place | generics.yaml |
 
-Shipped: 0.11–0.55 (through HTTP error returns / பரிமாற்றம்).
+Shipped: 0.11–0.56 (through HTTP request headers + exact-path mux).
 
 ## Struct & types
 
@@ -44,6 +44,7 @@ Shipped: 0.11–0.55 (through HTTP error returns / பரிமாற்றம�
 | ~~TCP sockets~~ | Tamil-0.53 `கொணர் "வலை"` (listen/dial/read/write) | net.yaml |
 | ~~HTTP server~~ | Tamil-0.54 `கொணர் "பரிமாற்றம்"` (handler func values) | http.yaml |
 | ~~Net / HTTP error returns~~ | Tamil-0.55 `*வலை.பிழை`; EOF remains `(0, இன்மை)` | net.yaml / http.yaml |
+| ~~HTTP request headers + mux~~ | Tamil-0.56 lowercase header map + exact paths | http.yaml |
 | Goroutines / channels | Tamil-0.48 on C (pthread); see goroutine.yaml | goroutine.yaml |
 | NASM + custom IR | IR when NASM begins | design-decisions |
 | Windows / macOS primary targets | Linux-first | Non-goals |

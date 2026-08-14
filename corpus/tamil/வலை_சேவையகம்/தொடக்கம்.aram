@@ -1,4 +1,4 @@
-// Aram: வலை_சேவையகம் — long-running HTTP server for browser testing (Tamil-0.54)
+// Aram: வலை_சேவையகம் — long-running HTTP mux server (Tamil-0.56)
 //
 //	.tools/go/bin/go run ./cmd/aram run corpus/tamil/வலை_சேவையகம்
 //	Open http://127.0.0.1:8080/
@@ -11,22 +11,19 @@
 
 செயல்பாடு தொடக்கம்() {
     பதிப்பி("http://127.0.0.1:8080/")
-    பரிமாற்றம்.கேட்டுசேவை(":8080", செயல்பாடு(கோ பரிமாற்றம்.கோரிக்கை, ப பரிமாற்றம்.பதிலளிப்பு) {
-        எனில் கோ.பாதை == "/" {
-            பரிமாற்றம்.எழுதுசரம்(ப, 200, "text/html; charset=utf-8",
-                "<!DOCTYPE html><html lang=\"ta\"><head><meta charset=\"utf-8\"><title>அறம்</title></head>"+
-                    "<body style=\"font-family:sans-serif;margin:3rem\">"+
-                    "<h1>வணக்கம், அறம்!</h1>"+
-                    "<p>Tamil-0.55 HTTP சேவையகம்</p>"+
-                    "<p><a href=\"/api\">/api</a></p>"+
-                    "</body></html>")
-            திருப்பு
-        }
-        எனில் கோ.பாதை == "/api" {
-            பரிமாற்றம்.எழுதுசரம்(ப, 200, "application/json; charset=utf-8",
-                "{\"ok\":true,\"மொழி\":\"தமிழ்\"}")
-            திருப்பு
-        }
-        பரிமாற்றம்.எழுதுசரம்(ப, 404, "text/plain; charset=utf-8", "காணவில்லை")
+    வழி := பரிமாற்றம்.புதியவழிப்படுத்தி()
+    பரிமாற்றம்.பதிவு(வழி, "/", செயல்பாடு(கோ பரிமாற்றம்.கோரிக்கை, ப பரிமாற்றம்.பதிலளிப்பு) {
+        பரிமாற்றம்.எழுதுசரம்(ப, 200, "text/html; charset=utf-8",
+            "<!DOCTYPE html><html lang=\"ta\"><head><meta charset=\"utf-8\"><title>அறம்</title></head>"+
+                "<body style=\"font-family:sans-serif;margin:3rem\">"+
+                "<h1>வணக்கம், அறம்!</h1>"+
+                "<p>Tamil-0.56 HTTP சேவையகம்</p>"+
+                "<p><a href=\"/api\">/api</a></p>"+
+                "</body></html>")
     })
+    பரிமாற்றம்.பதிவு(வழி, "/api", செயல்பாடு(கோ பரிமாற்றம்.கோரிக்கை, ப பரிமாற்றம்.பதிலளிப்பு) {
+        பரிமாற்றம்.எழுதுசரம்(ப, 200, "application/json; charset=utf-8",
+            "{\"ok\":true,\"மொழி\":\"தமிழ்\"}")
+    })
+    பரிமாற்றம்.வழிசேவை(":8080", வழி)
 }

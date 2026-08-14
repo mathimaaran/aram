@@ -223,6 +223,9 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 		e.needSlice = true
 		e.needArena = true
 	}
+	// Map handles are pointers to opaque table structs, so their forwards must
+	// precede any named struct body that contains a map field.
+	e.writeMapForwards(&b)
 	if e.needSlice || e.needAppend || e.needMake || e.needCopy {
 		e.needSlice = true
 		b.WriteString("typedef struct { int64_t *data; int64_t len; int64_t cap; } aram_slice_i64;\n")
@@ -303,8 +306,6 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 		e.writeStructsAndNestedSlices(&b)
 	}
 	e.writeArrayTypedefs(&b)
-	// Map handle forwards before tuples (comma-ok / map values may mention maps).
-	e.writeMapForwards(&b)
 	// Struct bodies may be map values; emit before map entry layouts.
 	if e.needMap && e.info != nil && len(e.info.Structs) > 0 && !e.structsDone {
 		e.writeStructForwards(&b)
@@ -485,6 +486,7 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 	}
 	e.writeArrayEqFuncs(&b)
 	e.writeMapFuncs(&b)
+	e.writeHttpMapBridge(&b)
 
 	if e.needDefer {
 		b.WriteString("typedef struct aram_defer_frame {\n")

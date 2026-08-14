@@ -16,7 +16,7 @@ Corpus programs are part of the frozen snapshot; treat changes as subset bumps u
 | `பல்கோப்பு/` | Tamil-0.9 | same-package multi-file (`aram பல்கோப்பு`) |
 | `கொணர்_எடு/` | Tamil-0.10 | `கொணர் "கணிதம்"` + `கணிதம்.கூட்டு` |
 | `வலை_எதிரொலி/` | Tamil-0.53 | TCP echo via `கொணர் "வலை"` |
-| `வலைபரிமாற்றம்/` | Tamil-0.54 | HTTP plain response |
+| `வலைபரிமாற்றம்/` | Tamil-0.56 | HTTP request headers + exact-path mux |
 | `வலைபரிமாற்றம்_html/` | Tamil-0.54 | HTTP HTML response |
 | `வலை_பிழை/` | Tamil-0.55 | TCP error result (`*வலை.பிழை`) |
 
