@@ -45,14 +45,48 @@ Put a Tamil font **after** your preferred monospace so Latin stays monospace and
 
 ```json
 {
-  "editor.fontFamily": "monospace, 'Noto Sans Tamil UI', 'Noto Sans Tamil'"
+  "editor.fontFamily": "'Noto Sans Mono', monospace, 'Noto Sans Tamil UI', 'Noto Sans Tamil'",
+  "chat.editor.fontFamily": "'Noto Sans Tamil UI', 'Noto Sans Tamil', 'Noto Sans Mono', monospace",
+  "markdown.preview.fontFamily": "'Noto Sans Tamil UI', 'Noto Sans Tamil', sans-serif"
 }
 ```
 
 User settings path (Linux): `~/.config/Cursor/User/settings.json`  
 (VS Code: `~/.config/Code/User/settings.json`)
 
-After changing fonts: **Developer: Reload Window**, then reopen the `.aram` file.
+After changing **editor** fonts: **Developer: Reload Window**, then reopen the `.aram` file.
+
+### Cursor **explorer / chat** still showing boxes
+
+The **project explorer** (file names like `பெயர்_முடிவு.aram`) uses the workbench UI font,
+not `editor.fontFamily`. On Linux Cursor hard-codes:
+
+`system-ui, Ubuntu, Droid Sans, sans-serif`
+
+Zorin maps that to **Arimo**, which has no Tamil.
+
+Also set GTK UI font (used by `system-ui`):
+
+`~/.config/gtk-3.0/settings.ini` → `gtk-font-name=Noto Sans Tamil UI 11`
+
+Then **fully quit Cursor** and reopen.
+
+### Cursor **chat** still showing boxes
+
+Agent chat does **not** use `editor.fontFamily`. It uses the workbench UI stack
+(`--cursor-font-family-sans` → `system-ui` / `sans-serif`). On Zorin that is
+**Arimo**, which has **no Tamil**, so chat draws empty squares even when `.aram`
+files look fine.
+
+Fix: user fontconfig `~/.config/fontconfig/conf.d/98-aram-tamil-fallback.conf`
+(Noto Sans + Noto Sans Tamil UI in front of Arimo). Then:
+
+1. `fc-cache -f`
+2. **Fully quit Cursor** (File → Exit / all windows) — Reload Window is not enough;
+   Electron caches fonts at process start.
+3. Reopen Cursor.
+
+Check: `fc-match sans-serif` should mention Noto, not only Arimo.
 
 ### Workspace tip (optional later)
 
