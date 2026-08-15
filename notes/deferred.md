@@ -13,7 +13,7 @@ Update when a subset ships (strike or move items) or when a construct card recor
 | Interfaces | Only if earned | method.yaml |
 | Generic types / constraints | After interfaces earn a place | generics.yaml |
 
-Shipped: 0.11–0.60 (through GC/string runtime polish + `-O2` default).
+Shipped: 0.11–0.61 (through HTTP client options + IPv4 UDP).
 
 ## Struct & types
 
@@ -49,6 +49,7 @@ Shipped: 0.11–0.60 (through GC/string runtime polish + `-O2` default).
 | ~~function values in struct/slice fields~~ | Tamil-0.58 | func-value.yaml |
 | ~~query parameters + chunked HTTP responses~~ | Tamil-0.59 | http.yaml |
 | ~~GC/string polish + optimized C default~~ | Tamil-0.60 | gc.yaml / string.yaml |
+| ~~HTTP timeout/redirect options + IPv4 UDP~~ | Tamil-0.61 | http.yaml / net.yaml |
 | Goroutines / channels | Tamil-0.48 on C (pthread); see goroutine.yaml | goroutine.yaml |
 | NASM + custom IR | IR when NASM begins | design-decisions |
 | Windows / macOS primary targets | Linux-first | Non-goals |

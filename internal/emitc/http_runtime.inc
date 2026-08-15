@@ -1,4 +1,5 @@
 /* Aram Tamil-0.59: HTTP/1.x server + client (Linux). Uses aram_net_* + GC park. */
+#include <sys/time.h>
 
 typedef struct {
 	const char *method;
@@ -789,7 +790,24 @@ static aram_http_client_result aram_http_read_response(int64_t fd) {
 	};
 }
 
-static aram_http_client_result aram_http_do_ex(const char *method, const char *url, void *headers, const char *ctype, const uint8_t *data, int64_t len) {
+static int aram_http_redirect_code(int64_t code) {
+	return code == 301 || code == 302 || code == 303 || code == 307 || code == 308;
+}
+
+static void *aram_http_set_timeout(int64_t fd, int64_t timeout_ms) {
+	if (timeout_ms < 0) return aram_net_error_new(EINVAL, "invalid HTTP timeout");
+	if (timeout_ms == 0) return NULL;
+	struct timeval tv = {
+		.tv_sec = (time_t)(timeout_ms / 1000),
+		.tv_usec = (suseconds_t)((timeout_ms % 1000) * 1000),
+	};
+	if (setsockopt((int)fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof tv) != 0 ||
+	    setsockopt((int)fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof tv) != 0)
+		return aram_net_errno_error();
+	return NULL;
+}
+
+static aram_http_client_result aram_http_do_ex(const char *method, const char *url, void *headers, const char *ctype, const uint8_t *data, int64_t len, int64_t timeout_ms) {
 	if (!method || !*method) method = "GET";
 	if (aram_http_has_crlf(method) || strchr(method, ' ')) {
 		return aram_http_client_fail(aram_net_error_new(EINVAL, "invalid HTTP method"));
@@ -810,6 +828,11 @@ static aram_http_client_result aram_http_do_ex(const char *method, const char *u
 	aram_net_i64_result dialed = aram_net_dial(dial);
 	if (dialed.err) return aram_http_client_fail(dialed.err);
 	int64_t fd = dialed.value;
+	err = aram_http_set_timeout(fd, timeout_ms);
+	if (err) {
+		aram_net_close(fd);
+		return aram_http_client_fail(err);
+	}
 
 	aram_http_buf req;
 	aram_http_buf_init(&req);
@@ -857,13 +880,35 @@ static aram_http_client_result aram_http_do_ex(const char *method, const char *u
 }
 
 static aram_http_client_result aram_http_do(const char *method, const char *url, void *headers, const uint8_t *data, int64_t len) {
-	return aram_http_do_ex(method, url, headers, NULL, data, len);
+	return aram_http_do_ex(method, url, headers, NULL, data, len, 0);
 }
 
 static aram_http_client_result aram_http_get(const char *url) {
-	return aram_http_do_ex("GET", url, NULL, NULL, NULL, 0);
+	return aram_http_do_ex("GET", url, NULL, NULL, NULL, 0, 0);
 }
 
 static aram_http_client_result aram_http_post(const char *url, const char *ctype, const uint8_t *data, int64_t len) {
-	return aram_http_do_ex("POST", url, NULL, ctype && *ctype ? ctype : "application/octet-stream", data, len);
+	return aram_http_do_ex("POST", url, NULL, ctype && *ctype ? ctype : "application/octet-stream", data, len, 0);
+}
+
+static aram_http_client_result aram_http_do_opts(const char *method, const char *url, void *headers, const uint8_t *data, int64_t len, int64_t timeout_ms, int64_t max_redirects) {
+	if (max_redirects < 0) return aram_http_client_fail(aram_net_error_new(EINVAL, "invalid HTTP redirect limit"));
+	const char *current_url = url;
+	const char *current_method = method;
+	const uint8_t *current_data = data;
+	int64_t current_len = len;
+	for (int64_t redirects = 0;; redirects++) {
+		aram_http_client_result result = aram_http_do_ex(current_method, current_url, headers, NULL, current_data, current_len, timeout_ms);
+		if (result.err || !aram_http_redirect_code(result.code) || max_redirects == 0) return result;
+		if (redirects >= max_redirects) return aram_http_client_fail(aram_net_error_new(ELOOP, "HTTP redirect limit exceeded"));
+		const char *location = aram_http_headers_get(result.headers, "location");
+		if (!location || !*location || strncmp(location, "http://", 7) != 0)
+			return aram_http_client_fail(aram_net_error_new(EINVAL, "unsupported HTTP redirect location"));
+		current_url = location;
+		if (result.code == 303 || ((result.code == 301 || result.code == 302) && strcasecmp(current_method, "GET") && strcasecmp(current_method, "HEAD"))) {
+			current_method = "GET";
+			current_data = NULL;
+			current_len = 0;
+		}
+	}
 }

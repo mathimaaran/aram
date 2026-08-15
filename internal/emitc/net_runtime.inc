@@ -9,6 +9,7 @@
 
 typedef struct { int64_t value; void *err; } aram_net_i64_result;
 typedef struct { const char *value; void *err; } aram_net_str_result;
+typedef struct { int64_t n; const char *addr; void *err; } aram_net_udp_result;
 typedef struct { int64_t code; const char *message; } aram_net_error;
 
 static void *aram_net_error_new(int64_t code, const char *message) {
@@ -165,4 +166,70 @@ static aram_net_str_result aram_net_addr(int64_t fd) {
 	char *r = (char *)aram_alloc((size_t)n + 1);
 	memcpy(r, buf, (size_t)n + 1);
 	return (aram_net_str_result){ r, NULL };
+}
+
+static aram_net_i64_result aram_net_udp_listen(const char *addr) {
+	char host[256];
+	const char *port = NULL;
+	if (aram_net_hostport(addr, host, sizeof host, &port) != 0)
+		return (aram_net_i64_result){ 0, aram_net_error_new(EINVAL, "invalid UDP listen address") };
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
+	struct addrinfo *res = NULL;
+	int gai = getaddrinfo(host[0] ? host : NULL, port, &hints, &res);
+	if (gai != 0 || !res) return (aram_net_i64_result){ 0, aram_net_error_new(gai, gai_strerror(gai)) };
+	int fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	if (fd < 0) { freeaddrinfo(res); return (aram_net_i64_result){ 0, aram_net_errno_error() }; }
+	if (bind(fd, res->ai_addr, res->ai_addrlen) != 0) {
+		close(fd); freeaddrinfo(res); return (aram_net_i64_result){ 0, aram_net_errno_error() };
+	}
+	freeaddrinfo(res);
+	return (aram_net_i64_result){ fd, NULL };
+}
+
+static aram_net_i64_result aram_net_udp_send(int64_t fd, const char *addr, const uint8_t *data, int64_t len) {
+	char host[256];
+	const char *port = NULL;
+	if (len < 0 || (len > 0 && !data)) return (aram_net_i64_result){ 0, aram_net_error_new(EINVAL, "invalid UDP data") };
+	if (aram_net_hostport(addr, host, sizeof host, &port) != 0 || !host[0])
+		return (aram_net_i64_result){ 0, aram_net_error_new(EINVAL, "invalid UDP address") };
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_NUMERICSERV;
+	struct addrinfo *res = NULL;
+	int gai = getaddrinfo(host, port, &hints, &res);
+	if (gai != 0 || !res) return (aram_net_i64_result){ 0, aram_net_error_new(gai, gai_strerror(gai)) };
+	volatile const uint8_t *root = data;
+	char sp;
+	aram_gc_park_begin(&sp);
+	ssize_t n = sendto((int)fd, (const uint8_t *)root, (size_t)len, 0, res->ai_addr, res->ai_addrlen);
+	aram_gc_park_end();
+	freeaddrinfo(res);
+	if (n < 0) return (aram_net_i64_result){ 0, aram_net_errno_error() };
+	return (aram_net_i64_result){ (int64_t)n, NULL };
+}
+
+static aram_net_udp_result aram_net_udp_recv(int64_t fd, uint8_t *data, int64_t len) {
+	if (len < 0 || (len > 0 && !data)) return (aram_net_udp_result){ 0, "", aram_net_error_new(EINVAL, "invalid UDP buffer") };
+	struct sockaddr_in peer;
+	socklen_t plen = sizeof peer;
+	volatile uint8_t *root = data;
+	char sp;
+	aram_gc_park_begin(&sp);
+	ssize_t n = recvfrom((int)fd, (uint8_t *)root, (size_t)len, 0, (struct sockaddr *)&peer, &plen);
+	aram_gc_park_end();
+	if (n < 0) return (aram_net_udp_result){ 0, "", aram_net_errno_error() };
+	char ip[INET_ADDRSTRLEN];
+	if (!inet_ntop(AF_INET, &peer.sin_addr, ip, sizeof ip)) return (aram_net_udp_result){ 0, "", aram_net_errno_error() };
+	char buf[64];
+	int m = snprintf(buf, sizeof buf, "%s:%u", ip, ntohs(peer.sin_port));
+	if (m < 0 || (size_t)m >= sizeof buf) return (aram_net_udp_result){ 0, "", aram_net_error_new(EINVAL, "address formatting failed") };
+	char *out = (char *)aram_alloc((size_t)m + 1);
+	memcpy(out, buf, (size_t)m + 1);
+	return (aram_net_udp_result){ (int64_t)n, out, NULL };
 }

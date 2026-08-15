@@ -93,6 +93,7 @@ Out of scope for Tamil-0:
 - [x] HTTP client + custom response headers
 - [x] Query parameters + HTTP/1.x protocol polish
 - [x] GC/string runtime polish + `-O2` default
+- [x] HTTP client timeout/redirect options + IPv4 UDP
 
 ## Later growth
 

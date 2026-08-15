@@ -1,6 +1,6 @@
 id: net
 status: codegen
-subset: Tamil-0.55
+subset: Tamil-0.61
 go_inspired: |
   ln, _ := net.Listen("tcp", ":0")
   c, _ := net.Dial("tcp", ln.Addr().String())
@@ -12,7 +12,8 @@ tamil_keywords: {}
 tamil_ebnf: |
   # no new syntax — stdlib package வலை (கொணர் "வலை")
 semantics: >
-  Tamil-0.55 TCP sockets via stdlib package வலை (Go net, TCP only).
+  Tamil-0.55 TCP sockets via stdlib package வலை. Tamil-0.61 adds IPv4 UDP
+  datagrams: தகவல்கேள், தகவலனுப்பு, தகவல்பெறு, தகவல்முகவரி, and தகவல்விடு.
   கொணர் "வலை" resolves to the compiler stdlib (not a relative directory).
   Types கேட்பி (listener) and இணைப்பு (conn) are defined முழுஎண் (fds).
   பிழை is a struct with குறியீடு and செய்தி; every operational failure returns
@@ -23,7 +24,8 @@ semantics: >
   படி/எழுது use []இருமி8; விடு closes a conn;
   நிறுத்து closes a listener; முகவரி returns "host:port" (0.0.0.0 → 127.0.0.1).
   Blocking I/O parks so GC can run. No new keywords. UDP / TLS
-  later; HTTP is Tamil-0.54 (`பரிமாற்றம்`).
+  later; HTTP is Tamil-0.54 (`பரிமாற்றம்`). UDP preserves one datagram per
+  receive; oversized datagrams are truncated to the supplied buffer.
 examples:
   - tamil: |
       கொணர் "வலை"
@@ -37,6 +39,7 @@ examples:
       c, _ := net.Dial("tcp", ln.Addr().String())
 notes:
   - "Tamil-0.55: package வலை; TCP IPv4; *பிழை operational errors."
+  - "Tamil-0.61: IPv4 UDP datagrams via தகவல்தளம்."
   - "விடு = close conn; நிறுத்து = stop listener (மூடு is the chan keyword)."
   - "கேள் = listen; ஏற்று = accept; இணை = dial/connect; படி/எழுது = read/write."
   - "Stdlib path: stdlib/வலை/; dummy .aram signatures, C intrinsics in emitc."

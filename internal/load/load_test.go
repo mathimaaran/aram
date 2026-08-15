@@ -278,6 +278,98 @@ func TestNetEchoProgram(t *testing.T) {
 	}
 }
 
+func TestUDPProgram(t *testing.T) {
+	dir := filepath.Join(root(t), "corpus", "tamil", "தகவல்_வலை")
+	prog, lerrs := load.LoadProgram([]string{dir})
+	if len(lerrs) != 0 {
+		t.Fatal(lerrs)
+	}
+	merged, merrs := prog.MergedFiles()
+	if len(merrs) != 0 {
+		t.Fatal(merrs)
+	}
+	pi, errs := check.CheckProgram(merged, prog.Entry.Name)
+	if len(errs) != 0 {
+		t.Fatal(errs)
+	}
+	cSrc, err := emitc.EmitProgram(pi)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(cSrc, "aram_net_udp_recv") {
+		t.Fatalf("missing UDP runtime\n%s", cSrc)
+	}
+	cc, err := exec.LookPath("gcc")
+	if err != nil {
+		cc, err = exec.LookPath("cc")
+		if err != nil {
+			t.Skip("gcc/cc not available")
+		}
+	}
+	tmp := t.TempDir()
+	cFile := filepath.Join(tmp, "out.c")
+	bin := filepath.Join(tmp, "out")
+	if err := os.WriteFile(cFile, []byte(cSrc), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := exec.Command(cc, "-std=c11", "-O2", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
+		t.Fatalf("cc: %v\n%s\n%s", err, out, cSrc)
+	}
+	got, err := exec.Command(bin).CombinedOutput()
+	if err != nil {
+		t.Fatalf("run: %v\n%s\nC:\n%s", err, got, cSrc)
+	}
+	if string(got) != "ping\npong\n" {
+		t.Fatalf("got %q want UDP echo\nC:\n%s", got, cSrc)
+	}
+}
+
+func TestHTTPRedirectOptions(t *testing.T) {
+	dir := filepath.Join(root(t), "corpus", "tamil", "வலை_திருப்பு")
+	prog, lerrs := load.LoadProgram([]string{dir})
+	if len(lerrs) != 0 {
+		t.Fatal(lerrs)
+	}
+	merged, merrs := prog.MergedFiles()
+	if len(merrs) != 0 {
+		t.Fatal(merrs)
+	}
+	pi, errs := check.CheckProgram(merged, prog.Entry.Name)
+	if len(errs) != 0 {
+		t.Fatal(errs)
+	}
+	cSrc, err := emitc.EmitProgram(pi)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(cSrc, "aram_http_do_opts") {
+		t.Fatalf("missing HTTP options runtime\n%s", cSrc)
+	}
+	cc, err := exec.LookPath("gcc")
+	if err != nil {
+		cc, err = exec.LookPath("cc")
+		if err != nil {
+			t.Skip("gcc/cc not available")
+		}
+	}
+	tmp := t.TempDir()
+	cFile := filepath.Join(tmp, "out.c")
+	bin := filepath.Join(tmp, "out")
+	if err := os.WriteFile(cFile, []byte(cSrc), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := exec.Command(cc, "-std=c11", "-O2", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
+		t.Fatalf("cc: %v\n%s\n%s", err, out, cSrc)
+	}
+	got, err := exec.Command(bin).CombinedOutput()
+	if err != nil {
+		t.Fatalf("run: %v\n%s\nC:\n%s", err, got, cSrc)
+	}
+	if string(got) != "200\nதிருப்பியது\n" {
+		t.Fatalf("got %q want redirected response\nC:\n%s", got, cSrc)
+	}
+}
+
 func TestHttpServeOne(t *testing.T) {
 	dir := filepath.Join(root(t), "corpus", "tamil", "வலைபரிமாற்றம்")
 	prog, lerrs := load.LoadProgram([]string{dir})

@@ -457,6 +457,19 @@ pointer lookup, and grows its trigger after collection when one large
 allocation exceeds the normal threshold. This also fixes the prior retry loop
 for allocations larger than 256 KiB on an otherwise small heap.
 
+## Tamil-0.61 (2026-08-14)
+
+`பரிமாற்றம்.கோருவிருப்பம்` accepts `வாடிக்கையாளர்விருப்பம்` with
+`நேரமுடிவு` (milliseconds; zero means no send/receive socket timeout) and
+`அதிகதிருப்புகள்` (zero disables redirects). It follows bounded absolute
+`http://` 301/302/303/307/308 redirects; unsupported relative/HTTPS targets
+return `*வலை.பிழை`. DNS and connection establishment are deliberately not
+timed in this synchronous implementation.
+
+`வலை` now supports IPv4 UDP with `தகவல்தளம்`, bind, send-to, receive-from,
+local-address, and close operations. Datagram receives return the sender
+address and truncate payloads to the caller buffer.
+
 ## Priority (2026-08-01)
 
 Harden the language (other gaps) **before** starting the NASM x86-64

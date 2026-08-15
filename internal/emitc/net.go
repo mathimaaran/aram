@@ -55,6 +55,16 @@ func (e *emitter) writeNetIntrinsic(b *strings.Builder, fn *ast.FuncDecl) bool {
 		call = "\treturn (" + errType + ")aram_net_close(" + cIdent("க") + ");\n"
 	case "முகவரி":
 		call = "\taram_net_str_result r = aram_net_addr(" + cIdent("க") + ");\n\treturn (" + ret + "){ r.value, (" + errType + ")r.err };\n"
+	case "தகவல்கேள்":
+		call = "\taram_net_i64_result r = aram_net_udp_listen(" + cIdent("முகவரி") + ");\n\treturn (" + ret + "){ r.value, (" + errType + ")r.err };\n"
+	case "தகவல்முகவரி":
+		call = "\taram_net_str_result r = aram_net_addr(" + cIdent("த") + ");\n\treturn (" + ret + "){ r.value, (" + errType + ")r.err };\n"
+	case "தகவலனுப்பு":
+		call = "\taram_net_i64_result r = aram_net_udp_send(" + cIdent("த") + ", " + cIdent("முகவரி") + ", " + cIdent("தரவு") + ".data, " + cIdent("தரவு") + ".len);\n\treturn (" + ret + "){ r.value, (" + errType + ")r.err };\n"
+	case "தகவல்பெறு":
+		call = "\taram_net_udp_result r = aram_net_udp_recv(" + cIdent("த") + ", " + cIdent("இடம்") + ".data, " + cIdent("இடம்") + ".len);\n\treturn (" + ret + "){ r.n, r.addr, (" + errType + ")r.err };\n"
+	case "தகவல்விடு":
+		call = "\treturn (" + errType + ")aram_net_close(" + cIdent("த") + ");\n"
 	default:
 		return false
 	}

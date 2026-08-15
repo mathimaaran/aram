@@ -39,6 +39,7 @@ func (e *emitter) writeHttpRuntime(b *strings.Builder) {
 	b.WriteString("#include <strings.h>\n")
 	b.WriteString("static void *aram_http_headers_new(void);\n")
 	b.WriteString("static void aram_http_headers_set(void *, const char *, const char *);\n")
+	b.WriteString("static const char *aram_http_headers_get(void *, const char *);\n")
 	b.WriteString("typedef void (*aram_http_header_visit_fn)(const char *, const char *, void *);\n")
 	b.WriteString("static void aram_http_headers_each(void *, aram_http_header_visit_fn, void *);\n")
 	b.WriteString(httpRuntimeC)
@@ -60,6 +61,10 @@ func (e *emitter) writeHttpMapBridge(b *strings.Builder) {
 		b.WriteString("}\n")
 		b.WriteString("static void aram_http_headers_set(void *m, const char *k, const char *v) {\n")
 		b.WriteString("\t" + e.mapSetName(t) + "((" + mapType + ")m, k, v);\n")
+		b.WriteString("}\n")
+		b.WriteString("static const char *aram_http_headers_get(void *m, const char *k) {\n")
+		b.WriteString("\tif (!m) return NULL;\n")
+		b.WriteString("\treturn " + e.mapGetName(t) + "((" + mapType + ")m, k);\n")
 		b.WriteString("}\n")
 		b.WriteString("static void aram_http_headers_each(void *m, aram_http_header_visit_fn fn, void *ctx) {\n")
 		b.WriteString("\t" + mapType + " tab = (" + mapType + ")m;\n")
@@ -126,6 +131,8 @@ func (e *emitter) writeHttpIntrinsic(b *strings.Builder, fn *ast.FuncDecl) bool 
 		call = e.httpClientRetCall(fn, "aram_http_post("+cIdent("முகவரி")+", "+cIdent("உள்ளடக்கம்")+", "+cIdent("உடல்")+".data, "+cIdent("உடல்")+".len)")
 	case "கோரு":
 		call = e.httpClientRetCall(fn, "aram_http_do("+cIdent("முறைமை")+", "+cIdent("முகவரி")+", "+cIdent("தலைப்புகள்")+", "+cIdent("உடல்")+".data, "+cIdent("உடல்")+".len)")
+	case "கோருவிருப்பம்":
+		call = e.httpClientRetCall(fn, "aram_http_do_opts("+cIdent("முறைமை")+", "+cIdent("முகவரி")+", "+cIdent("தலைப்புகள்")+", "+cIdent("உடல்")+".data, "+cIdent("உடல்")+".len, "+cIdent("விருப்பம்")+"."+cIdent("நேரமுடிவு")+", "+cIdent("விருப்பம்")+"."+cIdent("அதிகதிருப்புகள்")+")")
 	default:
 		return false
 	}

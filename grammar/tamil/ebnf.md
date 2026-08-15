@@ -2,7 +2,7 @@
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
-Status: **Tamil-0.60** (2026-08-14) — GC/string runtime polish and `-O2` C builds by default.
+Status: **Tamil-0.61** (2026-08-14) — HTTP client options and IPv4 UDP.
 
 ```
 SourceFile    = PackageClause { ImportDecl } { TopLevelDecl } .
