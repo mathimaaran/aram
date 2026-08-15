@@ -1,6 +1,6 @@
 id: http
 status: codegen
-subset: Tamil-0.57
+subset: Tamil-0.59
 go_inspired: |
   resp, err := http.Post("http://127.0.0.1:8080/echo", "text/plain", body)
   w.Header().Set("X-Echo", "ok")
@@ -10,13 +10,16 @@ tamil_ebnf: |
   # no new syntax — stdlib package பரிமாற்றம் (கொணர் "பரிமாற்றம்")
 semantics: >
   Tamil-0.57 extends பரிமாற்றம் with a synchronous HTTP/1.0 client and
-  custom response-header writes. Server types and mux from 0.56 remain.
+  custom response-header writes. Tamil-0.58 implements the exact-path mux
+  as an Aram struct holding path and handler slices. Tamil-0.59 exposes
+  decoded query parameters as கோரிக்கை.வினாக்கள்; repeated keys are
+  last-wins, + means space, and percent escapes are decoded.
   பதில் has குறியீடு, விளக்கம் (status text; நிலை is the bool keyword),
   தலைப்புகள், and உடல். Client APIs: பெறு(url), பதிவிடு(url, contentType,
   body), and கோரு(method, url, headers, body) return (பதில், *வலை.பிழை).
   Only http:// host[:port]/path][?query] is supported (default port 80,
-  fragment stripped, IPv4 via வலை). HTTPS, redirects, chunked bodies,
-  timeouts, TLS, and pooling are out of scope. Response writers
+  fragment stripped, IPv4 via வலை). HTTP/1.1 chunked responses are decoded.
+  HTTPS, redirects, timeouts, TLS, and pooling are out of scope. Response writers
   எழுதுதலைப்புகள் / எழுதுசரந்தலைப்புகள் take an optional header map while
   உள்ளடக்கம் remains authoritative Content-Type. User headers may not set
   Host, Content-Length, Connection, Transfer-Encoding, or Content-Type;
@@ -42,5 +45,7 @@ notes:
   - "முறைமை = HTTP method (முறை is already struct methods)."
   - "Depends on வலை (Tamil-0.53); blocking I/O parks for GC."
   - "Tamil-0.55: uses *வலை.பிழை for operational failures."
-  - "Tamil-0.56: lowercase request headers + opaque exact-path வழிப்படுத்தி."
+  - "Tamil-0.56: lowercase request headers + exact-path வழிப்படுத்தி."
   - "Tamil-0.57: client பெறு/பதிவிடு/கோரு + எழுதுதலைப்புகள்; status text field is விளக்கம்."
+  - "Tamil-0.58: pass *வழிப்படுத்தி to பதிவு / வழிசேவைஒன்று / வழிசேவை."
+  - "Tamil-0.59: கோரிக்கை.வினாக்கள் query map, strict HTTP/1.0–1.1 parsing, and chunked client responses."

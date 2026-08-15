@@ -1,8 +1,9 @@
-/* Aram Tamil-0.57: HTTP/1.0 server + client (Linux). Uses aram_net_* + GC park. */
+/* Aram Tamil-0.59: HTTP/1.x server + client (Linux). Uses aram_net_* + GC park. */
 
 typedef struct {
 	const char *method;
 	const char *path;
+	void *query;
 	aram_slice_u8 body;
 	void *headers;
 } aram_http_req;
@@ -18,59 +19,42 @@ typedef struct {
 typedef void (*aram_http_handler_fn)(void *env, aram_http_req req, int64_t w);
 
 typedef struct {
-	const char *path;
-	aram_fn handler;
-} aram_http_route;
-
-typedef struct {
-	aram_http_route *routes;
-	int64_t len;
-	int64_t cap;
-} aram_http_mux;
-
-typedef struct {
 	char *data;
 	size_t len;
 	size_t cap;
 	void *err;
 } aram_http_buf;
 
-static int64_t aram_http_mux_new(void) {
-	aram_http_mux *mux = (aram_http_mux *)aram_alloc(sizeof(*mux));
-	mux->cap = 8;
-	mux->routes = (aram_http_route *)aram_alloc((size_t)mux->cap * sizeof(*mux->routes));
-	return (int64_t)(intptr_t)mux;
-}
-
-static void aram_http_mux_handle(int64_t handle, const char *path, aram_fn handler) {
-	aram_http_mux *mux = (aram_http_mux *)(intptr_t)handle;
-	if (!mux || !path || !handler.fn) abort();
-	for (int64_t i = 0; i < mux->len; i++) {
-		if (strcmp(mux->routes[i].path, path) == 0) {
-			mux->routes[i].handler = handler;
-			return;
-		}
-	}
-	if (mux->len == mux->cap) {
-		int64_t cap = mux->cap * 2;
-		aram_http_route *routes = (aram_http_route *)aram_alloc((size_t)cap * sizeof(*routes));
-		memcpy(routes, mux->routes, (size_t)mux->len * sizeof(*routes));
-		mux->routes = routes;
-		mux->cap = cap;
-	}
-	mux->routes[mux->len++] = (aram_http_route){ path, handler };
-}
-
 static const char *aram_http_status_text(int code) {
 	switch (code) {
 	case 200: return "OK";
 	case 201: return "Created";
+	case 202: return "Accepted";
 	case 204: return "No Content";
+	case 206: return "Partial Content";
+	case 301: return "Moved Permanently";
 	case 302: return "Found";
+	case 303: return "See Other";
+	case 304: return "Not Modified";
+	case 307: return "Temporary Redirect";
+	case 308: return "Permanent Redirect";
 	case 400: return "Bad Request";
+	case 401: return "Unauthorized";
+	case 403: return "Forbidden";
 	case 404: return "Not Found";
 	case 405: return "Method Not Allowed";
+	case 408: return "Request Timeout";
+	case 409: return "Conflict";
+	case 410: return "Gone";
+	case 413: return "Content Too Large";
+	case 415: return "Unsupported Media Type";
+	case 422: return "Unprocessable Content";
+	case 429: return "Too Many Requests";
 	case 500: return "Internal Server Error";
+	case 501: return "Not Implemented";
+	case 502: return "Bad Gateway";
+	case 503: return "Service Unavailable";
+	case 504: return "Gateway Timeout";
 	default: return "";
 	}
 }
@@ -98,6 +82,62 @@ static int aram_http_header_reserved(const char *name) {
 	       !strcasecmp(name, "Connection") ||
 	       !strcasecmp(name, "Transfer-Encoding") ||
 	       !strcasecmp(name, "Host");
+}
+
+static int aram_http_hex(unsigned char c) {
+	if (c >= '0' && c <= '9') return c - '0';
+	if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+	if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+	return -1;
+}
+
+static char *aram_http_query_decode(const char *s, void **err) {
+	size_t n = strlen(s);
+	char *out = (char *)aram_alloc(n + 1);
+	size_t j = 0;
+	for (size_t i = 0; i < n; i++) {
+		unsigned char c = (unsigned char)s[i];
+		if (c == '+') {
+			out[j++] = ' ';
+		} else if (c == '%') {
+			if (i + 2 >= n) {
+				*err = aram_net_error_new(EINVAL, "invalid query escape");
+				return NULL;
+			}
+			int hi = aram_http_hex((unsigned char)s[i + 1]);
+			int lo = aram_http_hex((unsigned char)s[i + 2]);
+			if (hi < 0 || lo < 0 || (hi == 0 && lo == 0)) {
+				*err = aram_net_error_new(EINVAL, "invalid query escape");
+				return NULL;
+			}
+			out[j++] = (char)((hi << 4) | lo);
+			i += 2;
+		} else {
+			out[j++] = (char)c;
+		}
+	}
+	out[j] = '\0';
+	return out;
+}
+
+static void *aram_http_parse_query(char *raw, void **err) {
+	void *values = aram_http_headers_new();
+	if (!raw || !*raw) return values;
+	char *part = raw;
+	for (;;) {
+		char *amp = strchr(part, '&');
+		if (amp) *amp = '\0';
+		char *eq = strchr(part, '=');
+		if (eq) *eq++ = '\0';
+		char *key = aram_http_query_decode(part, err);
+		if (*err) return NULL;
+		char *value = aram_http_query_decode(eq ? eq : "", err);
+		if (*err) return NULL;
+		aram_http_headers_set(values, key, value);
+		if (!amp) break;
+		part = amp + 1;
+	}
+	return values;
 }
 
 static int64_t aram_http_header_i64(const char *headers, const char *key) {
@@ -129,6 +169,26 @@ static int aram_http_header_has(const char *headers, const char *key) {
 			return 1;
 		}
 		if (eol[0] == '\0') break;
+		p = eol + 2;
+	}
+	return 0;
+}
+
+static int aram_http_header_value_is(const char *headers, const char *key, const char *want) {
+	size_t klen = strlen(key);
+	const char *p = headers;
+	while (*p) {
+		const char *eol = strstr(p, "\r\n");
+		if (!eol) break;
+		if ((size_t)(eol - p) > klen + 1 &&
+		    strncasecmp(p, key, klen) == 0 && p[klen] == ':') {
+			const char *v = p + klen + 1;
+			while (v < eol && (*v == ' ' || *v == '\t')) v++;
+			const char *end = eol;
+			while (end > v && (end[-1] == ' ' || end[-1] == '\t')) end--;
+			return (size_t)(end - v) == strlen(want) &&
+			       strncasecmp(v, want, (size_t)(end - v)) == 0;
+		}
 		p = eol + 2;
 	}
 	return 0;
@@ -268,7 +328,11 @@ static int aram_http_read_req(int64_t fd, aram_http_req *out, void **err) {
 		return 0;
 	}
 	*version++ = '\0';
-	(void)version;
+	if ((strcmp(version, "HTTP/1.0") != 0 && strcmp(version, "HTTP/1.1") != 0) ||
+	    !*method || path[0] != '/') {
+		*err = aram_net_error_new(EINVAL, "unsupported HTTP request");
+		return 0;
+	}
 	int64_t cl = aram_http_header_i64(line_end + 2, "Content-Length");
 	void *headers = aram_http_headers_new();
 	char *header = line_end + 2;
@@ -324,15 +388,21 @@ static int aram_http_read_req(int64_t fd, aram_http_req *out, void **err) {
 	}
 	out->method = method;
 	out->path = path;
+	out->query = aram_http_headers_new();
 	out->body = (aram_slice_u8){ body, (int64_t)body_need, (int64_t)body_need };
 	out->headers = headers;
 	char *query = strchr((char *)out->path, '?');
-	if (query) *query = '\0';
+	if (query) {
+		*query++ = '\0';
+		out->query = aram_http_parse_query(query, err);
+		if (*err) return 0;
+	}
 	return 1;
 }
 
 static void *aram_http_write(int64_t fd, int64_t code, const char *ctype, void *headers, const uint8_t *data, int64_t len) {
 	if (len < 0) return aram_net_error_new(EINVAL, "invalid HTTP body");
+	if (code < 100 || code > 999) return aram_net_error_new(EINVAL, "invalid HTTP status code");
 	if (!ctype) ctype = "application/octet-stream";
 	if (aram_http_has_crlf(ctype)) return aram_net_error_new(EINVAL, "invalid Content-Type");
 	const char *text = aram_http_status_text((int)code);
@@ -364,19 +434,6 @@ static void *aram_http_write_str(int64_t fd, int64_t code, const char *ctype, vo
 	return aram_http_write(fd, code, ctype, headers, (const uint8_t *)s, (int64_t)n);
 }
 
-static void *aram_http_mux_dispatch(int64_t handle, aram_http_req req, int64_t fd) {
-	aram_http_mux *mux = (aram_http_mux *)(intptr_t)handle;
-	if (!mux) return aram_net_error_new(EINVAL, "invalid HTTP mux");
-	for (int64_t i = 0; i < mux->len; i++) {
-		if (strcmp(mux->routes[i].path, req.path) == 0) {
-			aram_fn handler = mux->routes[i].handler;
-			((aram_http_handler_fn)handler.fn)(handler.env, req, fd);
-			return NULL;
-		}
-	}
-	return aram_http_write_str(fd, 404, "text/plain; charset=utf-8", NULL, "காணவில்லை");
-}
-
 static void *aram_http_handle_conn(int64_t fd, aram_fn handler) {
 	aram_http_req req;
 	memset(&req, 0, sizeof req);
@@ -389,29 +446,10 @@ static void *aram_http_handle_conn(int64_t fd, aram_fn handler) {
 	return NULL;
 }
 
-static void *aram_http_handle_mux_conn(int64_t fd, int64_t mux) {
-	aram_http_req req;
-	memset(&req, 0, sizeof req);
-	void *err = NULL;
-	if (!aram_http_read_req(fd, &req, &err)) {
-		aram_http_write_str(fd, 400, "text/plain; charset=utf-8", NULL, "bad request");
-		return err;
-	}
-	return aram_http_mux_dispatch(mux, req, fd);
-}
-
 static void *aram_http_serve_one(int64_t ln, aram_fn handler) {
 	aram_net_i64_result accepted = aram_net_accept(ln);
 	if (accepted.err) return accepted.err;
 	void *err = aram_http_handle_conn(accepted.value, handler);
-	void *close_err = aram_net_close(accepted.value);
-	return err ? err : close_err;
-}
-
-static void *aram_http_mux_serve_one(int64_t ln, int64_t mux) {
-	aram_net_i64_result accepted = aram_net_accept(ln);
-	if (accepted.err) return accepted.err;
-	void *err = aram_http_handle_mux_conn(accepted.value, mux);
 	void *close_err = aram_net_close(accepted.value);
 	return err ? err : close_err;
 }
@@ -421,25 +459,10 @@ typedef struct {
 	int64_t fd;
 } aram_http_job;
 
-typedef struct {
-	int64_t mux;
-	int64_t fd;
-} aram_http_mux_job;
-
 static void *aram_http_job_main(void *p) {
 	aram_thread_register();
 	aram_http_job *j = (aram_http_job *)p;
 	aram_http_handle_conn(j->fd, j->handler);
-	aram_net_close(j->fd);
-	free(j);
-	aram_thread_unregister();
-	return NULL;
-}
-
-static void *aram_http_mux_job_main(void *p) {
-	aram_thread_register();
-	aram_http_mux_job *j = (aram_http_mux_job *)p;
-	aram_http_handle_mux_conn(j->fd, j->mux);
 	aram_net_close(j->fd);
 	free(j);
 	aram_thread_unregister();
@@ -467,29 +490,7 @@ static void *aram_http_listen_and_serve(const char *addr, aram_fn handler) {
 	}
 }
 
-static void *aram_http_mux_listen_and_serve(const char *addr, int64_t mux) {
-	if (!mux) return aram_net_error_new(EINVAL, "invalid HTTP mux");
-	aram_net_i64_result listened = aram_net_listen(addr);
-	if (listened.err) return listened.err;
-	int64_t ln = listened.value;
-	for (;;) {
-		aram_gc_poll();
-		aram_net_i64_result accepted = aram_net_accept(ln);
-		if (accepted.err) return accepted.err;
-		aram_http_mux_job *j = (aram_http_mux_job *)malloc(sizeof(*j));
-		if (!j) return aram_net_error_new(ENOMEM, "HTTP worker allocation failed");
-		j->mux = mux;
-		j->fd = accepted.value;
-		pthread_t th;
-		if (pthread_create(&th, NULL, aram_http_mux_job_main, j) != 0) {
-			free(j);
-			return aram_net_error_new(errno, strerror(errno));
-		}
-		pthread_detach(th);
-	}
-}
-
-/* ---- Tamil-0.57 HTTP client ---- */
+/* ---- Tamil-0.59 HTTP client ---- */
 
 typedef struct {
 	char host[256];
@@ -578,6 +579,61 @@ static void aram_http_parse_headers_block(char *block, char *hdr_end, void *head
 	}
 }
 
+static void *aram_http_decode_chunked(const uint8_t *src, size_t n, uint8_t **body_out, size_t *len_out) {
+	const size_t limit = 1024 * 1024;
+	size_t cap = 256;
+	uint8_t *body = (uint8_t *)aram_alloc(cap);
+	size_t pos = 0;
+	size_t used = 0;
+	for (;;) {
+		size_t line = pos;
+		while (line + 1 < n && !(src[line] == '\r' && src[line + 1] == '\n')) line++;
+		if (line + 1 >= n) return aram_net_error_new(EINVAL, "truncated chunked HTTP body");
+		size_t end = pos;
+		while (end < line && src[end] != ';') end++;
+		if (end == pos) return aram_net_error_new(EINVAL, "invalid HTTP chunk size");
+		size_t chunk = 0;
+		for (size_t i = pos; i < end; i++) {
+			int digit = aram_http_hex(src[i]);
+			if (digit < 0 || chunk > (limit >> 4)) {
+				return aram_net_error_new(EINVAL, "invalid HTTP chunk size");
+			}
+			chunk = (chunk << 4) | (size_t)digit;
+		}
+		pos = line + 2;
+		if (chunk == 0) {
+			for (;;) {
+				size_t trailer = pos;
+				while (trailer + 1 < n && !(src[trailer] == '\r' && src[trailer + 1] == '\n')) trailer++;
+				if (trailer + 1 >= n) return aram_net_error_new(EINVAL, "truncated HTTP trailers");
+				if (trailer == pos) {
+					*body_out = body;
+					*len_out = used;
+					return NULL;
+				}
+				pos = trailer + 2;
+			}
+		}
+		if (chunk > limit - used) return aram_net_error_new(EOVERFLOW, "HTTP body too large");
+		if (used + chunk > cap) {
+			size_t next = cap;
+			while (next < used + chunk) next *= 2;
+			if (next > limit) next = limit;
+			uint8_t *grown = (uint8_t *)aram_alloc(next);
+			if (used) memcpy(grown, body, used);
+			body = grown;
+			cap = next;
+		}
+		if (chunk > n - pos || n - pos - chunk < 2 ||
+		    src[pos + chunk] != '\r' || src[pos + chunk + 1] != '\n') {
+			return aram_net_error_new(EINVAL, "truncated chunked HTTP body");
+		}
+		memcpy(body + used, src + pos, chunk);
+		used += chunk;
+		pos += chunk + 2;
+	}
+}
+
 static aram_http_client_result aram_http_read_response(int64_t fd) {
 	size_t cap = 4096;
 	char *buf = (char *)aram_alloc(cap);
@@ -628,24 +684,27 @@ static aram_http_client_result aram_http_read_response(int64_t fd) {
 		return aram_http_client_fail(aram_net_error_new(EINVAL, "malformed HTTP response"));
 	}
 	*code_s++ = '\0';
-	if (strncmp(proto, "HTTP/1.", 7) != 0) {
+	if (strcmp(proto, "HTTP/1.0") != 0 && strcmp(proto, "HTTP/1.1") != 0) {
 		aram_net_close(fd);
 		return aram_http_client_fail(aram_net_error_new(EINVAL, "unsupported HTTP version"));
 	}
 	char *reason = strchr(code_s, ' ');
 	if (reason) *reason++ = '\0';
 	else reason = "";
-	int64_t code = (int64_t)strtoll(code_s, NULL, 10);
-	if (code <= 0) {
+	if (strlen(code_s) != 3 || code_s[0] < '1' || code_s[0] > '9' ||
+	    code_s[1] < '0' || code_s[1] > '9' || code_s[2] < '0' || code_s[2] > '9') {
 		aram_net_close(fd);
 		return aram_http_client_fail(aram_net_error_new(EINVAL, "malformed HTTP response"));
 	}
+	int64_t code = (int64_t)strtoll(code_s, NULL, 10);
 	char *status = (char *)aram_alloc(strlen(code_s) + 1 + strlen(reason) + 1);
 	if (*reason) sprintf(status, "%s %s", code_s, reason);
 	else strcpy(status, code_s);
-	if (aram_http_header_has(line_end + 2, "Transfer-Encoding")) {
+	int has_transfer = aram_http_header_has(line_end + 2, "Transfer-Encoding");
+	int chunked = aram_http_header_value_is(line_end + 2, "Transfer-Encoding", "chunked");
+	if (has_transfer && !chunked) {
 		aram_net_close(fd);
-		return aram_http_client_fail(aram_net_error_new(EINVAL, "chunked HTTP responses not supported"));
+		return aram_http_client_fail(aram_net_error_new(EINVAL, "unsupported HTTP transfer encoding"));
 	}
 	void *resp_headers = aram_http_headers_new();
 	aram_http_parse_headers_block(line_end + 2, hdr_end, resp_headers);
@@ -653,7 +712,7 @@ static aram_http_client_result aram_http_read_response(int64_t fd) {
 	size_t body_have = n > hdr_len ? n - hdr_len : 0;
 	uint8_t *body = NULL;
 	size_t body_need = 0;
-	if (cl >= 0) {
+	if (!chunked && cl >= 0) {
 		body_need = (size_t)cl;
 		if (body_need > 1024 * 1024) {
 			aram_net_close(fd);
@@ -678,18 +737,19 @@ static aram_http_client_result aram_http_read_response(int64_t fd) {
 			body_have += (size_t)r;
 		}
 	} else {
-		size_t bcap = body_have ? body_have : 256;
+		size_t body_limit = chunked ? 2 * 1024 * 1024 : 1024 * 1024;
+		size_t bcap = body_have > 256 ? body_have : 256;
 		body = (uint8_t *)aram_alloc(bcap);
 		if (body_have) memcpy(body, buf + hdr_len, body_have);
 		body_need = body_have;
 		for (;;) {
 			if (body_need + 512 > bcap) {
-				if (bcap >= 1024 * 1024) {
+				if (bcap >= body_limit) {
 					aram_net_close(fd);
 					return aram_http_client_fail(aram_net_error_new(EOVERFLOW, "HTTP body too large"));
 				}
 				size_t ncap = bcap * 2;
-				if (ncap > 1024 * 1024) ncap = 1024 * 1024;
+				if (ncap > body_limit) ncap = body_limit;
 				uint8_t *nb = (uint8_t *)aram_alloc(ncap);
 				if (body_need) memcpy(nb, body, body_need);
 				body = nb;
@@ -707,6 +767,17 @@ static aram_http_client_result aram_http_read_response(int64_t fd) {
 			if (r == 0) break;
 			body_need += (size_t)r;
 		}
+	}
+	if (chunked) {
+		uint8_t *decoded = NULL;
+		size_t decoded_len = 0;
+		void *chunk_err = aram_http_decode_chunked(body, body_need, &decoded, &decoded_len);
+		if (chunk_err) {
+			aram_net_close(fd);
+			return aram_http_client_fail(chunk_err);
+		}
+		body = decoded;
+		body_need = decoded_len;
 	}
 	aram_net_close(fd);
 	return (aram_http_client_result){

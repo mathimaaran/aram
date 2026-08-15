@@ -2,7 +2,7 @@
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
-Status: **Tamil-0.57** (2026-08-14) — HTTP client + custom response headers (no new syntax).
+Status: **Tamil-0.59** (2026-08-14) — query parameters and HTTP/1.x protocol polish.
 
 ```
 SourceFile    = PackageClause { ImportDecl } { TopLevelDecl } .
@@ -305,7 +305,7 @@ No new syntax. Stdlib package `வலை` (`கொணர் "வலை"`): `க�
 `இணை` / `படி` / `எழுது` / `விடு` / `நிறுத்து` / `முகவரி`. TCP IPv4, Linux
 C backend. See `constructs/net.yaml`.
 
-## HTTP (Tamil-0.57)
+## HTTP (Tamil-0.59)
 
 No new syntax. Stdlib package `பரிமாற்றம்` (`கொணர் "பரிமாற்றம்"`):
 server (`கோரிக்கை` / `பதிலளிப்பு` / `கையாளு` / `வழிப்படுத்தி`,

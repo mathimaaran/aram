@@ -108,14 +108,6 @@ func (e *emitter) writeHttpIntrinsic(b *strings.Builder, fn *ast.FuncDecl) bool 
 	errType := cPkgIdent("வலை", "பிழை") + " *"
 	var call string
 	switch fn.Name.Name {
-	case "புதியவழிப்படுத்தி":
-		call = "\treturn aram_http_mux_new();\n"
-	case "பதிவு":
-		call = "\taram_http_mux_handle(" + cIdent("வ") + ", " + cIdent("பாதை") + ", " + cIdent("க") + ");\n"
-	case "வழிசேவைஒன்று":
-		call = "\treturn (" + errType + ")aram_http_mux_serve_one(" + cIdent("கேட்பி") + ", " + cIdent("வ") + ");\n"
-	case "வழிசேவை":
-		call = "\treturn (" + errType + ")aram_http_mux_listen_and_serve(" + cIdent("முகவரி") + ", " + cIdent("வ") + ");\n"
 	case "எழுது":
 		call = "\treturn (" + errType + ")aram_http_write(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", NULL, " + cIdent("உடல்") + ".data, " + cIdent("உடல்") + ".len);\n"
 	case "எழுதுசரம்":

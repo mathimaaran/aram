@@ -744,8 +744,8 @@ func (c *Checker) sliceOf(elem Type) (Type, bool) {
 	case TypeRune:
 		return TypeSliceRune, true
 	}
-	// Nested slices, []struct, []*T, []defined, []type-param (Tamil-0.25 / 0.41).
-	if !isSlice(elem) && !isStruct(elem) && !isPointer(elem) && !isDefined(elem) && !IsTypeParam(elem) {
+	// Nested slices, []struct, []*T, []defined, []func, []type-param.
+	if !isSlice(elem) && !isStruct(elem) && !isPointer(elem) && !isDefined(elem) && !IsFunc(elem) && !IsTypeParam(elem) {
 		return TypeInvalid, false
 	}
 	for st, e := range c.info.SliceElem {

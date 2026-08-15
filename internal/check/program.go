@@ -122,12 +122,12 @@ func CheckProgram(merged []*ast.File, entry string) (*ProgramInfo, []error) {
 	}
 	for _, f := range merged {
 		c.cur = c.pkgs[f.Package.Name.Name]
+		c.resolveAliases(f.Decls)
 		for _, d := range f.Decls {
 			if td, ok := d.(*ast.TypeDecl); ok {
 				c.fillTypeFields(td)
 			}
 		}
-		c.resolveAliases(f.Decls)
 	}
 	c.checkStructValueCycles()
 	for _, f := range merged {

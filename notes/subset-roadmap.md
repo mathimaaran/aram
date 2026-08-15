@@ -77,6 +77,7 @@ Out of scope for Tamil-0:
 - [x] Bare zero-arg `தள்ளிவை` sugar
 - [x] Defer method bind (pointer `&x` capture)
 - [x] Function types + method / package function values
+- [x] Function values in struct and slice fields
 - [x] Function literals / closures (capture by reference)
 - [x] Go 1.22+ per-iteration `சுழல்` / `ஒவ்வொரு` vars
 - [x] Method expressions `T.M` / `(*T).M`
@@ -90,6 +91,7 @@ Out of scope for Tamil-0:
 - [x] Net / HTTP error returns (`*வலை.பிழை`)
 - [x] HTTP request headers + exact-path mux
 - [x] HTTP client + custom response headers
+- [x] Query parameters + HTTP/1.x protocol polish
 
 ## Later growth
 

@@ -405,11 +405,9 @@ HTTP requests expose `தலைப்புகள் அகராதி[சர�
 lowercased, surrounding value whitespace is trimmed, and repeated names use
 the last value. `பாதை` excludes the URL query.
 
-`பரிமாற்றம்.வழிப்படுத்தி` is an opaque exact-path mux. `பதிவு` adds or
-replaces a handler; `வழிசேவைஒன்று` and `வழிசேவை` dispatch requests and
-write 404 for misses. Routes are registered before serving. The opaque
-runtime table is necessary because function values are not valid struct
-fields in the current language subset.
+`பரிமாற்றம்.வழிப்படுத்தி` is an exact-path mux. `பதிவு` adds or replaces a
+handler; `வழிசேவைஒன்று` and `வழிசேவை` dispatch requests and write 404 for
+misses. Routes are registered before serving.
 
 ## Tamil-0.57 (2026-08-14)
 
@@ -424,6 +422,25 @@ Custom response headers via additive `எழுதுதலைப்புகள
 `உள்ளடக்கம்` owns Content-Type. User maps may not set Host,
 Content-Length, Connection, Transfer-Encoding, or Content-Type; CR/LF
 injection returns `*வலை.பிழை`.
+
+## Tamil-0.58 (2026-08-14)
+
+Function values may be stored in struct fields and slices, including through
+function type aliases. Aggregate printing renders them as `<செயல்பாடு>` and
+aggregates containing them are not comparable. The HTTP mux now uses an Aram
+`வழிப்படுத்தி` struct with parallel path and handler slices; callers pass
+`*வழிப்படுத்தி` to registration and serving functions.
+
+## Tamil-0.59 (2026-08-14)
+
+HTTP requests expose `வினாக்கள் அகராதி[சரம்]சரம்`. Query keys and values
+decode `+` as space and valid percent escapes; repeated keys are last-wins.
+Malformed escapes produce a 400 response. `பாதை` remains query-free.
+
+The client accepts strict HTTP/1.0 or HTTP/1.1 status lines and decodes
+`Transfer-Encoding: chunked` bodies up to the existing 1 MiB decoded-body
+limit. Unsupported transfer encodings remain errors. The obsolete C mux
+table was removed now that Tamil-0.58's mux is implemented in Aram.
 
 ## Priority (2026-08-01)
 

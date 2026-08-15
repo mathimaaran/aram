@@ -16,11 +16,12 @@ Corpus programs are part of the frozen snapshot; treat changes as subset bumps u
 | `பல்கோப்பு/` | Tamil-0.9 | same-package multi-file (`aram பல்கோப்பு`) |
 | `கொணர்_எடு/` | Tamil-0.10 | `கொணர் "கணிதம்"` + `கணிதம்.கூட்டு` |
 | `வலை_எதிரொலி/` | Tamil-0.53 | TCP echo via `கொணர் "வலை"` |
-| `வலைபரிமாற்றம்/` | Tamil-0.56 | HTTP request headers + exact-path mux |
+| `வலைபரிமாற்றம்/` | Tamil-0.59 | query params + request headers + exact-path mux |
 | `வலைபரிமாற்றம்_html/` | Tamil-0.54 | HTTP HTML response |
 | `வலை_பிழை/` | Tamil-0.55 | TCP error result (`*வலை.பிழை`) |
-| `வலை_வாடிக்கையாளர்/` | Tamil-0.57 | HTTP client + custom response headers |
+| `வலை_வாடிக்கையாளர்/` | Tamil-0.59 | HTTP client + headers + chunked response |
 | `வலை_வாடிக்கையாளர்_பிழை/` | Tamil-0.57 | HTTPS/URL/reserved-header errors |
+| `செயல்பாடு_புலம்.aram` | Tamil-0.58 | function values in struct and slice fields |
 
 ## Invalid (`invalid/`)
 

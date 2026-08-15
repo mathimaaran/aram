@@ -1,6 +1,6 @@
 id: func-value
 status: codegen
-subset: Tamil-0.44
+subset: Tamil-0.58
 go_inspired: |
   type F = func(int)
   var f func(int)
@@ -16,7 +16,8 @@ tamil_ebnf: |
   Primary  = Operand { … | "." identifier | Arguments } .
   # bare X.M (method) and bare F (package func) are values when not called
 semantics: >
-  Function types hold callable values. Method value X.M binds the receiver
+  Function types hold callable values and may be struct fields or slice
+  elements. Method value X.M binds the receiver
   now: value methods copy X; pointer methods on addressable X bind &X
   (same as தள்ளிவை 0.43). Package function name as expression yields a
   function value. Call through a function-typed expression. No function
@@ -40,3 +41,4 @@ notes:
   - "Generics cannot be used as values in 0.44."
   - "Closures / function literals: Tamil-0.45 (closure.yaml)."
   - "Method expressions T.M: Tamil-0.47 (method-expr.yaml)."
+  - "Tamil-0.58: function fields and []function values may be called after selection or indexing."

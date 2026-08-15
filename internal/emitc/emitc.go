@@ -1025,7 +1025,7 @@ func (e *emitter) structComparable(t check.Type) bool {
 		return false
 	}
 	for _, f := range si.Fields {
-		if isSliceType(f.Type) {
+		if isSliceType(f.Type) || check.IsFunc(f.Type) || check.IsMap(f.Type) || check.IsChan(f.Type) {
 			return false
 		}
 		if _, nested := e.info.Structs[f.Type]; nested {
@@ -1223,6 +1223,8 @@ func (e *emitter) writeFieldPrint(b *strings.Builder, access string, t check.Typ
 		b.WriteString("\taram_print_quoted_n(")
 		b.WriteString(access)
 		b.WriteString(");\n")
+	case check.IsFunc(t):
+		b.WriteString("\tprintf(\"<செயல்பாடு>\");\n")
 	case e.info.Structs[t] != nil:
 		b.WriteByte('\t')
 		b.WriteString(e.printFuncName(e.info.Structs[t]))
@@ -1560,6 +1562,8 @@ func (e *emitter) writeSliceFieldPrint(b *strings.Builder, access string, t chec
 		fmt.Fprintf(b, "\t\taram_print_int_n((int64_t)%s(%s, __i));\n", e.sliceGetName(t), access)
 	case elem == check.TypeFloat:
 		fmt.Fprintf(b, "\t\taram_print_float_n(%s(%s, __i));\n", e.sliceGetName(t), access)
+	case check.IsFunc(elem):
+		b.WriteString("\t\tprintf(\"<செயல்பாடு>\");\n")
 	case check.IsSlice(elem):
 		tmp := fmt.Sprintf("__sl_%d", int(t))
 		fmt.Fprintf(b, "\t\t{ %s %s = %s(%s, __i);\n", e.sliceCName(elem), tmp, e.sliceGetName(t), access)
@@ -2000,6 +2004,8 @@ func (e *emitter) zeroCExpr(t check.Type) string {
 		return "\"\""
 	case t == check.TypeFloat:
 		return "0.0"
+	case check.IsFunc(t):
+		return "(aram_fn){0}"
 	case check.IsSlice(t), check.IsArray(t):
 		return "(" + e.cTypeFrom(t) + "){0}"
 	case check.IsMap(t):

@@ -531,6 +531,15 @@ func TestEmitSelectAndGo(t *testing.T) {
 	}
 }
 
+func TestEmitAndRunFunctionAggregateFields(t *testing.T) {
+	_, _, cSrc := compile(t, "செயல்பாடு_புலம்.aram")
+	got := runC(t, cSrc)
+	want := "5\n10\n15\nபெட்டிகள்{கணக்குகள்: [<செயல்பாடு>, <செயல்பாடு>]}\n"
+	if got != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
 func TestEmitAndRunGo(t *testing.T) {
 	_, _, cSrc := compile(t, "இழை.aram")
 	got := runCTimeout(t, cSrc, 5*time.Second)

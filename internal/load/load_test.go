@@ -296,8 +296,8 @@ func TestHttpServeOne(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(cSrc, "aram_http_mux_serve_one") {
-		t.Fatalf("missing HTTP mux serve runtime\n%s", cSrc)
+	if strings.Contains(cSrc, "aram_http_mux_serve_one") {
+		t.Fatalf("obsolete C HTTP mux runtime emitted\n%s", cSrc)
 	}
 	if !strings.Contains(cSrc, "aram_http_headers_set") {
 		t.Fatalf("missing request-header map bridge\n%s", cSrc)
@@ -328,6 +328,9 @@ func TestHttpServeOne(t *testing.T) {
 	}
 	if !strings.Contains(out, "வணக்கம்") {
 		t.Fatalf("missing body: %q\nC:\n%s", out, cSrc)
+	}
+	if !strings.Contains(out, "aram lang\n") || !strings.Contains(out, "a/b\n") {
+		t.Fatalf("missing decoded query values: %q\nC:\n%s", out, cSrc)
 	}
 	if !strings.Contains(out, "HTTP/1.0 404") || !strings.Contains(out, "காணவில்லை") {
 		t.Fatalf("missing mux 404: %q\nC:\n%s", out, cSrc)
@@ -429,7 +432,7 @@ func TestHttpClientAndResponseHeaders(t *testing.T) {
 		t.Fatalf("run: %v\n%s\nC:\n%s", err, got, cSrc)
 	}
 	out := string(got)
-	for _, want := range []string{"200\n", "200 OK\n", "ok\n", "அறம்\n", "hello\n"} {
+	for _, want := range []string{"200\n", "200 OK\n", "ok\n", "அறம்\n", "hello\n", "hello world\n"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("missing %q in %q\nC:\n%s", want, out, cSrc)
 		}
