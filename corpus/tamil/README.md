@@ -22,6 +22,7 @@ Corpus programs are part of the frozen snapshot; treat changes as subset bumps u
 | `வலை_வாடிக்கையாளர்/` | Tamil-0.59 | HTTP client + headers + chunked response |
 | `வலை_வாடிக்கையாளர்_பிழை/` | Tamil-0.57 | HTTPS/URL/reserved-header errors |
 | `செயல்பாடு_புலம்.aram` | Tamil-0.58 | function values in struct and slice fields |
+| `குவியல்.aram` | Tamil-0.60 | indexed conservative GC + flattened string concat |
 
 ## Invalid (`invalid/`)
 

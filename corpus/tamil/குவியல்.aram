@@ -1,4 +1,4 @@
-// Aram: குவியல்.aram — native heap + GC (Tamil-0.52)
+// Aram: குவியல்.aram — native heap + indexed GC and string concat (Tamil-0.60)
 // Go equivalent:
 //
 //	package main

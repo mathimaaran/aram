@@ -1,6 +1,6 @@
 id: string
 status: codegen
-subset: Tamil-0.2
+subset: Tamil-0.60
 go_inspired: string
 tamil_ebnf: |
   Type = "முழுஎண்" | "நிலை" | "சரம்" .
@@ -13,7 +13,9 @@ ast:
 semantics: >
   First-class string type. Variables, params, and results may be சரம்.
   Short declaration := infers சரம் from string literals and string-typed exprs.
-  Operator + concatenates two சரம் values (runtime allocates; C backend).
+  Operator + concatenates சரம் values. Tamil-0.60 flattens a + chain into one
+  sized allocation, preserves left-to-right operand evaluation, and avoids
+  allocation when zero or one component is non-empty (C backend).
   Operators == and != compare string contents. பதிப்பி prints சரம் with a newline.
 examples:
   - tamil: |

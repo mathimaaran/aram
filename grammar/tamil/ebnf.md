@@ -2,7 +2,7 @@
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
-Status: **Tamil-0.59** (2026-08-14) — query parameters and HTTP/1.x protocol polish.
+Status: **Tamil-0.60** (2026-08-14) — GC/string runtime polish and `-O2` C builds by default.
 
 ```
 SourceFile    = PackageClause { ImportDecl } { TopLevelDecl } .

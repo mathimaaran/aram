@@ -5,7 +5,7 @@ It is free to diverge from Go. The long-term goal is a quality compiler for
 Linux (x86-64 first, then i386), with NASM as a later backend.
 
 **Phase 0:** complete (Tamil-0 frozen 2026-08-01).  
-**Phase 1 (next):** implement compiler against frozen Tamil-0 (lexer → parser → C backend).
+**Phase 1:** active C backend through Tamil-0.60; NASM remains later.
 
 | Item | Value |
 |------|--------|
@@ -14,7 +14,7 @@ Linux (x86-64 first, then i386), with NASM as a later backend.
 | Source extension | `.aram` |
 | Keywords | Semantic Tamil |
 | Semantics | Go-inspired, free to diverge |
-| Language subset | **Tamil-0.1** (Tamil-0 + சுழல்) |
+| Language subset | **Tamil-0.60** |
 | Early backend | Emit C (reuse `gcc`/`clang`) |
 | Later backend | NASM → Linux ELF (64-bit, then 32-bit) |
 
@@ -51,6 +51,7 @@ go test ./...
 go run ./cmd/aram check corpus/tamil/வணக்கம்.aram
 go run ./cmd/aram run corpus/tamil/வணக்கம்.aram
 # → build/வணக்கம்.c and build/வணக்கம் (override with -o)
+# C builds default to -O2; pass --debug or -O0 for an unoptimized build.
 ```
 
 See [`tools/README.md`](tools/README.md) for the portable Go toolchain.

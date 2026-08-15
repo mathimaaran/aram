@@ -208,12 +208,26 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 	e.writePanicRuntime(&b)
 	if e.needConcat {
 		e.needArena = true
-		b.WriteString("static const char *aram_concat(const char *a, const char *b) {\n")
-		b.WriteString("\tsize_t la = strlen(a), lb = strlen(b);\n")
-		b.WriteString("\tchar *r = (char *)aram_arena_alloc(la + lb + 1);\n")
-		b.WriteString("\tmemcpy(r, a, la);\n")
-		b.WriteString("\tmemcpy(r + la, b, lb);\n")
-		b.WriteString("\tr[la + lb] = '\\0';\n")
+		b.WriteString("static const char *aram_concat_many(size_t n, const char *const *parts) {\n")
+		b.WriteString("\tsize_t total = 0, nonempty = 0;\n")
+		b.WriteString("\tconst char *single = \"\";\n")
+		b.WriteString("\tfor (size_t i = 0; i < n; i++) {\n")
+		b.WriteString("\t\tconst char *p = parts[i] ? parts[i] : \"\";\n")
+		b.WriteString("\t\tsize_t len = strlen(p);\n")
+		b.WriteString("\t\tif (len > SIZE_MAX - total - 1) abort();\n")
+		b.WriteString("\t\ttotal += len;\n")
+		b.WriteString("\t\tif (len) { nonempty++; single = p; }\n")
+		b.WriteString("\t}\n")
+		b.WriteString("\tif (nonempty == 0) return \"\";\n")
+		b.WriteString("\tif (nonempty == 1) return single;\n")
+		b.WriteString("\tchar *r = (char *)aram_arena_alloc(total + 1);\n")
+		b.WriteString("\tsize_t off = 0;\n")
+		b.WriteString("\tfor (size_t i = 0; i < n; i++) {\n")
+		b.WriteString("\t\tconst char *p = parts[i] ? parts[i] : \"\";\n")
+		b.WriteString("\t\tsize_t len = strlen(p);\n")
+		b.WriteString("\t\tmemcpy(r + off, p, len); off += len;\n")
+		b.WriteString("\t}\n")
+		b.WriteString("\tr[off] = '\\0';\n")
 		b.WriteString("\treturn r;\n")
 		b.WriteString("}\n")
 	}
@@ -4519,17 +4533,36 @@ func (e *emitter) writeIndexSetName(b *strings.Builder, idx *ast.IndexExpr, valC
 	b.WriteByte(')')
 }
 
+func (e *emitter) collectStringConcatParts(expr ast.Expr, parts *[]ast.Expr) {
+	if binary, ok := expr.(*ast.BinaryExpr); ok && binary.Op == token.ADD && e.typeOf(binary) == check.TypeString {
+		e.collectStringConcatParts(binary.X, parts)
+		e.collectStringConcatParts(binary.Y, parts)
+		return
+	}
+	*parts = append(*parts, expr)
+}
+
 func (e *emitter) writeBinary(b *strings.Builder, expr *ast.BinaryExpr) {
 	lt := e.typeOf(expr.X)
 	rt := e.typeOf(expr.Y)
 	if expr.Op == token.ADD && (lt == check.TypeString || rt == check.TypeString) {
 		e.needConcat = true
 		e.needArena = true
-		b.WriteString("aram_concat(")
-		e.writeExpr(b, expr.X)
-		b.WriteString(", ")
-		e.writeExpr(b, expr.Y)
-		b.WriteByte(')')
+		var parts []ast.Expr
+		e.collectStringConcatParts(expr, &parts)
+		b.WriteString("({ const char *__aram_parts[")
+		b.WriteString(fmt.Sprintf("%d", len(parts)))
+		b.WriteString("]; ")
+		for i, part := range parts {
+			b.WriteString("__aram_parts[")
+			b.WriteString(fmt.Sprintf("%d", i))
+			b.WriteString("] = ")
+			e.writeExpr(b, part)
+			b.WriteString("; ")
+		}
+		b.WriteString("aram_concat_many(")
+		b.WriteString(fmt.Sprintf("%d", len(parts)))
+		b.WriteString(", __aram_parts); })")
 		return
 	}
 	if (expr.Op == token.EQL || expr.Op == token.NEQ) && lt == check.TypeString {

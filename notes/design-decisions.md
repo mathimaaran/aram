@@ -442,6 +442,21 @@ The client accepts strict HTTP/1.0 or HTTP/1.1 status lines and decodes
 limit. Unsupported transfer encodings remain errors. The obsolete C mux
 table was removed now that Tamil-0.58's mux is implemented in Aram.
 
+
+## Tamil-0.60 (2026-08-14)
+
+`aram build` and `aram run` compile generated C with `-O2` by default.
+`--debug` / `-O0` restore unoptimized builds; explicit `-O1`, `-O2`, `-O3`,
+and `-Os` are accepted.
+
+String `+` chains evaluate operands left-to-right, measure once, and allocate
+once. Empty components are allocation-free when at most one component is
+non-empty. The conservative collector captures register roots with `setjmp`,
+builds a sorted object index once per collection for logarithmic interior-
+pointer lookup, and grows its trigger after collection when one large
+allocation exceeds the normal threshold. This also fixes the prior retry loop
+for allocations larger than 256 KiB on an otherwise small heap.
+
 ## Priority (2026-08-01)
 
 Harden the language (other gaps) **before** starting the NASM x86-64

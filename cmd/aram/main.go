@@ -26,6 +26,7 @@ func main() {
 
 	mode := "run"
 	outPath := ""
+	optLevel := defaultCOpt
 	var paths []string
 	for i := 1; i < len(os.Args); i++ {
 		a := os.Args[i]
@@ -45,6 +46,10 @@ func main() {
 			mode = "emit"
 		case a == "run" || a == "-run":
 			mode = "run"
+		case a == "-O0" || a == "-O1" || a == "-O2" || a == "-O3" || a == "-Os":
+			optLevel = a
+		case a == "--debug":
+			optLevel = "-O0"
 		case a == "-o":
 			if i+1 >= len(os.Args) {
 				fmt.Fprintln(os.Stderr, "-o requires an argument")
@@ -86,11 +91,11 @@ func main() {
 	case "check":
 		os.Exit(runCheckAll(paths))
 	case "build":
-		os.Exit(runBuildAll(paths, outBase, outPath, false))
+		os.Exit(runBuildAll(paths, outBase, outPath, false, optLevel))
 	case "emit":
 		os.Exit(runEmitAll(paths, outBase, outPath))
 	case "run":
-		os.Exit(runBuildAll(paths, outBase, outPath, true))
+		os.Exit(runBuildAll(paths, outBase, outPath, true, optLevel))
 	default:
 		fmt.Fprintf(os.Stderr, "unknown mode %s\n", mode)
 		os.Exit(2)
@@ -212,7 +217,9 @@ func runEmitAll(paths []string, outBase, outPath string) int {
 	return 0
 }
 
-func runBuildAll(paths []string, outBase, outPath string, run bool) int {
+const defaultCOpt = "-O2"
+
+func runBuildAll(paths []string, outBase, outPath string, run bool, optLevel string) int {
 	pi, code := compileFront(paths)
 	if code != 0 {
 		return code
@@ -246,7 +253,7 @@ func runBuildAll(paths []string, outBase, outPath string, run bool) int {
 		}
 		return 0
 	}
-	cmd := exec.Command(gcc, "-std=c11", "-O0", "-pthread", cFile, "-o", binPath)
+	cmd := exec.Command(gcc, "-std=c11", optLevel, "-pthread", cFile, "-o", binPath)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -360,7 +367,7 @@ func usage() {
 	fmt.Fprintf(os.Stderr, `aram — Aram language toolchain (Tamil-0)
 
 Usage:
-  aram [run|build|emit|check|parse|lex] [-o out] <file.aram|dir>…
+  aram [run|build|emit|check|parse|lex] [-O0|-O1|-O2|-O3|-Os|--debug] [-o out] <file.aram|dir>…
 
 Commands:
   run     typecheck, emit C, compile with gcc/cc, and execute (default)
@@ -369,6 +376,8 @@ Commands:
   check   parse + typecheck only
   parse   parse and print a short AST summary
   lex     tokenize and print tokens
+
+C compilation defaults to -O2; use --debug or -O0 for unoptimized output.
 
 Packages: pass a directory or .aram files. Use கொணர் "rel/dir" to import
 another package directory; call as pkg.Name (Tamil-0.10).

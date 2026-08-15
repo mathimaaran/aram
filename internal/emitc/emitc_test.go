@@ -66,7 +66,7 @@ func runCTimeout(t *testing.T, cSrc string, d time.Duration) string {
 	if err := os.WriteFile(cFile, []byte(cSrc), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if out, err := exec.Command(cc, "-std=c11", "-O0", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
+	if out, err := exec.Command(cc, "-std=c11", "-O2", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
 		t.Fatalf("cc: %v\n%s\n%s", err, out, cSrc)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), d)
@@ -140,6 +140,9 @@ func TestEmitAndRunLoop(t *testing.T) {
 
 func TestEmitAndRunString(t *testing.T) {
 	_, _, cSrc := compile(t, "சரம்.aram")
+	if !strings.Contains(cSrc, "aram_concat_many(3, __aram_parts)") {
+		t.Fatalf("string chain was not flattened into one concat\n%s", cSrc)
+	}
 	got := runC(t, cSrc)
 	want := "வணக்கம், அறம்!\nமெய்\nபொய்\nஆம்\n"
 	if got != want {
@@ -674,17 +677,22 @@ func TestGCRuntimeReclaim(t *testing.T) {
 	driver := string(runtime) + `
 int main(void) {
 	aram_heap_init();
-	void *keep = aram_alloc(64);
-	(void)keep;
+	volatile unsigned char *root = (unsigned char *)aram_alloc(64);
+	root[0] = 77;
 	size_t base = aram_heap_live();
 	for (int i = 0; i < 100; i++) (void)aram_alloc(64);
 	size_t mid = aram_heap_live();
 	aram_gc();
 	size_t after = aram_heap_live();
-	aram_heap_shutdown();
 	if (mid <= base) return 2;
 	if (after >= mid) return 3;
 	if (after > base + 256) return 4;
+	if (root[0] != 77) return 5;
+	unsigned char *large = (unsigned char *)aram_alloc(1024 * 1024);
+	large[0] = 1;
+	large[1024 * 1024 - 1] = 2;
+	if (large[0] != 1 || large[1024 * 1024 - 1] != 2) return 6;
+	aram_heap_shutdown();
 	return 0;
 }
 `
@@ -693,7 +701,7 @@ int main(void) {
 	if err := os.WriteFile(cFile, []byte(driver), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if out, err := exec.Command(cc, "-std=c11", "-O0", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
+	if out, err := exec.Command(cc, "-std=c11", "-O2", "-pthread", cFile, "-o", bin).CombinedOutput(); err != nil {
 		t.Fatalf("cc: %v\n%s", err, out)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
