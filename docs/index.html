@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Developer documentation for the Aram programming language.">
+  <title>Aram Programming Language — Developer Documentation</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="docs.js"></script>
+</head>
+<body>
+<main id="main-content">
+  <section class="hero">
+    <p class="eyebrow">Developer reference · v0.62</p>
+    <h1>Aram <span lang="ta">அறம்</span></h1>
+    <p class="lead">A Go-inspired programming language with semantic Tamil keywords, a Go-hosted compiler, and a C/Linux backend.</p>
+    <p><span class="pill">Experimental</span><span class="pill">UTF-8</span><span class="pill">Linux</span><span class="pill">C backend</span><span class="pill">SQL / SQLite</span><span class="pill">Apache-2.0</span></p>
+  </section>
+
+  <div class="callout warning">
+    <strong>Project status</strong>
+    Aram is an experimental research compiler, not a production language. v0.62 is implemented end to end on Linux through generated C. The planned native NASM backend has not started. Licensed under <a href="misc.html#license">Apache License 2.0</a>.
+  </div>
+
+  <h2 id="whats-new">What is new in v0.62</h2>
+  <ul>
+    <li><strong>SQL package <code>தரவுத்தளம்</code>:</strong> shared Tamil API over an internal C backend vtable; SQLite is loaded at runtime via <code>dlopen</code> (no <code>sqlite3.h</code> / <code>-lsqlite3</code> at build time).</li>
+    <li><strong>Prepared statements:</strong> typed binds (1-based), row stepping, and copied column getters (0-based), with explicit finalize/close.</li>
+    <li><strong>Corpus:</strong> <code>corpus/tamil/தரவுத்தளம்/</code> for the API, plus <code>corpus/tamil/ஊழியர்_முழுஅடுக்கு/</code> for an Aram REST + React + SQLite full-stack example.</li>
+  </ul>
+  <p>Full API: <a href="standard-library.html#database">Standard library → SQL database</a>. Setup for the full-stack demo: <code>corpus/tamil/ஊழியர்_முழுஅடுக்கு/SETUP.md</code>.</p>
+
+  <h2 id="documentation">Documentation map</h2>
+  <div class="card-grid">
+    <a class="card card-link" href="getting-started.html">
+      <h3>Getting started</h3>
+      <p>Set up the compiler, run your first program, understand packages, and learn the command-line workflow.</p>
+    </a>
+    <a class="card card-link" href="language-reference.html">
+      <h3>Language reference</h3>
+      <p>Syntax, types, declarations, control flow, aggregates, functions, methods, generics, and errors.</p>
+    </a>
+    <a class="card card-link" href="concurrency-runtime.html">
+      <h3>Concurrency & runtime</h3>
+      <p>Threads, channels, select, panic/recover, defer, allocation, garbage collection, and runtime guarantees.</p>
+    </a>
+    <a class="card card-link" href="standard-library.html">
+      <h3>Standard library</h3>
+      <p>Complete API reference for TCP/UDP <code>வலை</code>, HTTP <code>பரிமாற்றம்</code>, and SQL <code>தரவுத்தளம்</code>.</p>
+    </a>
+    <a class="card card-link" href="tooling.html">
+      <h3>Compiler & tooling</h3>
+      <p><code>aram</code> commands, compiler flags, generated artifacts, repository layout, and test workflow.</p>
+    </a>
+    <a class="card card-link" href="implementation.html">
+      <h3>Implementation notes</h3>
+      <p>Compiler architecture, C ABI strategy, GC design, limitations, version history, and NASM roadmap.</p>
+    </a>
+    <a class="card card-link" href="misc.html">
+      <h3>Misc</h3>
+      <p>Apache-2.0 license notes, corpus pointers (including the SQL full-stack demo), and Tamil typing tutors (Tamil99 / Inscript / Bamini—no phonetic).</p>
+    </a>
+  </div>
+
+  <h2 id="quick-example">A complete first program</h2>
+  <pre><code>தொகுப்பு தொடக்கம்
+
+செயல்பாடு வாழ்த்து(பெயர் சரம்) சரம் {
+    திருப்பு "வணக்கம், " + பெயர் + "!"
+}
+
+செயல்பாடு தொடக்கம்() {
+    பதிப்பி(வாழ்த்து("அறம்"))
+}</code></pre>
+  <p>Run it from the repository root:</p>
+  <pre><code>go run ./cmd/aram run path/to/program.aram</code></pre>
+
+  <h2 id="design">Core design</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Area</th><th>Current decision</th></tr></thead>
+      <tbody>
+        <tr><td>Language identity</td><td>Semantic Tamil keywords; source extension <code>.aram</code></td></tr>
+        <tr><td>Semantics</td><td>Go-inspired but intentionally free to diverge</td></tr>
+        <tr><td>Compiler</td><td>Written in Go; hand-written lexer/parser and static checker</td></tr>
+        <tr><td>Backend</td><td>Generated C11, compiled by GCC/Clang with <code>-O2</code> by default</td></tr>
+        <tr><td>Runtime</td><td>pthread concurrency and stop-the-world conservative mark/sweep GC</td></tr>
+        <tr><td>Platforms</td><td>Linux first; IPv4 networking; x86-64 native backend planned</td></tr>
+        <tr><td>Standard library</td><td>TCP/UDP <code>வலை</code>, HTTP <code>பரிமாற்றம்</code>, SQL <code>தரவுத்தளம்</code> (SQLite first)</td></tr>
+        <tr><td>Visibility</td><td>Private by default; explicit <code>வெளி</code> export marker</td></tr>
+        <tr><td>License</td><td>Apache License 2.0 (<code>LICENSE</code> + <code>NOTICE</code>)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="keyword-sample">Keyword orientation</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Aram</th><th>Meaning</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><td><code>தொகுப்பு</code></td><td>package / collection</td><td>Package clause</td></tr>
+        <tr><td><code>செயல்பாடு</code></td><td>function</td><td>Functions, function types, closures</td></tr>
+        <tr><td><code>மாறி</code></td><td>variable</td><td>Explicit variable declaration</td></tr>
+        <tr><td><code>எனில்</code> / <code>இல்லையேல்</code></td><td>if / else</td><td>Conditionals; <code>எனில்</code> also labels switch/select cases</td></tr>
+        <tr><td><code>சுழல்</code></td><td>loop</td><td>All loop forms</td></tr>
+        <tr><td><code>திருப்பு</code></td><td>return</td><td>Return from a function</td></tr>
+        <tr><td><code>வகை</code> / <code>அமைப்பு</code></td><td>type / struct</td><td>Named types and structs</td></tr>
+        <tr><td><code>கொணர்</code> / <code>வெளி</code></td><td>import / export</td><td>Package boundary</td></tr>
+        <tr><td><code>இழை</code> / <code>தடம்</code></td><td>thread / channel</td><td>Concurrency</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="next-links">
+    <a href="getting-started.html"><span>Start here</span>Install and run Aram →</a>
+    <a href="language-reference.html"><span>Reference</span>Read the language guide →</a>
+  </div>
+</main>
+</body>
+</html>

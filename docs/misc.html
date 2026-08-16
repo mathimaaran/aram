@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Miscellaneous Aram developer notes, including Tamil typing tutors and keyboard layouts.">
+  <title>Misc — Aram Documentation</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="docs.js"></script>
+</head>
+<body>
+<main id="main-content">
+  <section class="hero">
+    <p class="eyebrow">Extras</p>
+    <h1>Misc</h1>
+    <p class="lead">Supporting material for Aram developers. Start with Tamil keyboard practice: Aram source is written in Tamil script, so comfortable Unicode typing matters as much as the compiler toolchain.</p>
+  </section>
+
+  <div class="toc">
+    <strong>On this page</strong>
+    <ul>
+      <li><a href="#license">License</a></li>
+      <li><a href="#examples">Corpus examples</a></li>
+      <li><a href="#tamil-typing">Tamil typing for Aram</a></li>
+      <li><a href="#layouts">Recommended layouts</a></li>
+      <li><a href="#tutors">Online tutors and practice</a></li>
+      <li><a href="#setup">OS / editor setup</a></li>
+      <li><a href="#practice-plan">Suggested practice plan</a></li>
+    </ul>
+  </div>
+
+  <h2 id="license">License</h2>
+  <p>Aram is licensed under the <strong>Apache License, Version 2.0</strong>.</p>
+  <ul>
+    <li>Full text: <code>LICENSE</code> in the repository root</li>
+    <li>Copyright attribution: <code>NOTICE</code></li>
+    <li>Official reference: <a href="https://www.apache.org/licenses/LICENSE-2.0">apache.org/licenses/LICENSE-2.0</a></li>
+  </ul>
+  <p>This includes the Apache-2.0 copyright and patent grants described in the license terms.</p>
+
+  <h2 id="examples">Corpus examples worth opening</h2>
+  <ul>
+    <li><code>corpus/tamil/தரவுத்தளம்/</code> — SQL API walkthrough (SQLite file under <code>build/</code>).</li>
+    <li><code>corpus/tamil/ஊழியர்_முழுஅடுக்கு/</code> — Tamil employee REST API + React UI; start with <code>SETUP.md</code>.</li>
+    <li><code>corpus/tamil/வலை_வாடிக்கையாளர்/</code> — HTTP client sample.</li>
+  </ul>
+  <p>More API detail: <a href="standard-library.html#database-examples">Standard library → Database examples</a>.</p>
+
+  <h2 id="tamil-typing">Tamil typing for Aram</h2>
+  <p>Aram keywords and identifiers use Tamil Unicode (UTF-8). Developers should learn a real Tamil keyboard layout rather than English-to-Tamil phonetic transliteration.</p>
+  <div class="callout warning">
+    <strong>No phonetic input</strong>
+    Phonetic / romanized tools (type <code>vanakkam</code> → get <code>வணக்கம்</code>) are convenient for casual chat, but they hide the script and produce weaker muscle memory for Aram keywords. Prefer Tamil99, Inscript, or Bamini practice below.
+  </div>
+  <p>Also install a Tamil-capable font such as Noto Sans Tamil so editors and terminals render glyphs correctly. See <code>notes/fonts-tamil.md</code> and <a href="getting-started.html#editor">Getting started → Tamil editor setup</a>.</p>
+
+  <h2 id="layouts">Recommended layouts</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Layout</th>
+          <th>Why it matters</th>
+          <th>Best for Aram?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Tamil99</strong></td>
+          <td>Official Tamil Nadu keyboard standard. Logical consonant→vowel typing on a normal QWERTY board. Strong Unicode support via Keyman and OS input methods.</td>
+          <td>Yes — first recommendation</td>
+        </tr>
+        <tr>
+          <td><strong>Inscript</strong></td>
+          <td>Government of India standard shared across Indian scripts. Once learned, transfers to other Indic languages. Built into many OS Tamil keyboards.</td>
+          <td>Yes — especially if you already know Inscript</td>
+        </tr>
+        <tr>
+          <td><strong>Bamini</strong></td>
+          <td>Popular in Tamil typing exams and publishing workflows. Many free online tutors teach it. Historically tied to non-Unicode fonts in some tools—prefer Unicode-aware practice for Aram source.</td>
+          <td>Useful for speed drills; keep files UTF-8</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="tutors">Online tutors and practice</h2>
+  <p>These external sites are not affiliated with Aram. Links and availability can change; they are curated as practical starting points for layout-based Tamil typing.</p>
+
+  <h3>Tamil99</h3>
+  <div class="api">
+    <h3><a href="https://keyman.com/keyboards/ekwtamil99uni?bcp47=ta">Keyman — Thamizha Tamil99</a></h3>
+    <p>Installable Unicode Tamil99 keyboard for Windows, macOS, Linux, web, and mobile. Best long-term setup for writing <code>.aram</code> files daily.</p>
+    <p>Layout help: <a href="https://help.keyman.com/keyboard/ekwtamil99uni/current-version">Tamil99 Keyboard Help</a>.</p>
+  </div>
+  <div class="api">
+    <h3><a href="https://www.typingbit.com/typing-test/practice/?lang=tamil">TypingBit — Tamil practice (Tamil99)</a></h3>
+    <p>Browser Tamil typing practice oriented around the Tamil99 layout. Useful timed drills after you install a Tamil99 input method.</p>
+  </div>
+  <div class="api">
+    <h3><a href="https://en.wikipedia.org/wiki/Tamil_99">Wikipedia — Tamil 99</a> / <a href="https://tamilelibrary.org/teli/tnstd.html">Tamil Electronic Library — TN standards</a></h3>
+    <p>Background on the Tamil Nadu approved keyboard standard and related encoding history.</p>
+  </div>
+
+  <h3>Inscript</h3>
+  <div class="api">
+    <h3><a href="https://tamil.indiatyping.com/index.php/english-to-tamil-online/tamil-inscript-typing">IndiaTyping — Tamil Inscript online keyboard</a></h3>
+    <p>On-screen Inscript keyboard for learning key positions. Pair with OS Tamil Inscript once you know the map.</p>
+  </div>
+  <div class="api">
+    <h3><a href="https://tamil.indiatyping.com/index.php/tamil-keyboard/tamil-inscript-keyboard">IndiaTyping — enable Inscript on Windows</a></h3>
+    <p>Step-by-step OS setup for Tamil Inscript. On Linux/macOS, add a Tamil → Inscript input source from system settings when available.</p>
+  </div>
+  <div class="api">
+    <h3><a href="https://help.keyman.com/keyboard/tamil/1.0/chart.pdf">Keyman — Tamil Inscript chart (PDF)</a></h3>
+    <p>Printable layout chart for consonants, vowels, and vowel signs.</p>
+  </div>
+
+  <h3>Bamini (exam / speed practice)</h3>
+  <div class="api">
+    <h3><a href="https://maxtyping.com/typing-tutor/tamil/">MaxTyping — Tamil Bamini tutor</a></h3>
+    <p>Free structured Bamini lessons with speed/accuracy feedback. Good for building finger memory; keep Aram sources in Unicode Tamil99/Inscript for day-to-day coding.</p>
+  </div>
+  <div class="api">
+    <h3><a href="https://babatyping.com/baba-typing-tamil-speed-test/">Baba Typing — Tamil speed test</a></h3>
+    <p>Timed Tamil typing tests with Unicode and Bamini layout options. Prefer the Unicode mode when practicing for Aram.</p>
+  </div>
+  <div class="api">
+    <h3><a href="https://www.typingpoint.com/tamil/tamil-typing">Typing Point — Tamil typing master</a></h3>
+    <p>Lesson sets and paragraph practice. Useful extra drills once a layout is chosen.</p>
+  </div>
+
+  <h2 id="setup">OS / editor setup tips</h2>
+  <ul>
+    <li><strong>Prefer Unicode layouts</strong> (Tamil99 or Inscript) for Aram. Save every <code>.aram</code> file as UTF-8.</li>
+    <li><strong>Linux:</strong> install Keyman Tamil99, or enable Tamil input methods from your desktop’s language settings when available.</li>
+    <li><strong>Windows / macOS:</strong> add Tamil language support, then choose Tamil99 or Inscript; Keyman works well cross-platform.</li>
+    <li><strong>Editor:</strong> configure a Tamil font fallback (Noto Sans Tamil / Noto Sans Tamil UI) so keywords and identifiers are readable. Details live in <code>notes/fonts-tamil.md</code>.</li>
+    <li><strong>Switching:</strong> learn one OS shortcut to flip between English and Tamil so Latin operators (<code>:=</code>, <code>{}</code>, <code>()</code>) stay easy while keywords stay Tamil.</li>
+  </ul>
+
+  <h2 id="practice-plan">Suggested practice plan</h2>
+  <ol>
+    <li>Install <strong>Keyman Tamil99</strong> (or OS Inscript if you already use it).</li>
+    <li>Spend a few sessions on vowels, consonants, and pulli (<code>்</code>) until common Aram keywords feel automatic: <code>தொகுப்பு</code>, <code>செயல்பாடு</code>, <code>எனில்</code>, <code>திருப்பு</code>, <code>பதிப்பி</code>.</li>
+    <li>Use TypingBit / MaxTyping / Baba Typing for timed accuracy, not as the only input method.</li>
+    <li>Rewrite small corpus examples by hand (for example <code>corpus/tamil/வணக்கம்.aram</code>) without copy-paste.</li>
+    <li>Only after Unicode layout fluency, optionally use Bamini drills for raw speed—then return to Tamil99/Inscript for coding.</li>
+  </ol>
+
+  <div class="callout">
+    <strong>Goal for Aram contributors</strong>
+    Be able to type a short program’s Tamil keywords and identifiers from memory in Unicode, with Latin punctuation for operators and braces.
+  </div>
+
+  <div class="next-links">
+    <a href="implementation.html"><span>Previous</span>← Implementation notes</a>
+    <a href="index.html"><span>Documentation home</span>Return to overview →</a>
+  </div>
+</main>
+</body>
+</html>

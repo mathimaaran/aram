@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Install Aram, compile programs, and learn the project workflow.">
+  <title>Getting Started — Aram Documentation</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="docs.js"></script>
+</head>
+<body>
+<main id="main-content">
+  <section class="hero">
+    <p class="eyebrow">Guide</p>
+    <h1>Getting started</h1>
+    <p class="lead">Build the compiler, run an Aram program, organize packages, and understand the files produced by the C backend.</p>
+  </section>
+
+  <div class="toc">
+    <strong>On this page</strong>
+    <ul>
+      <li><a href="#requirements">Requirements</a></li>
+      <li><a href="#compiler">Run the compiler</a></li>
+      <li><a href="#hello">Hello world</a></li>
+      <li><a href="#packages">Packages</a></li>
+      <li><a href="#imports">Imports and exports</a></li>
+      <li><a href="#errors">Handling errors</a></li>
+      <li><a href="#examples">Useful examples</a></li>
+      <li><a href="#editor">Tamil editor setup</a></li>
+    </ul>
+  </div>
+
+  <h2 id="requirements">Requirements</h2>
+  <ul>
+    <li>Linux (the current supported runtime target).</li>
+    <li>Go toolchain to build/run the Aram compiler.</li>
+    <li>GCC or Clang-compatible <code>cc</code> to compile generated C.</li>
+    <li>pthread support for concurrency and the runtime.</li>
+    <li><code>libdl</code> (<code>-ldl</code>) for dynamic loading used by the SQL runtime.</li>
+    <li>For database programs: a runtime SQLite shared library such as <code>libsqlite3.so.0</code> (Debian/Ubuntu: <code>libsqlite3-0</code>). Headers and <code>-lsqlite3</code> are not required to build.</li>
+    <li>A UTF-8 editor with a Tamil font such as Noto Sans Tamil.</li>
+  </ul>
+
+  <p>The repository includes a portable Go setup helper:</p>
+  <pre><code>source tools/env.sh
+go test ./...</code></pre>
+  <p>If your system Go is suitable, the first line is optional.</p>
+
+  <h2 id="compiler">Run the compiler</h2>
+  <p>The compiler entry point is <code>cmd/aram</code>. During development, invoke it through Go:</p>
+  <pre><code>go run ./cmd/aram check corpus/tamil/வணக்கம்.aram
+go run ./cmd/aram run corpus/tamil/வணக்கம்.aram
+go run ./cmd/aram build corpus/tamil/வணக்கம்.aram</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Command</th><th>Behavior</th></tr></thead>
+      <tbody>
+        <tr><td><code>run</code></td><td>Parse, typecheck, emit C, compile, and execute. This is the default command.</td></tr>
+        <tr><td><code>build</code></td><td>Parse, typecheck, emit C, and compile without execution.</td></tr>
+        <tr><td><code>emit</code></td><td>Write generated C only.</td></tr>
+        <tr><td><code>check</code></td><td>Parse and typecheck, then print <code>ok</code>.</td></tr>
+        <tr><td><code>parse</code></td><td>Print a short AST summary.</td></tr>
+        <tr><td><code>lex</code></td><td>Print the token stream.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Generated C builds use <code>-O2</code> by default. Select a different level or debug output explicitly:</p>
+  <pre><code>go run ./cmd/aram build --debug program.aram
+go run ./cmd/aram build -O0 program.aram
+go run ./cmd/aram build -O3 -o bin/my-program program.aram</code></pre>
+  <p>Supported optimization flags are <code>-O0</code>, <code>-O1</code>, <code>-O2</code>, <code>-O3</code>, and <code>-Os</code>. Without <code>-o</code>, outputs are written below <code>build/</code>.</p>
+
+  <h2 id="hello">Your first program</h2>
+  <p>Create <code>hello.aram</code>:</p>
+  <pre><code>தொகுப்பு தொடக்கம்
+
+செயல்பாடு தொடக்கம்() {
+    பதிப்பி("வணக்கம், உலகம்!")
+}</code></pre>
+  <p>A runnable package follows the entry convention:</p>
+  <ol>
+    <li>Its package name is <code>தொடக்கம்</code>.</li>
+    <li>It contains exactly one zero-argument <code>செயல்பாடு தொடக்கம்()</code>.</li>
+  </ol>
+  <pre><code>go run ./cmd/aram run hello.aram</code></pre>
+
+  <h2 id="packages">Files and packages</h2>
+  <p>Every source file begins with a package clause. Multiple files with the same package name share declarations:</p>
+  <pre><code>project/
+├── தொடக்கம்.aram
+└── helpers.aram</code></pre>
+  <pre><code>// helpers.aram
+தொகுப்பு தொடக்கம்
+
+செயல்பாடு இரட்டி(எ முழுஎண்) முழுஎண் {
+    திருப்பு எ * 2
+}</code></pre>
+  <pre><code>// தொடக்கம்.aram
+தொகுப்பு தொடக்கம்
+
+செயல்பாடு தொடக்கம்() {
+    பதிப்பி(இரட்டி(21))
+}</code></pre>
+  <p>Compile a directory or pass multiple files:</p>
+  <pre><code>go run ./cmd/aram run project/
+go run ./cmd/aram run project/தொடக்கம்.aram project/helpers.aram</code></pre>
+
+  <h2 id="imports">Imports and exports</h2>
+  <p><code>கொணர்</code> imports a package. Names are private unless explicitly marked <code>வெளி</code>; Aram does not use capitalization for visibility.</p>
+  <pre><code>// math/எண்.aram
+தொகுப்பு கணிதம்
+
+வெளி செயல்பாடு கூட்டு(அ முழுஎண், ஆ முழுஎண்) முழுஎண் {
+    திருப்பு அ + ஆ
+}</code></pre>
+  <pre><code>தொகுப்பு தொடக்கம்
+
+கொணர் "math"
+
+செயல்பாடு தொடக்கம்() {
+    பதிப்பி(கணிதம்.கூட்டு(20, 22))
+}</code></pre>
+  <p>Use a local alias or blank import:</p>
+  <pre><code>கொணர் க "math"
+கொணர் _ "side-effect-package"</code></pre>
+  <div class="callout">
+    <strong>Compiler standard library</strong>
+    Imports <code>"வலை"</code>, <code>"பரிமாற்றம்"</code>, and <code>"தரவுத்தளம்"</code> resolve to built-in packages under <code>stdlib/</code>, not relative folders.
+  </div>
+
+  <h2 id="errors">Handling operational errors</h2>
+  <p>Networking and HTTP APIs return <code>*வலை.பிழை</code>. Database APIs return <code>*தரவுத்தளம்.பிழை</code>. Success is <code>இன்மை</code>. This is explicit result handling rather than exceptions:</p>
+  <pre><code>கொணர் "வலை"
+
+இணைப்பு, பிழை := வலை.இணை("127.0.0.1:8080")
+எனில் பிழை != இன்மை {
+    பதிப்பி(பிழை.செய்தி)
+    திருப்பு
+}
+தள்ளிவை வலை.விடு(இணைப்பு)</code></pre>
+  <p>Programmer/runtime faults use <code>அலறு</code> and can be intercepted by <code>மீள்()</code> inside a deferred closure. See <a href="concurrency-runtime.html#panic">Panic and recover</a>.</p>
+
+  <h2 id="examples">Useful examples</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Path</th><th>What it shows</th></tr></thead>
+      <tbody>
+        <tr><td><code>corpus/tamil/வணக்கம்.aram</code></td><td>Minimal hello program</td></tr>
+        <tr><td><code>corpus/tamil/தரவுத்தளம்/</code></td><td>SQLite open, create, prepare, bind, query, and unsupported-driver error</td></tr>
+        <tr><td><code>corpus/tamil/ஊழியர்_முழுஅடுக்கு/</code></td><td>Aram HTTP REST + SQLite employees DB + React UI (see <code>SETUP.md</code>)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <pre><code>go run ./cmd/aram run corpus/tamil/தரவுத்தளம்/</code></pre>
+  <p>API details: <a href="standard-library.html#database">Standard library → SQL database</a>.</p>
+
+  <h2 id="editor">Tamil editor setup</h2>
+  <ul>
+    <li>Store source as UTF-8.</li>
+    <li>Install Noto Sans Tamil and include it as an editor font fallback.</li>
+    <li>Aram identifiers may mix Unicode letters, marks, digits, and underscore.</li>
+    <li>Both Arabic digits and Tamil digits <code>௦–௯</code> work in numeric literals.</li>
+  </ul>
+  <p>Repository-specific font setup is documented in <code>notes/fonts-tamil.md</code>.</p>
+  <p>For Tamil99 / Inscript / Bamini typing tutors (no phonetic transliteration), see <a href="misc.html#tamil-typing">Misc → Tamil typing</a>.</p>
+
+  <div class="next-links">
+    <a href="index.html"><span>Previous</span>← Documentation overview</a>
+    <a href="language-reference.html"><span>Next</span>Language reference →</a>
+  </div>
+</main>
+</body>
+</html>

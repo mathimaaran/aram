@@ -5,15 +5,27 @@ Natural enhancements kept out of the current subset so each Tamil-0.x stay small
 
 Update when a subset ships (strike or move items) or when a construct card records a new cut.
 
-## Likely next (harden language first; NASM later)
+## Likely next (NASM next; leftovers stay backlog)
 
 | Item | Notes | Source |
 |------|--------|--------|
-| NASM x86-64 → i386 | After language harden | roadmap |
-| Interfaces | Only if earned | method.yaml |
+| NASM x86-64 → i386 | Next major backend work | roadmap |
+| Interfaces | Only if earned (e.g. Go-style `Handler`) | method.yaml |
 | Generic types / constraints | After interfaces earn a place | generics.yaml |
 
-Shipped: 0.11–0.61 (through HTTP client options + IPv4 UDP).
+Shipped: 0.11–0.62 (through shared SQL vtable + SQLite).
+
+## Backlog leftovers (pre-NASM optional; keep out of critical path)
+
+| Item | Notes | Source |
+|------|--------|--------|
+| Dial / DNS timeouts | HTTP `நேரமுடிவு` currently covers send/receive sockets only | http.yaml |
+| Relative HTTP redirects | Absolute `http://` only today | http.yaml |
+| HTTPS / TLS | Explicitly out of scope for 0.61 | http.yaml / net.yaml |
+| PostgreSQL / MySQL backends | Implement the Tamil-0.62 internal DB vtable | database.yaml |
+| Database pooling | Connection handles are single connections today | database.yaml |
+| Public database driver ABI | Internal C vtable is not a third-party plugin API | database.yaml |
+| Interfaces | Only if earned | method.yaml |
 
 ## Struct & types
 
@@ -50,6 +62,7 @@ Shipped: 0.11–0.61 (through HTTP client options + IPv4 UDP).
 | ~~query parameters + chunked HTTP responses~~ | Tamil-0.59 | http.yaml |
 | ~~GC/string polish + optimized C default~~ | Tamil-0.60 | gc.yaml / string.yaml |
 | ~~HTTP timeout/redirect options + IPv4 UDP~~ | Tamil-0.61 | http.yaml / net.yaml |
+| ~~Shared SQL vtable + SQLite backend~~ | Tamil-0.62 `கொணர் "தரவுத்தளம்"` | database.yaml |
 | Goroutines / channels | Tamil-0.48 on C (pthread); see goroutine.yaml | goroutine.yaml |
 | NASM + custom IR | IR when NASM begins | design-decisions |
 | Windows / macOS primary targets | Linux-first | Non-goals |

@@ -1,0 +1,53 @@
+id: database
+status: codegen
+subset: Tamil-0.62
+go_inspired: |
+  db, err := sql.Open("sqlite", ":memory:")
+  stmt, err := db.Prepare("INSERT INTO item VALUES (?, ?)")
+  stmt.Exec(1, "Aram")
+  rows, err := db.Query("SELECT id, name FROM item")
+tamil_keywords: {}
+tamil_ebnf: |
+  # no new syntax — stdlib package தரவுத்தளம் (கொணர் "தரவுத்தளம்")
+semantics: >
+  Tamil-0.62 adds a shared SQL database API backed by an internal C vtable.
+  திற(driver, address) dispatches to a registered backend; SQLite is the
+  first backend and accepts "sqlite" or "sqlite3". Connections and prepared
+  statements are opaque handles. செயல் executes SQL without rows and returns
+  செயல்முடிவு (பாதித்தவை, சேர்க்கையெண்). தயாரி creates a reusable statement.
+  One-based bind functions support null, int64, float64, UTF-8 text, and byte
+  blobs. அடுத்து returns (மெய், இன்மை) for a row and (பொய், இன்மை) when done.
+  Column getters use zero-based indexes and copy text/blob results into the
+  Aram managed heap. All operational failures return *தரவுத்தளம்.பிழை.
+  The SQLite backend is loaded at runtime with dlopen, so compiling an Aram
+  program needs no sqlite3 headers or -lsqlite3; execution needs
+  libsqlite3.so.0 (or libsqlite3.so). Handles require explicit கூற்றுவிடு /
+  விடு; there are no finalizers. A connection or statement must not be used
+  concurrently by multiple இழை in this first slice.
+examples:
+  - tamil: |
+      கொணர் "தரவுத்தளம்"
+      இ, ப := தரவுத்தளம்.திற("sqlite", ":memory:")
+      எனில் ப != இன்மை { திருப்பு }
+      _, ப = தரவுத்தளம்.செயல்(இ, "CREATE TABLE பொருள் (எண் INTEGER, பெயர் TEXT)")
+      மாறி க தரவுத்தளம்.கூற்று
+      க, ப = தரவுத்தளம்.தயாரி(இ, "INSERT INTO பொருள் VALUES (?, ?)")
+      ப = தரவுத்தளம்.முழுஎண்பிணை(க, 1, 1)
+      ப = தரவுத்தளம்.சரம்பிணை(க, 2, "அறம்")
+      _, ப = தரவுத்தளம்.அடுத்து(க)
+      ப = தரவுத்தளம்.கூற்றுவிடு(க)
+      ப = தரவுத்தளம்.விடு(இ)
+    go_equivalent: |
+      db, _ := sql.Open("sqlite", ":memory:")
+      db.Exec("CREATE TABLE item (id INTEGER, name TEXT)")
+      stmt, _ := db.Prepare("INSERT INTO item VALUES (?, ?)")
+      stmt.Exec(1, "Aram")
+      stmt.Close()
+      db.Close()
+notes:
+  - "No new keywords; தரவுத்தளம் is a compiler stdlib package."
+  - "The vtable is internal C architecture, not a public plugin ABI."
+  - "Additional first-party RDBMS backends can implement the same vtable."
+  - "The API is shared; SQL text and placeholder syntax may remain backend-specific."
+  - "No pooling, reflection, ORM, migrations, or arbitrary-value Scan in Tamil-0.62."
+  - "Transactions are available through SQL (BEGIN / COMMIT / ROLLBACK)."

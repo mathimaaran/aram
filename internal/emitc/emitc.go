@@ -96,6 +96,7 @@ type emitter struct {
 	needPanic     bool // அலறு / மீள் (Tamil-0.49)
 	needNet       bool // வலை TCP sockets (Tamil-0.53)
 	needHttp      bool // பரிமாற்றம் HTTP (Tamil-0.54)
+	needDB        bool // தரவுத்தளம் SQL database API (Tamil-0.62)
 	needArena     bool
 	needUTF8      bool
 	needRuneStr   bool // சரம்(rune) conversion helper
@@ -133,6 +134,7 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 	}
 	e.markNetNeeds(pkgNames)
 	e.markHttpNeeds(pkgNames)
+	e.markDBNeeds(pkgNames)
 
 	var body strings.Builder
 	for _, p := range pkgs {
@@ -163,7 +165,7 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 		e.needFunc = true
 	}
 	e.markChanNeeds()
-	if e.needArena || e.needConcat || e.needAppend || e.needSlice || e.needMake || e.needRuneStr || e.needStrBytes || e.needMap || e.needDefer || e.needFunc || e.needChan || e.needGo || e.needNet || e.needHttp {
+	if e.needArena || e.needConcat || e.needAppend || e.needSlice || e.needMake || e.needRuneStr || e.needStrBytes || e.needMap || e.needDefer || e.needFunc || e.needChan || e.needGo || e.needNet || e.needHttp || e.needDB {
 		e.needArena = true
 	}
 
@@ -204,6 +206,7 @@ func (e *emitter) emitProgram(pkgs []*check.PkgInfo) (string, error) {
 	e.writeFuncTypedef(&b)
 	e.writeGCRuntime(&b)
 	e.writeNetRuntime(&b)
+	e.writeDBRuntime(&b)
 	e.writeChanRuntime(&b)
 	e.writePanicRuntime(&b)
 	if e.needConcat {
@@ -2252,6 +2255,9 @@ func (e *emitter) writeFunc(b *strings.Builder, fn *ast.FuncDecl) {
 		return
 	}
 	if e.writeHttpIntrinsic(b, fn) {
+		return
+	}
+	if e.writeDBIntrinsic(b, fn) {
 		return
 	}
 	prev := e.curFn

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Aram compiler commands, build output, testing, and repository workflow.">
+  <title>Compiler & Tooling — Aram Documentation</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="docs.js"></script>
+</head>
+<body>
+<main id="main-content">
+  <section class="hero">
+    <p class="eyebrow">Developer guide</p>
+    <h1>Compiler & tooling</h1>
+    <p class="lead">Command reference, compilation pipeline, output paths, optimization controls, repository organization, tests, and contribution workflow.</p>
+  </section>
+
+  <div class="toc">
+    <strong>On this page</strong>
+    <ul>
+      <li><a href="#commands">Command reference</a></li>
+      <li><a href="#pipeline">Compilation pipeline</a></li>
+      <li><a href="#outputs">Outputs and flags</a></li>
+      <li><a href="#packages">Package loading</a></li>
+      <li><a href="#repository">Repository layout</a></li>
+      <li><a href="#tests">Testing</a></li>
+      <li><a href="#adding">Adding a feature</a></li>
+      <li><a href="#debugging">Debugging generated C</a></li>
+    </ul>
+  </div>
+
+  <h2 id="commands">Command reference</h2>
+  <pre><code>aram [run|build|emit|check|parse|lex] \
+  [-O0|-O1|-O2|-O3|-Os|--debug] \
+  [-o out] \
+  &lt;file.aram|directory&gt;…</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Command</th><th>Frontend</th><th>C emission</th><th>C compile</th><th>Execute</th></tr></thead>
+      <tbody>
+        <tr><td><code>run</code> (default)</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td></tr>
+        <tr><td><code>build</code></td><td>yes</td><td>yes</td><td>yes</td><td>no</td></tr>
+        <tr><td><code>emit</code></td><td>yes</td><td>yes</td><td>no</td><td>no</td></tr>
+        <tr><td><code>check</code></td><td>yes</td><td>no</td><td>no</td><td>no</td></tr>
+        <tr><td><code>parse</code></td><td>parse only</td><td>no</td><td>no</td><td>no</td></tr>
+        <tr><td><code>lex</code></td><td>lex only</td><td>no</td><td>no</td><td>no</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>While working in the repository, replace <code>aram</code> with:</p>
+  <pre><code>go run ./cmd/aram</code></pre>
+
+  <h2 id="pipeline">Compilation pipeline</h2>
+  <ol>
+    <li><strong>Expansion:</strong> input files/directories are expanded; imported directories are recursively loaded.</li>
+    <li><strong>Lexing:</strong> UTF-8 source becomes tokens; Go-like semicolon insertion runs here.</li>
+    <li><strong>Parsing:</strong> recursive-descent parser produces the Aram AST.</li>
+    <li><strong>Package merge:</strong> same-package files are merged in dependency order.</li>
+    <li><strong>Checking:</strong> names, visibility, types, method sets, generic instantiations, closure captures, and entry rules are validated.</li>
+    <li><strong>C emission:</strong> typed program metadata drives generated C types, runtime inclusion, monomorphization, and function bodies.</li>
+    <li><strong>C compilation:</strong> GCC is preferred, then <code>cc</code>; generated C11 links pthread.</li>
+    <li><strong>Execution:</strong> <code>run</code> launches the absolute binary path and forwards stdout/stderr.</li>
+  </ol>
+
+  <h2 id="outputs">Output files and build flags</h2>
+  <p>Default output base comes from the input filename or directory:</p>
+  <pre><code>go run ./cmd/aram build corpus/tamil/வணக்கம்.aram
+# build/வணக்கம்.c
+# build/வணக்கம்</code></pre>
+  <p>Override the binary output:</p>
+  <pre><code>go run ./cmd/aram build -o dist/hello hello.aram
+# dist/hello.c
+# dist/hello</code></pre>
+  <p><code>emit -o generated/program</code> adds the <code>.c</code> extension when missing.</p>
+
+  <h3>Optimization</h3>
+  <ul>
+    <li>Default: <code>-O2</code>.</li>
+    <li>Debug/unoptimized: <code>--debug</code> or <code>-O0</code>.</li>
+    <li>Explicit: <code>-O1</code>, <code>-O2</code>, <code>-O3</code>, or <code>-Os</code>.</li>
+  </ul>
+  <p>The effective C invocation is equivalent to:</p>
+  <pre><code>gcc -std=c11 -O2 -pthread generated.c -o program -ldl</code></pre>
+  <p><code>-ldl</code> is required so the SQL runtime can <code>dlopen</code> SQLite. Programs that never import <code>தரவுத்தளம்</code> still link it today; the driver always passes <code>-ldl</code>.</p>
+
+  <h2 id="packages">Package loading</h2>
+  <ul>
+    <li>A directory input loads its <code>.aram</code> package files.</li>
+    <li>Relative import paths resolve from the importing package directory.</li>
+    <li><code>"வலை"</code>, <code>"பரிமாற்றம்"</code>, and <code>"தரவுத்தளம்"</code> resolve from <code>stdlib/</code>.</li>
+    <li>Dependency packages are checked/emitted before dependents.</li>
+    <li>Cycles and unresolved package names are hard errors.</li>
+    <li>The entry package defaults to <code>தொடக்கம்</code>.</li>
+  </ul>
+
+  <h2 id="repository">Repository layout</h2>
+  <pre><code>cmd/aram/               compiler command-line driver
+internal/ast/           syntax tree definitions
+internal/token/         token and source position model
+internal/lex/           lexer and semicolon insertion
+internal/parse/         recursive-descent parser
+internal/load/          package/import loader and integration tests
+internal/check/         static checker and typed program metadata
+internal/emitc/         C emitter and embedded C runtimes
+stdlib/வலை/             TCP/UDP public declarations
+stdlib/பரிமாற்றம்/      HTTP public declarations and Aram mux
+stdlib/தரவுத்தளம்/      SQL database public declarations
+grammar/tamil/          EBNF, keyword glossary, construct cards
+corpus/tamil/           valid/invalid examples and integration programs
+  தரவுத்தளம்/           SQLite API sample
+  ஊழியர்_முழுஅடுக்கு/   Aram REST + React + SQLite full-stack demo
+notes/                  roadmap, design decisions, deferred inventory
+tools/                  portable toolchain helpers
+docs/                   this static developer documentation
+LICENSE / NOTICE        Apache License 2.0 + copyright attribution</code></pre>
+
+  <h2 id="tests">Testing</h2>
+  <pre><code>go test ./...</code></pre>
+  <p>The suite includes:</p>
+  <ul>
+    <li>Lexer/parser/checker unit and corpus tests.</li>
+    <li>C emitter structural and compile/run tests.</li>
+    <li>Runtime tests for strings, slices, maps, defer, panic, concurrency, and GC.</li>
+    <li>Package-loader integration tests for TCP, UDP, HTTP loopback behavior, and SQL (<code>TestDatabaseProgram</code>).</li>
+  </ul>
+  <p>Network integration tests bind loopback/ephemeral ports. Database tests require a runtime SQLite shared library. Run them in an environment that allows local sockets and can resolve <code>libsqlite3.so.0</code>.</p>
+  <pre><code>go test ./internal/load -run TestDatabaseProgram -count=1
+go test ./internal/load -run TestUDPProgram -count=3
+go test ./internal/load -run TestHTTPRedirectOptions -count=1</code></pre>
+
+  <h2 id="adding">Adding a language feature</h2>
+  <p>The project uses closed Tamil-0.x slices. A typical feature should update all affected layers:</p>
+  <ol>
+    <li>Add a dated decision to <code>notes/design-decisions.md</code>.</li>
+    <li>Lock spelling/syntax in <code>grammar/tamil/keywords.yaml</code> and <code>grammar/tamil/ebnf.md</code>.</li>
+    <li>Add or update a construct card under <code>grammar/tamil/constructs/</code>.</li>
+    <li>Add a focused corpus example, and an invalid example when diagnostics matter.</li>
+    <li>Implement lexer/parser/AST changes when new syntax is required.</li>
+    <li>Implement checker types and semantic validation.</li>
+    <li>Implement C emission/runtime support.</li>
+    <li>Add unit and compile/run integration tests.</li>
+    <li>Update roadmap, deferred inventory, README, and these HTML docs.</li>
+  </ol>
+  <div class="callout">
+    <strong>No syntax change?</strong>
+    Standard library/runtime additions often need only public <code>stdlib/*.aram</code> declarations, checker-compatible signatures, emitter intrinsics, C runtime code, corpus, tests, and documentation.
+  </div>
+
+  <h2 id="debugging">Debugging generated C</h2>
+  <ol>
+    <li>Use <code>check</code> first to isolate frontend errors.</li>
+    <li>Use <code>emit</code> to inspect C without invoking the compiler.</li>
+    <li>Build with <code>--debug</code> to disable optimization.</li>
+    <li>Compile the emitted file manually with extra warning/sanitizer flags when appropriate.</li>
+  </ol>
+  <pre><code>go run ./cmd/aram emit -o build/debug program.aram
+gcc -std=c11 -O0 -g -pthread \
+  -fsanitize=address,undefined \
+  build/debug.c -o build/debug
+./build/debug</code></pre>
+  <p>Generated identifiers are UTF-8-safe C-mangled names. Runtime helpers retain readable <code>aram_*</code> names such as <code>aram_alloc</code>, <code>aram_http_do_opts</code>, <code>aram_net_udp_recv</code>, and database helpers under <code>aram_db_*</code>.</p>
+
+  <div class="next-links">
+    <a href="standard-library.html"><span>Previous</span>← Standard library</a>
+    <a href="implementation.html"><span>Next</span>Implementation notes →</a>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Aram compiler implementation architecture, backend design, limitations, and roadmap.">
+  <title>Implementation Notes — Aram Documentation</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="docs.js"></script>
+</head>
+<body>
+<main id="main-content">
+  <section class="hero">
+    <p class="eyebrow">Compiler internals</p>
+    <h1>Implementation notes</h1>
+    <p class="lead">How the Go frontend, typed program model, generated C, runtime subsystems, and versioned language process fit together.</p>
+  </section>
+
+  <div class="toc">
+    <strong>On this page</strong>
+    <ul>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#frontend">Frontend</a></li>
+      <li><a href="#checker">Checker model</a></li>
+      <li><a href="#c-backend">C backend</a></li>
+      <li><a href="#runtime">Embedded runtime</a></li>
+      <li><a href="#versions">Version history</a></li>
+      <li><a href="#limitations">Known limitations</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#public">Public project status</a></li>
+    </ul>
+  </div>
+
+  <h2 id="architecture">Architecture at a glance</h2>
+  <pre><code>UTF-8 .aram source
+       │
+       ▼
+ lexer + semicolon insertion
+       │
+       ▼
+ recursive-descent parser ──► AST
+       │
+       ▼
+ package loader / dependency ordering
+       │
+       ▼
+ checker ──► ProgramInfo + type/closure/generic metadata
+       │
+       ▼
+ C emitter + selected embedded runtimes
+       │
+       ▼
+ generated C11 ──► gcc/cc -pthread -O2 ──► Linux executable</code></pre>
+
+  <h2 id="frontend">Lexer, parser, and AST</h2>
+  <ul>
+    <li>The lexer handles Unicode identifiers, Tamil decimal digits, strings/comments, and Go-like semicolon insertion.</li>
+    <li>The parser is hand-written recursive descent with explicit precedence levels for expressions.</li>
+    <li>The AST preserves source positions for diagnostics and has nodes for declarations, statements, type expressions, and value expressions.</li>
+    <li>Language syntax is specified in <code>grammar/tamil/ebnf.md</code>; construct cards contain semantics and examples.</li>
+  </ul>
+
+  <h2 id="checker">Checker and typed program model</h2>
+  <p>The checker runs package-by-package after all package names/imports are registered. Its shared <code>ProgramInfo</code> records:</p>
+  <ul>
+    <li>Expression types and named/underlying type relationships.</li>
+    <li>Struct fields, pointer elements, slices, arrays, maps, channels, tuples, and function signatures.</li>
+    <li>Imported package/local qualifier mappings and export visibility.</li>
+    <li>Generic call instantiations for monomorphization.</li>
+    <li>Method values/expressions and package function values.</li>
+    <li>Closure capture sets and locals promoted to heap storage.</li>
+  </ul>
+  <p>Types use compact internal IDs with ranges for named, defined, pointer, slice, tuple, array, map, channel, function, and type-parameter classes.</p>
+  <p>The checker rejects unsupported contexts early: invalid aggregate members, non-comparable equality, bad method sets, unused imports, import cycles, assignment arity mismatches, and malformed entry packages.</p>
+
+  <h2 id="c-backend">Generated C backend</h2>
+  <h3>Type lowering</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Aram concept</th><th>C representation</th></tr></thead>
+      <tbody>
+        <tr><td>Integers / bytes / runes</td><td><code>int64_t</code>, <code>uint8_t</code>, <code>int32_t</code></td></tr>
+        <tr><td>Float</td><td><code>double</code></td></tr>
+        <tr><td>Boolean</td><td><code>int</code></td></tr>
+        <tr><td>String</td><td>NUL-terminated <code>const char *</code>, allocated on managed heap when dynamic</td></tr>
+        <tr><td>Struct / array</td><td>C struct value</td></tr>
+        <tr><td>Pointer</td><td>Typed C pointer</td></tr>
+        <tr><td>Slice</td><td>Typed descriptor with <code>data</code>, <code>len</code>, <code>cap</code></td></tr>
+        <tr><td>Map</td><td>Pointer to typed open-addressing table</td></tr>
+        <tr><td>Multiple return</td><td>Generated tuple struct</td></tr>
+        <tr><td>Function value</td><td><code>{ void *fn; void *env; }</code></td></tr>
+        <tr><td>Channel</td><td>Pointer to pthread mutex/condition runtime object</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Names and declarations</h3>
+  <p>Tamil/package identifiers are encoded into legal collision-resistant C identifiers. The emitter writes forwards before dependent aggregate bodies, orders nested structs topologically, and creates helper functions for equality, printing, slice operations, maps, calls, and closure trampolines.</p>
+
+  <h3>Generics</h3>
+  <p>Generic functions are monomorphized from checker-recorded instantiations. Each concrete type argument combination receives a generated C function. There is no dynamic generic dispatch.</p>
+
+  <h3>Closures and methods</h3>
+  <p>Function values pair a trampoline pointer with an environment pointer. Captured locals are promoted when needed, and closures store references in managed heap environments. Bound methods save their receiver; method expressions use an unbound receiver-first function shape.</p>
+
+  <h3>Intrinsic packages</h3>
+  <p>Public Aram signatures in <code>stdlib/</code> are normal declarations for loading/checking. During emission, known package functions are replaced with calls into embedded C runtime helpers. Higher-level exact-path mux logic remains implemented in Aram. The database package embeds <code>db_runtime.inc</code>: an internal <code>aram_db_vtable</code> of operation pointers, with SQLite filled in through <code>dlopen</code>/<code>dlsym</code> so future first-party engines can share one Tamil API.</p>
+
+  <h2 id="runtime">Embedded runtime subsystems</h2>
+  <p>The emitter only includes runtime features needed by loaded packages and typed expressions.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Subsystem</th><th>Implementation</th></tr></thead>
+      <tbody>
+        <tr><td>Heap/GC</td><td>Stop-the-world conservative mark/sweep; pthread registration; stack/register roots; sorted object index.</td></tr>
+        <tr><td>Strings</td><td>UTF-8 byte strings; flattened <code>+</code> chains allocate once; byte/rune conversion helpers.</td></tr>
+        <tr><td>Slices</td><td>Typed generated descriptors/helpers; growth uses managed allocation.</td></tr>
+        <tr><td>Maps</td><td>Typed open-addressing hash tables with tombstones.</td></tr>
+        <tr><td>Defer</td><td>Per-call thunk stack executed by generated epilogues.</td></tr>
+        <tr><td>Panic/recover</td><td>Per-thread state with <code>setjmp</code>/<code>longjmp</code> and generated frame names.</td></tr>
+        <tr><td>Concurrency</td><td>pthread threads, mutexes, condition variables, buffered/unbuffered channels, select.</td></tr>
+        <tr><td>TCP/UDP</td><td>Linux/POSIX IPv4 sockets; GC-aware blocking calls.</td></tr>
+        <tr><td>HTTP</td><td>Synchronous HTTP/1.x parser/serializer layered over sockets; fixed safety limits.</td></tr>
+        <tr><td>SQL databases</td><td>Internal C <code>aram_db_vtable</code>; SQLite via <code>dlopen</code>/<code>dlsym</code>; prepared statements with copied text/blob values; driver links <code>-ldl</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="versions">Tamil-0.x implementation milestones</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Version</th><th>Milestone</th></tr></thead>
+      <tbody>
+        <tr><td>0.0–0.10</td><td>Core syntax, functions, variables, control flow, strings/slices, structs, pointers/methods, packages/imports.</td></tr>
+        <tr><td>0.11–0.20</td><td>Explicit exports, nil, richer fields, switch/init, struct equality/printing, import aliases, slice growth, positional literals.</td></tr>
+        <tr><td>0.21–0.30</td><td>Nested slices, make/copy/cap, multiple/named returns, arrays, slices of structs, parallel assignment, named types, floats.</td></tr>
+        <tr><td>0.31–0.41</td><td>Tamil digits, import diagnostics, conversions, maps, defer, richer keys, byte/rune conversion, function generics.</td></tr>
+        <tr><td>0.42–0.51</td><td>Defer polish, function values, closures, method expressions, pthread concurrency, panic/recover, channel range.</td></tr>
+        <tr><td>0.52</td><td>Native managed heap and conservative GC.</td></tr>
+        <tr><td>0.53–0.57</td><td>TCP, HTTP server, operational error returns, headers/mux, HTTP client and custom response headers.</td></tr>
+        <tr><td>0.58–0.59</td><td>Function values in aggregates, Aram mux, query parameters, chunked response decoding, protocol validation.</td></tr>
+        <tr><td>0.60</td><td>GC/string polish and <code>-O2</code> default C builds.</td></tr>
+        <tr><td>0.61</td><td>HTTP timeout/redirect options and IPv4 UDP.</td></tr>
+        <tr><td>0.62</td><td>Shared SQL database vtable (<code>தரவுத்தளம்</code>), runtime-loaded SQLite backend, corpus API sample, and full-stack Aram/React employee demo.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="limitations">Known limitations</h2>
+  <h3>Language surface</h3>
+  <ul>
+    <li>No interfaces, interface values, constraints, generic types, or generic methods.</li>
+    <li>No top-level variables.</li>
+    <li>No bitwise operator family, richer integer widths, complex numbers, or constants system comparable to Go.</li>
+    <li>No standard file/filesystem, time, formatting, JSON, crypto, or TLS packages.</li>
+    <li>Panic/recover payload is string-oriented, not arbitrary values.</li>
+  </ul>
+
+  <h3>Runtime and platform</h3>
+  <ul>
+    <li>Linux/POSIX only; IPv4 only.</li>
+    <li>Each <code>இழை</code> is a pthread, not a lightweight user-space task.</li>
+    <li>Conservative GC may retain false-positive objects and is stop-the-world.</li>
+    <li>No race detector, sanitizer integration in the driver, finalizers, or deterministic memory release.</li>
+    <li>Several programmer faults abort instead of producing recoverable typed errors.</li>
+  </ul>
+
+  <h3>HTTP/network backlog</h3>
+  <ul>
+    <li>Dial and DNS timeouts.</li>
+    <li>Relative redirects.</li>
+    <li>HTTPS/TLS, IPv6, proxies, pooling, streaming, compression, cookies.</li>
+  </ul>
+
+  <h3>Database backlog</h3>
+  <ul>
+    <li>PostgreSQL and MySQL implementations of the internal backend vtable.</li>
+    <li>Connection pooling and safe concurrent sharing of one database handle.</li>
+    <li>A stable public driver/plugin ABI, ORM, migrations, and reflection-like row mapping.</li>
+  </ul>
+
+  <h2 id="roadmap">Roadmap</h2>
+  <ol>
+    <li><strong>NASM x86-64:</strong> introduce a small target-neutral IR and emit Linux ELF through NASM.</li>
+    <li><strong>i386 Linux:</strong> add a second native architecture after x86-64 stabilizes.</li>
+    <li><strong>SQL backends:</strong> first-party PostgreSQL/MySQL implementations of the internal vtable when needed; pooling and concurrent handle policy later.</li>
+    <li><strong>Optional backlog:</strong> networking leftovers and interfaces only when concrete use cases justify them.</li>
+    <li><strong>Larger Go-inspired features:</strong> richer generics/constraints only if they earn their complexity.</li>
+  </ol>
+  <p>The current C backend remains the semantic reference while the native backend begins.</p>
+
+  <h2 id="public">Public project status</h2>
+  <p>Aram v0.62 is suitable for public release as an <strong>experimental research compiler</strong>. It should not be described as production-ready.</p>
+  <p>Licensing: the repository is under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a> (<code>LICENSE</code> + <code>NOTICE</code>). See also <a href="misc.html#license">Misc → License</a>.</p>
+  <p>Remaining public-release hygiene:</p>
+  <ul>
+    <li>Add CI that runs <code>go test ./...</code>, including loopback socket and SQLite runtime tests.</li>
+    <li>Document contribution and security-reporting expectations.</li>
+    <li>Keep platform/protocol/database limitations prominent.</li>
+  </ul>
+
+  <div class="next-links">
+    <a href="tooling.html"><span>Previous</span>← Compiler & tooling</a>
+    <a href="misc.html"><span>Next</span>Misc →</a>
+  </div>
+</main>
+</body>
+</html>

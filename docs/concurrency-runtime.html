@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Aram concurrency, panic, defer, and garbage collection reference.">
+  <title>Concurrency & Runtime — Aram Documentation</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="docs.js"></script>
+</head>
+<body>
+<main id="main-content">
+  <section class="hero">
+    <p class="eyebrow">Runtime reference</p>
+    <h1>Concurrency & runtime</h1>
+    <p class="lead">OS-thread concurrency, channels and selection, panic/defer behavior, and the conservative managed heap used by the C backend.</p>
+  </section>
+
+  <div class="toc">
+    <strong>On this page</strong>
+    <ul>
+      <li><a href="#threads">Threads</a></li>
+      <li><a href="#channels">Channels</a></li>
+      <li><a href="#select">Select</a></li>
+      <li><a href="#range">Channel range</a></li>
+      <li><a href="#defer">Defer</a></li>
+      <li><a href="#panic">Panic and recover</a></li>
+      <li><a href="#heap">Heap and GC</a></li>
+      <li><a href="#runtime-limits">Runtime limitations</a></li>
+    </ul>
+  </div>
+
+  <h2 id="threads">Starting concurrent work with <code>இழை</code></h2>
+  <pre><code>இழை பணி(42)
+
+இழை செயல்பாடு() {
+    பதிப்பி("concurrent")
+}()</code></pre>
+  <p><code>இழை</code> starts a call on a new pthread. It accepts normal calls, method calls, and immediately invoked closures. Captured closure variables follow normal by-reference closure semantics.</p>
+  <p>The generated program's main thread waits for all Aram-created threads before shutting down the heap and exiting.</p>
+  <div class="callout warning">
+    <strong>Thread cost</strong>
+    Aram currently maps each <code>இழை</code> to an OS thread; it does not provide Go's lightweight goroutine scheduler. Use bounded concurrency.
+  </div>
+
+  <h2 id="channels">Channels</h2>
+  <h3>Types and creation</h3>
+  <pre><code>முடிவு := ஆக்கு(தடம் சரம்)       // unbuffered
+வேலை := ஆக்கு(தடம் முழுஎண், 8)  // buffered
+
+மாறி அனுப்பு தடம்&lt;- முழுஎண் = வேலை
+மாறி பெறு &lt;-தடம் முழுஎண் = வேலை</code></pre>
+  <p><code>தடம் T</code> is bidirectional. <code>தடம்&lt;- T</code> is send-only and <code>&lt;-தடம் T</code> is receive-only.</p>
+
+  <h3>Send, receive, and close</h3>
+  <pre><code>வேலை &lt;- 10
+மதிப்பு := &lt;-வேலை
+மதிப்பு, திறந்தது := &lt;-வேலை
+மூடு(வேலை)</code></pre>
+  <ul>
+    <li>Unbuffered sends rendezvous with a receiver.</li>
+    <li>Buffered sends block when capacity is full; receives block when empty.</li>
+    <li>Receive after close returns the element zero value and <code>பொய்</code> in comma-ok form.</li>
+    <li>Send on a closed channel is fatal.</li>
+  </ul>
+
+  <h2 id="select">Selecting communications</h2>
+  <pre><code>தடத்தேர்வு {
+எனில் வேலை &lt;- 7 {
+    பதிப்பி("sent")
+}
+எனில் மதிப்பு, திறந்தது := &lt;-முடிவு {
+    பதிப்பி(மதிப்பு)
+}
+மற்றபடி {
+    பதிப்பி("not ready")
+}
+}</code></pre>
+  <p><code>தடத்தேர்வு</code> waits until a send or receive case is ready. <code>எனில்</code> labels communication cases; <code>மற்றபடி</code> is an optional non-blocking default. Closed-channel receive is ready immediately.</p>
+
+  <h2 id="range">Ranging over channels</h2>
+  <pre><code>சுழல் மதிப்பு := ஒவ்வொரு வேலை {
+    பதிப்பி(மதிப்பு)
+}</code></pre>
+  <p>Channel range receives values until the channel is closed. It accepts at most one iteration variable.</p>
+
+  <h2 id="defer">Deferred calls</h2>
+  <pre><code>செயல்பாடு கோப்பு_பயன்படுத்து() {
+    வளம் := திற()
+    தள்ளிவை வளம்.மூடு()
+
+    தள்ளிவை செயல்பாடு() {
+        பதிப்பி("runs first")
+    }()
+}</code></pre>
+  <p>Deferred calls run in LIFO order on normal return and during panic unwind. Function arguments and receivers are evaluated when the defer statement executes, not later.</p>
+  <ul>
+    <li>A deferred value-receiver method captures a receiver copy.</li>
+    <li>A deferred pointer-receiver method on an addressable value captures its address.</li>
+    <li><code>தள்ளிவை done</code> is zero-argument sugar for <code>தள்ளிவை done()</code>.</li>
+  </ul>
+
+  <h2 id="panic">Panic and recover</h2>
+  <pre><code>செயல்பாடு பாதுகாப்பாக() {
+    தள்ளிவை செயல்பாடு() {
+        செய்தி := மீள்()
+        எனில் செய்தி != "" {
+            பதிப்பி("recovered: " + செய்தி)
+        }
+    }()
+
+    அலறு("something failed")
+}</code></pre>
+  <p><code>அலறு</code> accepts <code>சரம்</code>, <code>முழுஎண்</code>, <code>மிதவைஎண்</code>, <code>நிலை</code>, <code>இருமி8</code>, or <code>இருமி32</code>; primitive values are stringified. The panic state is per thread.</p>
+  <p><code>மீள்()</code> only stops an active panic when called from deferred execution. It returns the panic string. Otherwise it returns <code>""</code>. An uncaught panic prints Aram function frames and aborts the process.</p>
+  <p>There is no interface/any panic payload in v0.62.</p>
+
+  <h2 id="heap">Managed heap and garbage collection</h2>
+  <p>The C backend uses a malloc-backed stop-the-world conservative mark/sweep collector. Allocation is implicit for strings, slice/map growth, closures, channels, defer thunks, networking buffers, and runtime objects.</p>
+
+  <h3>Collection model</h3>
+  <ol>
+    <li>Allocation checks the current heap trigger.</li>
+    <li>A collector requests all registered Aram threads to stop or park.</li>
+    <li>Thread stacks and captured register sets are scanned conservatively.</li>
+    <li>Interior-looking pointers are resolved through a sorted object index.</li>
+    <li>Reachable heap objects are recursively marked; unmarked objects are freed.</li>
+    <li>The next trigger is based on live heap size, with safe growth for large single allocations.</li>
+  </ol>
+
+  <h3>Safe points and blocking</h3>
+  <ul>
+    <li>Generated functions and loop back-edges poll for collection.</li>
+    <li>Channel waits park through a GC-aware condition wait.</li>
+    <li>TCP, UDP, and HTTP blocking I/O parks the current thread.</li>
+    <li>SQL calls through <code>தரவுத்தளம்</code> also block the calling thread while waiting on the native backend.</li>
+    <li>Register roots are captured with <code>setjmp</code>, required for optimized <code>-O2</code> builds.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Conservative semantics</strong>
+    The collector may retain unreachable objects when ordinary integer/byte data resembles a heap address. This affects reclamation precision, not program correctness.
+  </div>
+
+  <h2 id="runtime-limits">Runtime guarantees and limitations</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Area</th><th>Current v0.62 behavior</th></tr></thead>
+      <tbody>
+        <tr><td>Scheduling</td><td>One pthread per <code>இழை</code>; no work-stealing scheduler.</td></tr>
+        <tr><td>Memory</td><td>Automatic conservative GC; no explicit free in the language.</td></tr>
+        <tr><td>Finalizers</td><td>Not implemented. Close network and database handles explicitly or with defer.</td></tr>
+        <tr><td>Data races</td><td>No race detector and no automatic synchronization of shared variables.</td></tr>
+        <tr><td>Database handles</td><td>Do not share one <code>தரவுத்தளம்</code> connection or statement across <code>இழை</code>; open separate handles per thread.</td></tr>
+        <tr><td>Channel faults</td><td>Send on closed channel aborts; nil-channel semantics are limited by runtime implementation.</td></tr>
+        <tr><td>Panic payloads</td><td>Primitive values only; recover returns a string.</td></tr>
+        <tr><td>Runtime target</td><td>Linux + pthread + generated C (<code>-ldl</code> for SQL <code>dlopen</code>).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="next-links">
+    <a href="language-reference.html"><span>Previous</span>← Language reference</a>
+    <a href="standard-library.html"><span>Next</span>Standard library →</a>
+  </div>
+</main>
+</body>
+</html>

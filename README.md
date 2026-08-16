@@ -5,7 +5,7 @@ It is free to diverge from Go. The long-term goal is a quality compiler for
 Linux (x86-64 first, then i386), with NASM as a later backend.
 
 **Phase 0:** complete (Tamil-0 frozen 2026-08-01).  
-**Phase 1:** active C backend through Tamil-0.60; NASM remains later.
+**Phase 1:** active C backend through v0.62; NASM remains later.
 
 | Item | Value |
 |------|--------|
@@ -14,9 +14,11 @@ Linux (x86-64 first, then i386), with NASM as a later backend.
 | Source extension | `.aram` |
 | Keywords | Semantic Tamil |
 | Semantics | Go-inspired, free to diverge |
-| Language subset | **Tamil-0.60** |
+| Language subset | **v0.62** |
 | Early backend | Emit C (reuse `gcc`/`clang`) |
 | Later backend | NASM → Linux ELF (64-bit, then 32-bit) |
+| Status | Experimental research compiler (Linux + C backend) |
+| License | [Apache License 2.0](LICENSE) |
 
 ## First program
 
@@ -31,7 +33,7 @@ notes/           design decisions, roadmap, Unicode, Tamil fonts
 grammar/go/      frozen Go reference (inspiration, not a checklist)
 grammar/tamil/   Aram grammar, keywords, construct cards
 corpus/tamil/    example and test programs
-stdlib/          compiler stdlib (வலை, பரிமாற்றம்)
+stdlib/          compiler stdlib (வலை, பரிமாற்றம், தரவுத்தளம்)
 tools/           experiments (empty in Phase 0)
 ```
 
@@ -43,7 +45,9 @@ Aram source uses Tamil script. If you see **squares** instead of letters, instal
 ## Status
 
 - Phase 0 complete — Tamil-0 **frozen** (2026-08-01). See `notes/design-decisions.md`.
-- Phase 1: lexer + parser + **typecheck** + **C emit**. Binary build needs `gcc`/`cc`.
+- Phase 1: lexer + parser + typecheck + **C emit/run** through **v0.62** on Linux.
+- Suitable for **public experimental** use if framed as early/research; not a polished production language yet.
+- Next major backend: NASM x86-64. Optional leftovers live in [`notes/deferred.md`](notes/deferred.md).
 
 ```bash
 source tools/env.sh   # if needed
@@ -55,6 +59,19 @@ go run ./cmd/aram run corpus/tamil/வணக்கம்.aram
 ```
 
 See [`tools/README.md`](tools/README.md) for the portable Go toolchain.
+
+## Developer documentation
+
+Open [`docs/index.html`](docs/index.html) for the comprehensive static HTML
+reference: getting started, language syntax, concurrency/runtime, standard
+library APIs (TCP/UDP, HTTP, and SQL/`தரவுத்தளம்`), compiler tooling,
+implementation notes, and misc extras (license and Tamil typing tutors
+without phonetic input).
+
+## License
+
+Aram is licensed under the [Apache License, Version 2.0](LICENSE).
+See [`NOTICE`](NOTICE) for copyright attribution.
 
 ## Working with AI agents
 

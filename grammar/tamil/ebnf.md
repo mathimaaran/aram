@@ -2,7 +2,7 @@
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
-Status: **Tamil-0.61** (2026-08-14) — HTTP client options and IPv4 UDP.
+Status: **Tamil-0.62** (2026-08-15) — shared database vtable and SQLite backend.
 
 ```
 SourceFile    = PackageClause { ImportDecl } { TopLevelDecl } .
@@ -299,19 +299,28 @@ dump, per-`இழை` state. See `constructs/panic.yaml`. C backend:
 No new syntax. C backend uses a stop-the-world conservative mark-sweep
 heap instead of a bump arena. See `constructs/gc.yaml`.
 
-## TCP sockets (Tamil-0.53)
+## TCP / UDP sockets (Tamil-0.61)
 
 No new syntax. Stdlib package `வலை` (`கொணர் "வலை"`): `கேள்` / `ஏற்று` /
-`இணை` / `படி` / `எழுது` / `விடு` / `நிறுத்து` / `முகவரி`. TCP IPv4, Linux
-C backend. See `constructs/net.yaml`.
+`இணை` / `படி` / `எழுது` / `விடு` / `நிறுத்து` / `முகவரி`; UDP
+`தகவல்கேள்` / `தகவல்முகவரி` / `தகவலனுப்பு` / `தகவல்பெறு` /
+`தகவல்விடு`. IPv4, Linux C backend. See `constructs/net.yaml`.
 
-## HTTP (Tamil-0.59)
+## HTTP (Tamil-0.61)
 
 No new syntax. Stdlib package `பரிமாற்றம்` (`கொணர் "பரிமாற்றம்"`):
 server (`கோரிக்கை` / `பதிலளிப்பு` / `கையாளு` / `வழிப்படுத்தி`,
 `எழுது` / `எழுதுசரம்` / `எழுதுதலைப்புகள்` / `எழுதுசரந்தலைப்புகள்`,
 `சேவைஒன்று` / `கேட்டுசேவை` / `வழிசேவை`), and client (`பதில்`, `பெறு` /
-`பதிவிடு` / `கோரு`). See `constructs/http.yaml`.
+`பதிவிடு` / `கோரு` / `கோருவிருப்பம்`). See `constructs/http.yaml`.
+
+## SQL databases (Tamil-0.62)
+
+No new syntax. Stdlib package `தரவுத்தளம்` (`கொணர் "தரவுத்தளம்"`) provides
+a shared connection/prepared-statement API over an internal C backend vtable.
+SQLite (`"sqlite"` / `"sqlite3"`) is the first backend. Typed bind and column
+functions cover null, integer, float, UTF-8 text, and byte blobs. See
+`constructs/database.yaml`.
 
 ## Entry convention
 

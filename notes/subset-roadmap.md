@@ -94,19 +94,25 @@ Out of scope for Tamil-0:
 - [x] Query parameters + HTTP/1.x protocol polish
 - [x] GC/string runtime polish + `-O2` default
 - [x] HTTP client timeout/redirect options + IPv4 UDP
+- [x] Shared SQL database vtable + SQLite backend
 
 ## Later growth
 
-**Harden the language** (remaining gaps) alongside native backends:
-
-1. Other small gaps in [`deferred.md`](deferred.md)
-
-**Native backends:**
+**Native backends (next):**
 
 5. NASM x86-64
 6. i386 Linux
-7. Larger Go-inspired features only if they earn their place
-   (interfaces, richer generics/constraints, …)
+
+**Backlog leftovers** (not required before NASM; see [`deferred.md`](deferred.md)):
+
+- Dial / DNS timeouts
+- Relative HTTP redirects
+- HTTPS / TLS
+- Additional SQL backends (PostgreSQL / MySQL) behind the vtable
+- Database pooling and a public driver/plugin ABI
+- Interfaces (only if earned)
+- Larger Go-inspired features only if they earn their place
+  (richer generics/constraints, …)
 
 Inventory: [`deferred.md`](deferred.md).
 

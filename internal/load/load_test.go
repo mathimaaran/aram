@@ -324,6 +324,56 @@ func TestUDPProgram(t *testing.T) {
 	}
 }
 
+func TestDatabaseProgram(t *testing.T) {
+	dir := filepath.Join(root(t), "corpus", "tamil", "தரவுத்தளம்")
+	prog, lerrs := load.LoadProgram([]string{dir})
+	if len(lerrs) != 0 {
+		t.Fatal(lerrs)
+	}
+	merged, merrs := prog.MergedFiles()
+	if len(merrs) != 0 {
+		t.Fatal(merrs)
+	}
+	pi, errs := check.CheckProgram(merged, prog.Entry.Name)
+	if len(errs) != 0 {
+		t.Fatal(errs)
+	}
+	cSrc, err := emitc.EmitProgram(pi)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(cSrc, "aram_db_vtable") || !strings.Contains(cSrc, "aram_sqlite_vtable") {
+		t.Fatalf("missing database vtable runtime\n%s", cSrc)
+	}
+	cc, err := exec.LookPath("gcc")
+	if err != nil {
+		cc, err = exec.LookPath("cc")
+		if err != nil {
+			t.Skip("gcc/cc not available")
+		}
+	}
+	tmp := t.TempDir()
+	cFile := filepath.Join(tmp, "out.c")
+	bin := filepath.Join(tmp, "out")
+	if err := os.WriteFile(cFile, []byte(cSrc), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := exec.Command(cc, "-std=c11", "-O2", "-pthread", cFile, "-o", bin, "-ldl").CombinedOutput(); err != nil {
+		t.Fatalf("cc: %v\n%s\n%s", err, out, cSrc)
+	}
+	got, err := exec.Command(bin).CombinedOutput()
+	if err != nil {
+		t.Fatalf("run: %v\n%s\nC:\n%s", err, got, cSrc)
+	}
+	if strings.Contains(string(got), "SQLite runtime unavailable") {
+		t.Skipf("SQLite runtime unavailable: %s", got)
+	}
+	want := "5\nஎண்\n1\nஅறம்\n9.5\nதரவு\nமெய்\nunsupported database driver\n"
+	if string(got) != want {
+		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
+	}
+}
+
 func TestHTTPRedirectOptions(t *testing.T) {
 	dir := filepath.Join(root(t), "corpus", "tamil", "வலை_திருப்பு")
 	prog, lerrs := load.LoadProgram([]string{dir})

@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Aram standard library API reference for TCP, UDP, HTTP, and SQL databases.">
+  <title>Standard Library — Aram Documentation</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="docs.js"></script>
+</head>
+<body>
+<main id="main-content">
+  <section class="hero">
+    <p class="eyebrow">API reference</p>
+    <h1>Standard library</h1>
+    <p class="lead">Compiler-provided v0.62 APIs: <code>வலை</code> for IPv4 TCP/UDP, <code>பரிமாற்றம்</code> for synchronous HTTP, and <code>தரவுத்தளம்</code> for SQL databases through a shared backend vtable.</p>
+  </section>
+
+  <div class="toc">
+    <strong>On this page</strong>
+    <ul>
+      <li><a href="#model">Import and error model</a></li>
+      <li><a href="#net-types">வலை types</a></li>
+      <li><a href="#tcp">TCP API</a></li>
+      <li><a href="#udp">UDP API</a></li>
+      <li><a href="#http-types">HTTP types</a></li>
+      <li><a href="#http-server">HTTP server API</a></li>
+      <li><a href="#http-client">HTTP client API</a></li>
+      <li><a href="#http-behavior">HTTP behavior and limits</a></li>
+      <li><a href="#database">SQL database API</a></li>
+      <li><a href="#database-lifecycle">Database architecture</a></li>
+      <li><a href="#database-examples">Database examples</a></li>
+    </ul>
+  </div>
+
+  <h2 id="model">Import and error model</h2>
+  <p>These package names resolve to compiler standard library directories:</p>
+  <pre><code>கொணர் "வலை"
+கொணர் "பரிமாற்றம்"
+கொணர் "தரவுத்தளம்"</code></pre>
+  <p>Public <code>.aram</code> declarations define static types, while the C emitter replaces low-level bodies with runtime intrinsics.</p>
+  <p>Network/HTTP failures return <code>*வலை.பிழை</code>; database failures return <code>*தரவுத்தளம்.பிழை</code>. Success returns <code>இன்மை</code>. Always inspect the error before using associated results.</p>
+  <pre><code>மதிப்பு, பிழை := வலை.இணை("127.0.0.1:8080")
+எனில் பிழை != இன்மை {
+    பதிப்பி(பிழை.குறியீடு)
+    பதிப்பி(பிழை.செய்தி)
+    திருப்பு
+}</code></pre>
+
+  <h2 id="net-types"><code>வலை</code> types</h2>
+  <div class="api">
+    <h3><code>கேட்பி</code></h3>
+    <p>TCP listener handle, backed by a file descriptor.</p>
+  </div>
+  <div class="api">
+    <h3><code>இணைப்பு</code></h3>
+    <p>Connected TCP stream handle, backed by a file descriptor.</p>
+  </div>
+  <div class="api">
+    <h3><code>தகவல்தளம்</code></h3>
+    <p>Bound IPv4 UDP socket handle.</p>
+  </div>
+  <div class="api">
+    <h3><code>பிழை</code></h3>
+    <pre><code>வெளி வகை பிழை அமைப்பு {
+    வெளி குறியீடு முழுஎண்
+    வெளி செய்தி சரம்
+}</code></pre>
+    <p><code>குறியீடு</code> normally contains an errno/getaddrinfo-compatible numeric code; <code>செய்தி</code> is human-readable.</p>
+  </div>
+
+  <h2 id="tcp">TCP API</h2>
+  <div class="api">
+    <h3><code>கேள்</code> — listen</h3>
+    <code class="api-signature">கேள்(முகவரி சரம்) (கேட்பி, *பிழை)</code>
+    <p>Bind and listen on <code>":port"</code> or <code>"host:port"</code>. Port <code>0</code> asks the OS for an available port.</p>
+  </div>
+  <div class="api">
+    <h3><code>ஏற்று</code> — accept</h3>
+    <code class="api-signature">ஏற்று(க கேட்பி) (இணைப்பு, *பிழை)</code>
+    <p>Block until a connection arrives. The wait parks for GC.</p>
+  </div>
+  <div class="api">
+    <h3><code>இணை</code> — dial</h3>
+    <code class="api-signature">இணை(முகவரி சரம்) (இணைப்பு, *பிழை)</code>
+    <p>Resolve and connect to an IPv4 TCP address.</p>
+  </div>
+  <div class="api">
+    <h3><code>படி</code> — read</h3>
+    <code class="api-signature">படி(இ இணைப்பு, இடம் []இருமி8) (முழுஎண், *பிழை)</code>
+    <p>Read up to <code>நீளம்(இடம்)</code> bytes. EOF is <code>(0, இன்மை)</code>.</p>
+  </div>
+  <div class="api">
+    <h3><code>எழுது</code> — write</h3>
+    <code class="api-signature">எழுது(இ இணைப்பு, தரவு []இருமி8) (முழுஎண், *பிழை)</code>
+    <p>Write the complete byte slice unless an error interrupts it; count reports bytes sent.</p>
+  </div>
+  <div class="api">
+    <h3><code>விடு</code> — close connection</h3>
+    <code class="api-signature">விடு(இ இணைப்பு) *பிழை</code>
+  </div>
+  <div class="api">
+    <h3><code>நிறுத்து</code> — close listener</h3>
+    <code class="api-signature">நிறுத்து(க கேட்பி) *பிழை</code>
+  </div>
+  <div class="api">
+    <h3><code>முகவரி</code> — listener address</h3>
+    <code class="api-signature">முகவரி(க கேட்பி) (சரம், *பிழை)</code>
+    <p>Return <code>"host:port"</code>. A wildcard <code>0.0.0.0</code> bind is exposed as <code>127.0.0.1</code> for loopback clients.</p>
+  </div>
+
+  <h3>TCP example</h3>
+  <pre><code>கேட்பி, பிழை := வலை.கேள்(":0")
+எனில் பிழை != இன்மை { திருப்பு }
+தள்ளிவை வலை.நிறுத்து(கேட்பி)
+
+முக, _ := வலை.முகவரி(கேட்பி)
+இழை செயல்பாடு() {
+    இ, _ := வலை.இணை(முக)
+    வலை.எழுது(இ, []இருமி8("hello"))
+    வலை.விடு(இ)
+}()
+
+இ, _ := வலை.ஏற்று(கேட்பி)
+இடம் := ஆக்கு([]இருமி8, 64)
+n, _ := வலை.படி(இ, இடம்)
+பதிப்பி(சரம்(இடம்[:n]))
+வலை.விடு(இ)</code></pre>
+
+  <h2 id="udp">UDP API</h2>
+  <div class="api">
+    <h3><code>தகவல்கேள்</code> — bind datagram socket</h3>
+    <code class="api-signature">தகவல்கேள்(முகவரி சரம்) (தகவல்தளம், *பிழை)</code>
+    <p>Bind an IPv4 UDP socket. <code>":0"</code> selects an ephemeral port.</p>
+  </div>
+  <div class="api">
+    <h3><code>தகவல்முகவரி</code> — local datagram address</h3>
+    <code class="api-signature">தகவல்முகவரி(த தகவல்தளம்) (சரம், *பிழை)</code>
+  </div>
+  <div class="api">
+    <h3><code>தகவலனுப்பு</code> — send datagram</h3>
+    <code class="api-signature">தகவலனுப்பு(த தகவல்தளம், முகவரி சரம், தரவு []இருமி8) (முழுஎண், *பிழை)</code>
+    <p>Send one datagram to an IPv4 <code>host:port</code>.</p>
+  </div>
+  <div class="api">
+    <h3><code>தகவல்பெறு</code> — receive datagram</h3>
+    <code class="api-signature">தகவல்பெறு(த தகவல்தளம், இடம் []இருமி8) (முழுஎண், சரம், *பிழை)</code>
+    <p>Receive one datagram, returning byte count and sender address. Payloads larger than the provided buffer are truncated.</p>
+  </div>
+  <div class="api">
+    <h3><code>தகவல்விடு</code> — close datagram socket</h3>
+    <code class="api-signature">தகவல்விடு(த தகவல்தளம்) *பிழை</code>
+  </div>
+
+  <h3>UDP echo example</h3>
+  <pre><code>சேவை, _ := வலை.தகவல்கேள்(":0")
+முக, _ := வலை.தகவல்முகவரி(சேவை)
+
+இழை செயல்பாடு() {
+    இடம் := ஆக்கு([]இருமி8, 512)
+    n, அனுப்பியவர், _ := வலை.தகவல்பெறு(சேவை, இடம்)
+    வலை.தகவலனுப்பு(சேவை, அனுப்பியவர், இடம்[:n])
+}()
+
+வாடிக்கையாளர், _ := வலை.தகவல்கேள்(":0")
+வலை.தகவலனுப்பு(வாடிக்கையாளர், முக, []இருமி8("ping"))</code></pre>
+
+  <h2 id="http-types"><code>பரிமாற்றம்</code> types</h2>
+  <div class="api">
+    <h3><code>கோரிக்கை</code> — server request</h3>
+    <pre><code>வகை கோரிக்கை அமைப்பு {
+    முறைமை சரம்
+    பாதை சரம்
+    வினாக்கள் அகராதி[சரம்]சரம்
+    உடல் []இருமி8
+    தலைப்புகள் அகராதி[சரம்]சரம்
+}</code></pre>
+    <p><code>பாதை</code> excludes the query. Query/header map names are decoded/lowercased according to their rules; repeated values are last-wins.</p>
+  </div>
+  <div class="api">
+    <h3><code>பதிலளிப்பு</code></h3>
+    <p>Opaque response writer handle passed to handlers.</p>
+  </div>
+  <div class="api">
+    <h3><code>கையாளு</code></h3>
+    <code class="api-signature">செயல்பாடு(கோரிக்கை, பதிலளிப்பு)</code>
+  </div>
+  <div class="api">
+    <h3><code>வழிப்படுத்தி</code></h3>
+    <p>Exact-path mux implemented in Aram using parallel path and handler slices. Duplicate registration replaces the prior handler.</p>
+  </div>
+  <div class="api">
+    <h3><code>பதில்</code> — client response</h3>
+    <pre><code>வகை பதில் அமைப்பு {
+    குறியீடு முழுஎண்
+    விளக்கம் சரம்
+    தலைப்புகள் அகராதி[சரம்]சரம்
+    உடல் []இருமி8
+}</code></pre>
+  </div>
+  <div class="api">
+    <h3><code>வாடிக்கையாளர்விருப்பம்</code></h3>
+    <pre><code>வகை வாடிக்கையாளர்விருப்பம் அமைப்பு {
+    நேரமுடிவு முழுஎண்
+    அதிகதிருப்புகள் முழுஎண்
+}</code></pre>
+    <p><code>நேரமுடிவு</code> is milliseconds for send/receive socket operations; zero disables it. <code>அதிகதிருப்புகள்</code> is the opt-in redirect limit; zero disables redirects.</p>
+  </div>
+
+  <h2 id="http-server">HTTP server API</h2>
+  <div class="api">
+    <h3>Response writers</h3>
+    <code class="api-signature">எழுது(ப, code, contentType, bodyBytes) *வலை.பிழை</code><br>
+    <code class="api-signature">எழுதுசரம்(ப, code, contentType, bodyString) *வலை.பிழை</code><br>
+    <code class="api-signature">எழுதுதலைப்புகள்(ப, code, contentType, headers, bodyBytes) *வலை.பிழை</code><br>
+    <code class="api-signature">எழுதுசரந்தலைப்புகள்(ப, code, contentType, headers, bodyString) *வலை.பிழை</code>
+  </div>
+  <div class="api">
+    <h3>Serving handlers</h3>
+    <code class="api-signature">சேவைஒன்று(கேட்பி, கையாளு) *வலை.பிழை</code><br>
+    <code class="api-signature">கேட்டுசேவை(முகவரி, கையாளு) *வலை.பிழை</code>
+    <p><code>சேவைஒன்று</code> accepts and serves exactly one connection. <code>கேட்டுசேவை</code> listens indefinitely and serves accepted connections on worker threads.</p>
+  </div>
+  <div class="api">
+    <h3>Exact-path mux</h3>
+    <code class="api-signature">புதியவழிப்படுத்தி() வழிப்படுத்தி</code><br>
+    <code class="api-signature">பதிவு(*வழிப்படுத்தி, பாதை, கையாளு)</code><br>
+    <code class="api-signature">வழிசேவைஒன்று(கேட்பி, *வழிப்படுத்தி) *வலை.பிழை</code><br>
+    <code class="api-signature">வழிசேவை(முகவரி, *வழிப்படுத்தி) *வலை.பிழை</code>
+    <p>Only exact, query-free path matching is performed. Misses receive a Tamil 404 body.</p>
+  </div>
+
+  <h3>HTTP server example</h3>
+  <pre><code>வழி := பரிமாற்றம்.புதியவழிப்படுத்தி()
+பரிமாற்றம்.பதிவு(&வழி, "/hello", செயல்பாடு(கோ பரிமாற்றம்.கோரிக்கை, ப பரிமாற்றம்.பதிலளிப்பு) {
+    பெயர் := கோ.வினாக்கள்["name"]
+    பரிமாற்றம்.எழுதுசரம்(ப, 200, "text/plain; charset=utf-8", "வணக்கம் " + பெயர்)
+})
+பரிமாற்றம்.வழிசேவை(":8080", &வழி)</code></pre>
+
+  <h2 id="http-client">HTTP client API</h2>
+  <div class="api">
+    <h3><code>பெறு</code> — GET</h3>
+    <code class="api-signature">பெறு(முகவரி சரம்) (பதில், *வலை.பிழை)</code>
+  </div>
+  <div class="api">
+    <h3><code>பதிவிடு</code> — POST</h3>
+    <code class="api-signature">பதிவிடு(முகவரி, உள்ளடக்கம், உடல் []இருமி8) (பதில், *வலை.பிழை)</code>
+  </div>
+  <div class="api">
+    <h3><code>கோரு</code> — custom request</h3>
+    <code class="api-signature">கோரு(முறைமை, முகவரி, தலைப்புகள், உடல்) (பதில், *வலை.பிழை)</code>
+    <p>Redirects and socket timeouts are disabled.</p>
+  </div>
+  <div class="api">
+    <h3><code>கோருவிருப்பம்</code> — request with options</h3>
+    <code class="api-signature">கோருவிருப்பம்(முறைமை, முகவரி, தலைப்புகள், உடல், விருப்பம்) (பதில், *வலை.பிழை)</code>
+    <p>Enables bounded redirects and send/receive timeout behavior.</p>
+  </div>
+
+  <pre><code>தலை := அகராதி[சரம்]சரம்{"X-Aram": "அறம்"}
+விருப்பம் := பரிமாற்றம்.வாடிக்கையாளர்விருப்பம்{
+    நேரமுடிவு: 2000,
+    அதிகதிருப்புகள்: 3,
+}
+பதில், பிழை := பரிமாற்றம்.கோருவிருப்பம்(
+    "POST",
+    "http://127.0.0.1:8080/echo",
+    தலை,
+    []இருமி8("hello"),
+    விருப்பம்
+)</code></pre>
+
+  <h2 id="http-behavior">HTTP protocol behavior and limits</h2>
+  <ul>
+    <li>Synchronous HTTP/1.x over plain <code>http://</code>, IPv4 only.</li>
+    <li>Default port is 80; fragments are stripped; userinfo and IPv6 literals are rejected.</li>
+    <li>Client requests use HTTP/1.0 and <code>Connection: close</code>.</li>
+    <li>HTTP/1.1 chunked response bodies are decoded. Other transfer encodings are rejected.</li>
+    <li>Request/query and response header blocks are limited to 64 KiB; bodies are limited to 1 MiB decoded.</li>
+    <li>Query decoding maps <code>+</code> to space, decodes percent escapes, and keeps the last repeated key.</li>
+    <li>Headers are exposed with lowercase names; repeated headers are last-wins.</li>
+    <li>User response/request maps cannot override <code>Host</code>, <code>Content-Length</code>, <code>Connection</code>, <code>Transfer-Encoding</code>, or <code>Content-Type</code>.</li>
+    <li>Header names/values reject CR, LF, and NUL injection.</li>
+    <li>Redirects support absolute <code>http://</code> locations for 301, 302, 303, 307, and 308. Relative redirects and HTTPS are rejected.</li>
+    <li>301/302 from non-GET/HEAD and 303 convert the next request to GET; 307/308 preserve method and body.</li>
+    <li>Timeout currently covers socket send/receive only, not DNS resolution or TCP connection establishment.</li>
+    <li>No TLS, connection pooling, cookies, compression, proxy support, or streaming body API.</li>
+  </ul>
+
+  <h2 id="database"><code>தரவுத்தளம்</code> — SQL database API</h2>
+  <p>The database package presents one Tamil API over an internal C function-pointer table (vtable). SQLite is the first backend; future first-party PostgreSQL/MySQL backends can implement the same operation set without changing Aram programs.</p>
+  <pre><code>கொணர் "தரவுத்தளம்"
+
+இணைப்பு, பிழை := தரவுத்தளம்.திற("sqlite", ":memory:")
+எனில் பிழை != இன்மை {
+    பதிப்பி(பிழை.செய்தி)
+    திருப்பு
+}</code></pre>
+
+  <div class="api">
+    <h3>Core types</h3>
+    <code class="api-signature">இணைப்பு — opaque connection handle</code><br>
+    <code class="api-signature">கூற்று — opaque prepared-statement handle</code><br>
+    <code class="api-signature">பிழை { குறியீடு முழுஎண்; செய்தி சரம் }</code><br>
+    <code class="api-signature">செயல்முடிவு { பாதித்தவை முழுஎண்; சேர்க்கையெண் முழுஎண் }</code>
+  </div>
+  <div class="api">
+    <h3>Connection and direct execution</h3>
+    <code class="api-signature">திற(இயக்கி, முகவரி) (இணைப்பு, *பிழை)</code><br>
+    <code class="api-signature">செயல்(இணைப்பு, வினா) (செயல்முடிவு, *பிழை)</code><br>
+    <code class="api-signature">விடு(இணைப்பு) *பிழை</code>
+    <p>v0.62 accepts driver names <code>"sqlite"</code> and <code>"sqlite3"</code>. The address is a SQLite path or <code>":memory:"</code>. <code>செயல்</code> is for SQL that does not return rows and reports affected rows plus last inserted row ID.</p>
+  </div>
+  <div class="api">
+    <h3>Prepared statements and binds</h3>
+    <code class="api-signature">தயாரி(இணைப்பு, வினா) (கூற்று, *பிழை)</code><br>
+    <code class="api-signature">இன்மைபிணை(கூற்று, இடம்) *பிழை</code><br>
+    <code class="api-signature">முழுஎண்பிணை(கூற்று, இடம், மதிப்பு) *பிழை</code><br>
+    <code class="api-signature">மிதவைப்பிணை(கூற்று, இடம், மதிப்பு) *பிழை</code><br>
+    <code class="api-signature">சரம்பிணை(கூற்று, இடம், மதிப்பு) *பிழை</code><br>
+    <code class="api-signature">இருமிப்பிணை(கூற்று, இடம், மதிப்பு) *பிழை</code>
+    <p>Bind positions are <strong>one-based</strong>. Text and blob inputs use SQLite transient binding, so SQLite copies them before the call returns.</p>
+  </div>
+  <div class="api">
+    <h3>Stepping and columns</h3>
+    <code class="api-signature">அடுத்து(கூற்று) (நிலை, *பிழை)</code><br>
+    <code class="api-signature">நெடுவரிசைகள்(கூற்று) (முழுஎண், *பிழை)</code><br>
+    <code class="api-signature">நெடுவரிசைப்பெயர்(கூற்று, இடம்) (சரம், *பிழை)</code><br>
+    <code class="api-signature">இன்மையா(கூற்று, இடம்) (நிலை, *பிழை)</code><br>
+    <code class="api-signature">முழுஎண்பெறு / மிதவைப்பெறு / சரம்பெறு / இருமிப்பெறு</code>
+    <p><code>அடுத்து</code> returns <code>மெய்</code> when a row is ready and <code>பொய்</code> when execution is complete. Column indexes are <strong>zero-based</strong>. Text/blob results are copied into Aram-managed memory.</p>
+  </div>
+  <div class="api">
+    <h3>Reuse and cleanup</h3>
+    <code class="api-signature">மீட்டமை(கூற்று) *பிழை</code><br>
+    <code class="api-signature">கூற்றுவிடு(கூற்று) *பிழை</code>
+    <p><code>மீட்டமை</code> resets execution and clears all bindings. <code>கூற்றுவிடு</code> finalizes the native statement.</p>
+  </div>
+
+  <h3>Prepared insert and query</h3>
+  <pre><code>_, பிழை = தரவுத்தளம்.செயல்(இணைப்பு,
+    "CREATE TABLE பொருள் (எண் INTEGER, பெயர் TEXT)")
+
+மாறி கூற்று தரவுத்தளம்.கூற்று
+கூற்று, பிழை = தரவுத்தளம்.தயாரி(இணைப்பு,
+    "INSERT INTO பொருள் VALUES (?, ?)")
+பிழை = தரவுத்தளம்.முழுஎண்பிணை(கூற்று, 1, 1)
+பிழை = தரவுத்தளம்.சரம்பிணை(கூற்று, 2, "அறம்")
+_, பிழை = தரவுத்தளம்.அடுத்து(கூற்று)
+பிழை = தரவுத்தளம்.கூற்றுவிடு(கூற்று)
+
+கூற்று, பிழை = தரவுத்தளம்.தயாரி(இணைப்பு,
+    "SELECT எண், பெயர் FROM பொருள்")
+மாறி உண்டு நிலை
+சுழல் {
+    உண்டு, பிழை = தரவுத்தளம்.அடுத்து(கூற்று)
+    எனில் பிழை != இன்மை { முறி }
+    எனில் !உண்டு { முறி }
+    எண், _ := தரவுத்தளம்.முழுஎண்பெறு(கூற்று, 0)
+    பெயர், _ := தரவுத்தளம்.சரம்பெறு(கூற்று, 1)
+    பதிப்பி(பெயர்)
+}
+பிழை = தரவுத்தளம்.கூற்றுவிடு(கூற்று)
+பிழை = தரவுத்தளம்.விடு(இணைப்பு)</code></pre>
+
+  <h2 id="database-lifecycle">Database architecture and limitations</h2>
+  <ul>
+    <li><strong>Runtime-loaded SQLite:</strong> generated C uses <code>dlopen</code>/<code>dlsym</code>. Building needs no <code>sqlite3.h</code> or <code>-lsqlite3</code>; the linker uses <code>-ldl</code>. Running needs <code>libsqlite3.so.0</code> (or <code>libsqlite3.so</code>).</li>
+    <li><strong>Opaque handles:</strong> <code>இணைப்பு</code> and <code>கூற்று</code> are typed as <code>முழுஎண்</code> in Aram but must only be used with the database package APIs.</li>
+    <li><strong>Explicit lifetime:</strong> finalize every statement with <code>கூற்றுவிடு</code> before closing its connection with <code>விடு</code>. There are no database finalizers.</li>
+    <li><strong>No concurrent handle sharing:</strong> do not use one connection or statement from multiple <code>இழை</code> in v0.62. Separate handles are allowed.</li>
+    <li><strong>Transactions:</strong> issue <code>BEGIN</code>, <code>COMMIT</code>, and <code>ROLLBACK</code> through <code>செயல்</code>.</li>
+    <li><strong>Not included:</strong> pooling, ORM, migrations, reflection-based scan, public third-party drivers, PostgreSQL, and MySQL.</li>
+    <li><strong>Vtable scope:</strong> it is an internal backend contract, not a stable C FFI or plugin ABI.</li>
+    <li><strong>SQL portability:</strong> the Aram API is shared, but SQL dialect and placeholder syntax may differ between future backends.</li>
+  </ul>
+
+  <h2 id="database-examples">Database examples in the corpus</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Path</th><th>Contents</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>corpus/tamil/தரவுத்தளம்/</code></td>
+          <td>File-backed SQLite demo: create table, bind int/text/float/blob/null, query columns, print an unsupported-driver error.</td>
+        </tr>
+        <tr>
+          <td><code>corpus/tamil/ஊழியர்_முழுஅடுக்கு/</code></td>
+          <td>Full-stack employee app: Aram REST API + persistent SQLite (<code>build/ஊழியர்கள்.db</code>) + React/Vite UI with Tamil labels and data. Follow <code>SETUP.md</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <pre><code>go run ./cmd/aram run corpus/tamil/தரவுத்தளம்/
+# Full-stack: see corpus/tamil/ஊழியர்_முழுஅடுக்கு/SETUP.md</code></pre>
+  <div class="callout">
+    <strong>Install SQLite at runtime</strong>
+    On Debian/Ubuntu: <code>sudo apt install libsqlite3-0</code>. Confirm with <code>ldconfig -p | grep libsqlite3</code>.
+  </div>
+
+  <div class="next-links">
+    <a href="concurrency-runtime.html"><span>Previous</span>← Concurrency & runtime</a>
+    <a href="tooling.html"><span>Next</span>Compiler & tooling →</a>
+  </div>
+</main>
+</body>
+</html>

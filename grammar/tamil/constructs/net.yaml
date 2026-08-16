@@ -23,8 +23,8 @@ semantics: >
   கேள்(addr) listens (":port" or "host:port"); ஏற்று accepts; இணை dials;
   படி/எழுது use []இருமி8; விடு closes a conn;
   நிறுத்து closes a listener; முகவரி returns "host:port" (0.0.0.0 → 127.0.0.1).
-  Blocking I/O parks so GC can run. No new keywords. UDP / TLS
-  later; HTTP is Tamil-0.54 (`பரிமாற்றம்`). UDP preserves one datagram per
+  Blocking I/O parks so GC can run. No new keywords. TLS remains later;
+  HTTP is Tamil-0.54 (`பரிமாற்றம்`). UDP preserves one datagram per
   receive; oversized datagrams are truncated to the supplied buffer.
 examples:
   - tamil: |

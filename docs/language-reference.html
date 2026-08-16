@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Aram v0.62 language reference.">
+  <title>Language Reference — Aram Documentation</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="docs.js"></script>
+</head>
+<body>
+<main id="main-content">
+  <section class="hero">
+    <p class="eyebrow">Reference</p>
+    <h1>Language reference</h1>
+    <p class="lead">The implemented v0.62 source language: lexical rules, types, declarations, expressions, control flow, aggregates, functions, packages, and built-ins.</p>
+  </section>
+
+  <div class="toc">
+    <strong>On this page</strong>
+    <ul>
+      <li><a href="#lexical">Lexical rules</a></li>
+      <li><a href="#keywords">Keywords</a></li>
+      <li><a href="#types">Types and zero values</a></li>
+      <li><a href="#variables">Variables and assignment</a></li>
+      <li><a href="#operators">Expressions and operators</a></li>
+      <li><a href="#control">Control flow</a></li>
+      <li><a href="#functions">Functions and returns</a></li>
+      <li><a href="#structs">Structs and methods</a></li>
+      <li><a href="#collections">Arrays, slices, maps</a></li>
+      <li><a href="#functions-values">Function values and closures</a></li>
+      <li><a href="#generics">Generics</a></li>
+      <li><a href="#packages">Packages and visibility</a></li>
+      <li><a href="#builtins">Built-ins</a></li>
+    </ul>
+  </div>
+
+  <h2 id="lexical">Lexical rules</h2>
+  <h3>Source and identifiers</h3>
+  <p>Aram source is UTF-8 and uses the <code>.aram</code> extension. Identifiers begin with a Unicode letter or underscore and continue with letters, decimal digits, Unicode combining marks, or underscore. Tamil and Latin identifiers are both valid.</p>
+  <p><code>தொடக்கம்</code> is the conventional entry package/function name, not a reserved keyword.</p>
+
+  <h3>Literals</h3>
+  <ul>
+    <li>Decimal integers: <code>42</code> or Tamil digits such as <code>௪௨</code>.</li>
+    <li>Floating point: <code>3.14</code> (<code>மிதவைஎண்</code>, C <code>double</code>).</li>
+    <li>Strings: UTF-8 text in double quotes. Escapes include <code>\n</code>, <code>\r</code>, <code>\t</code>, <code>\\</code>, and <code>\"</code>.</li>
+    <li>Boolean: <code>மெய்</code> and <code>பொய்</code>.</li>
+    <li>Nil: <code>இன்மை</code> in typed pointer/map/channel contexts.</li>
+  </ul>
+
+  <h3>Comments and semicolons</h3>
+  <pre><code>// line comment
+/* block comment */</code></pre>
+  <p>Semicolons are inserted at line endings using Go-like rules. Explicit semicolons remain valid and are required between the three clauses of a C-style <code>சுழல்</code>.</p>
+
+  <h2 id="keywords">Keywords and built-ins</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>Aram spelling</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Packages</td><td><code>தொகுப்பு</code>, <code>கொணர்</code>, <code>வெளி</code></td><td>package, import, exported visibility</td></tr>
+        <tr><td>Declarations</td><td><code>செயல்பாடு</code>, <code>மாறி</code>, <code>வகை</code>, <code>அமைப்பு</code></td><td>function, variable, type, struct</td></tr>
+        <tr><td>Control flow</td><td><code>எனில்</code>, <code>இல்லையேல்</code>, <code>சுழல்</code>, <code>ஒவ்வொரு</code>, <code>முறி</code>, <code>தொடர்</code>, <code>திருப்பு</code></td><td>if/case, else, loop, range, break, continue, return</td></tr>
+        <tr><td>Switch</td><td><code>திசைவி</code>, <code>மற்றபடி</code></td><td>switch and default</td></tr>
+        <tr><td>Primitive types</td><td><code>முழுஎண்</code>, <code>நிலை</code>, <code>மிதவைஎண்</code>, <code>சரம்</code>, <code>இருமி8</code>, <code>இருமி32</code></td><td>int64, bool, float64, string, byte, rune</td></tr>
+        <tr><td>Values</td><td><code>மெய்</code>, <code>பொய்</code>, <code>இன்மை</code></td><td>true, false, nil</td></tr>
+        <tr><td>Collections</td><td><code>அகராதி</code>, <code>நீக்கு</code></td><td>map and delete</td></tr>
+        <tr><td>Deferred/panic</td><td><code>தள்ளிவை</code>, <code>அலறு</code>, <code>மீள்</code></td><td>defer, panic, recover</td></tr>
+        <tr><td>Concurrency</td><td><code>இழை</code>, <code>தடம்</code>, <code>தடத்தேர்வு</code>, <code>மூடு</code></td><td>go/thread, channel, select, close</td></tr>
+        <tr><td>General built-ins</td><td><code>பதிப்பி</code>, <code>நீளம்</code>, <code>திறன்</code>, <code>சேர்</code>, <code>ஆக்கு</code>, <code>நகல்</code></td><td>print, len, cap, append, make, copy</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="types">Types and zero values</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Type</th><th>Representation / meaning</th><th>Zero value</th></tr></thead>
+      <tbody>
+        <tr><td><code>முழுஎண்</code></td><td>Signed 64-bit integer</td><td><code>0</code></td></tr>
+        <tr><td><code>மிதவைஎண்</code></td><td>IEEE-754 binary64</td><td><code>0.0</code></td></tr>
+        <tr><td><code>நிலை</code></td><td>Boolean</td><td><code>பொய்</code></td></tr>
+        <tr><td><code>சரம்</code></td><td>Immutable UTF-8, byte length</td><td><code>""</code></td></tr>
+        <tr><td><code>இருமி8</code></td><td>Unsigned byte</td><td><code>0</code></td></tr>
+        <tr><td><code>இருமி32</code></td><td>Signed Unicode code point</td><td><code>0</code></td></tr>
+        <tr><td><code>*T</code></td><td>Pointer to <code>T</code></td><td><code>இன்மை</code></td></tr>
+        <tr><td><code>[]T</code></td><td>Slice descriptor (data, length, capacity)</td><td>nil/empty descriptor</td></tr>
+        <tr><td><code>[N]T</code></td><td>Fixed value array</td><td>element-wise zero</td></tr>
+        <tr><td><code>அகராதி[K]V</code></td><td>Reference map</td><td><code>இன்மை</code></td></tr>
+        <tr><td><code>தடம் T</code></td><td>Bidirectional channel</td><td><code>இன்மை</code></td></tr>
+        <tr><td><code>செயல்பாடு(...)</code></td><td>Function value plus captured environment</td><td>non-callable zero function</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Named aliases and defined types:</p>
+  <pre><code>வகை எண் = முழுஎண்       // alias: identical type
+வகை மதிப்பெண் முழுஎண்   // defined type: distinct type</code></pre>
+  <p>Explicit conversions use call syntax:</p>
+  <pre><code>எண் := முழுஎண்(3.9)
+மிதவை := மிதவைஎண்(எண்)
+எழுத்து := சரம்(65)
+இருமிகள் := []இருமி8("அறம்")
+மீண்டும் := சரம்(இருமிகள்)</code></pre>
+
+  <h2 id="variables">Variables and assignment</h2>
+  <pre><code>மாறி எண்ணிக்கை முழுஎண்
+மாறி பெயர் சரம் = "அறம்"
+வயது := 1
+
+எண்ணிக்கை = 10
+அ, ஆ = ஆ, அ</code></pre>
+  <p><code>:=</code> infers types and must introduce at least one new name in its scope. Parallel assignment evaluates right-hand values before assignment. Multiple-return calls unpack through <code>:=</code> or <code>=</code>.</p>
+  <p>The blank identifier <code>_</code> discards values:</p>
+  <pre><code>மதிப்பு, _ := கணக்கு()
+_, _ = வலை.எழுது(இணைப்பு, தரவு)</code></pre>
+
+  <h2 id="operators">Expressions and operators</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Precedence</th><th>Operators</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Unary</td><td><code>- ! * &amp; &lt;-</code></td><td>negate, not, dereference, address-of, receive</td></tr>
+        <tr><td>Multiplicative</td><td><code>* / %</code></td><td>Numeric arithmetic</td></tr>
+        <tr><td>Additive</td><td><code>+ -</code></td><td><code>+</code> also concatenates strings</td></tr>
+        <tr><td>Comparison</td><td><code>&lt; &lt;= &gt; &gt;=</code></td><td>Numbers and ordered values supported by checker</td></tr>
+        <tr><td>Equality</td><td><code>== !=</code></td><td>Comparable values; maps/slices/functions are not comparable</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Selection, indexing, slicing, and calls are primary-expression suffixes:</p>
+  <pre><code>புள்ளி.x
+பட்டியல்[i]
+பட்டியல்[கீழ்:மேல்]
+பட்டியல்[கீழ்:மேல்:அதிகம்]
+செயல்(வாதம்)</code></pre>
+  <p>String indexing/slicing is byte-oriented; <code>ஒவ்வொரு</code> over a string decodes UTF-8 runes and reports byte indices.</p>
+
+  <h2 id="control">Control flow</h2>
+  <h3>If</h3>
+  <pre><code>எனில் x &gt; 0 {
+    பதிப்பி("positive")
+} இல்லையேல் எனில் x &lt; 0 {
+    பதிப்பி("negative")
+} இல்லையேல் {
+    பதிப்பி("zero")
+}</code></pre>
+  <p>An optional initialization statement is scoped to the condition and branches:</p>
+  <pre><code>எனில் மதிப்பு := கணக்கு(); மதிப்பு &gt; 10 {
+    பதிப்பி(மதிப்பு)
+}</code></pre>
+
+  <h3>Loops</h3>
+  <pre><code>சுழல் i := 0; i &lt; 10; i = i + 1 {
+    எனில் i == 3 { தொடர் }
+    எனில் i == 8 { முறி }
+}
+
+சுழல் நிபந்தனை {
+    // while-like
+}
+
+சுழல் {
+    // infinite
+}
+
+சுழல் i, value := ஒவ்வொரு values {
+    பதிப்பி(value)
+}</code></pre>
+  <p>Range works over arrays, slices, strings, maps, and channels. Channel range receives until close.</p>
+
+  <h3>Switch</h3>
+  <pre><code>திசைவி x {
+எனில் 1, 2 {
+    பதிப்பி("small")
+}
+எனில் 3 {
+    பதிப்பி("three")
+}
+மற்றபடி {
+    பதிப்பி("other")
+}
+}</code></pre>
+  <p>There is no fallthrough. A tagless switch treats cases as boolean conditions. Like <code>எனில்</code>, switch accepts an optional initialization statement.</p>
+
+  <h2 id="functions">Functions and return values</h2>
+  <pre><code>செயல்பாடு கூட்டு(அ முழுஎண், ஆ முழுஎண்) முழுஎண் {
+    திருப்பு அ + ஆ
+}
+
+செயல்பாடு வகுத்தல்(அ முழுஎண், ஆ முழுஎண்) (முழுஎண், முழுஎண்) {
+    திருப்பு அ / ஆ, அ % ஆ
+}</code></pre>
+  <p>Named results become initialized locals and support a naked return:</p>
+  <pre><code>செயல்பாடு வகுத்தல்(அ முழுஎண், ஆ முழுஎண்) (ஈவு முழுஎண், மீதி முழுஎண்) {
+    ஈவு = அ / ஆ
+    மீதி = அ % ஆ
+    திருப்பு
+}</code></pre>
+
+  <h2 id="structs">Structs, pointers, and methods</h2>
+  <pre><code>வகை புள்ளி அமைப்பு {
+    வெளி x முழுஎண்
+    வெளி y முழுஎண்
+}
+
+செயல்பாடு (ப புள்ளி) கூட்டல்() முழுஎண் {
+    திருப்பு ப.x + ப.y
+}
+
+செயல்பாடு (ப *புள்ளி) நகர்த்து(dx முழுஎண், dy முழுஎண்) {
+    ப.x = ப.x + dx
+    ப.y = ப.y + dy
+}</code></pre>
+  <p>Construct values positionally or with keyed fields:</p>
+  <pre><code>அ := புள்ளி{3, 4}
+ஆ := புள்ளி{x: 10, y: 20}
+ஆ.நகர்த்து(1, 2)</code></pre>
+  <p>Address and dereference use <code>&amp;x</code> and <code>*p</code>. Field/method selection auto-dereferences struct pointers where appropriate. Value-method receivers copy; pointer receivers mutate addressable values.</p>
+  <p>Structs and arrays compare with <code>==</code>/<code>!=</code> only if every member is comparable. Slices, maps, channels, and function values prevent aggregate comparability.</p>
+
+  <h2 id="collections">Arrays, slices, and maps</h2>
+  <h3>Arrays and slices</h3>
+  <pre><code>நிலையான := [3]முழுஎண்{1, 2, 3}
+எண்கள் := []முழுஎண்{1, 2, 3}
+எண்கள் = சேர்(எண்கள், 4, 5)
+
+இடம் := ஆக்கு([]இருமி8, 128)
+நகலானது := நகல்(இடம், மூலம்)
+பதிப்பி(நீளம்(எண்கள்))
+பதிப்பி(திறன்(எண்கள்))</code></pre>
+  <ul>
+    <li>Arrays are values with fixed length.</li>
+    <li>Slices share backing storage. Two-index slicing adjusts length; three-index slicing also limits capacity.</li>
+    <li><code>சேர்</code> may allocate and returns the resulting slice; assign its result.</li>
+    <li><code>ஆக்கு([]T, len, cap)</code> creates zeroed storage.</li>
+  </ul>
+
+  <h3>Maps</h3>
+  <pre><code>ம := அகராதி[சரம்]முழுஎண்{"அ": 1, "ஆ": 2}
+ம["இ"] = 3
+மதிப்பு, உண்டு := ம["அ"]
+நீக்கு(ம, "ஆ")
+
+சுழல் விசை, மதிப்பு := ஒவ்வொரு ம {
+    பதிப்பி(விசை)
+}</code></pre>
+  <ul>
+    <li>Map zero value is <code>இன்மை</code>; use <code>ஆக்கு(அகராதி[K]V)</code> or a literal before assignment.</li>
+    <li>Missing lookup yields the value type's zero value; comma-ok reports presence.</li>
+    <li>Keys must be comparable: scalars, pointers, and comparable arrays/structs are supported.</li>
+    <li>Maps compare only with <code>இன்மை</code>, not with each other.</li>
+  </ul>
+
+  <h2 id="functions-values">Function values, closures, and defer</h2>
+  <pre><code>வகை மாற்றி = செயல்பாடு(முழுஎண்) முழுஎண்
+
+இரட்டி := செயல்பாடு(எ முழுஎண்) முழுஎண் {
+    திருப்பு எ * 2
+}
+
+மாறிகள் := []மாற்றி{இரட்டி}
+பதிப்பி(மாறிகள்[0](21))</code></pre>
+  <p>Package functions, bound methods, unbound method expressions, and closures are first-class values. Closures capture free variables by reference. Function values may be fields in structs or elements in slices.</p>
+  <pre><code>காட்டு := பொருள்.காட்டு       // bound method value
+காட்டு()
+
+செயல் := வகை.முறை           // unbound method expression
+செயல்(பெறுநர், வாதம்)</code></pre>
+  <p><code>தள்ளிவை</code> schedules calls in LIFO order when the surrounding function returns. Arguments are evaluated immediately:</p>
+  <pre><code>தள்ளிவை வளம்.மூடு()
+தள்ளிவை முடிந்தது    // zero-argument sugar for முடிந்தது()</code></pre>
+
+  <h2 id="generics">Function generics</h2>
+  <pre><code>செயல்பாடு அடையாளம்[யா](x யா) யா {
+    திருப்பு x
+}
+
+செயல்பாடு தலை[யா](xs []யா) யா {
+    திருப்பு xs[0]
+}
+
+எண் := அடையாளம்(42)
+பெயர் := அடையாளம்[சரம்]("அறம்")</code></pre>
+  <p>Generics are currently limited to unconstrained function type parameters. Multiple parameters, slices of type parameters, inference, explicit type arguments, and cross-package use are supported. Generic types, generic methods, constraints, and an <code>any</code> interface are not implemented. The C backend monomorphizes each instantiation.</p>
+
+  <h2 id="packages">Packages and visibility</h2>
+  <pre><code>தொகுப்பு பயன்பாடு
+
+கொணர் வ "வலை"
+கொணர் _ "side-effects"
+
+வெளி வகை அமைவு அமைப்பு {
+    வெளி பெயர் சரம்
+    மறைவு முழுஎண்
+}</code></pre>
+  <ul>
+    <li>All files in one package use the same package name.</li>
+    <li>Imports resolve by directory; imported calls use a qualifier.</li>
+    <li>Unused non-blank imports are errors. Import cycles report their path.</li>
+    <li>Top-level functions/types and struct fields require <code>வெளி</code> for access by another package.</li>
+    <li>Top-level variables are not supported in v0.62.</li>
+    <li>Compiler packages <code>"வலை"</code>, <code>"பரிமாற்றம்"</code>, and <code>"தரவுத்தளம்"</code> resolve from <code>stdlib/</code>. See the <a href="standard-library.html">standard library</a> reference.</li>
+  </ul>
+
+  <h2 id="builtins">Built-in functions</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Built-in</th><th>Signature shape</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>பதிப்பி(x)</code></td><td>one printable value</td><td>Print followed by newline; supports primitives and named structs.</td></tr>
+        <tr><td><code>நீளம்(x)</code></td><td>slice/string/map → int</td><td>Length; string length is bytes.</td></tr>
+        <tr><td><code>திறன்(slice)</code></td><td>slice → int</td><td>Slice capacity.</td></tr>
+        <tr><td><code>சேர்(slice, values...)</code></td><td>slice + elements → slice</td><td>Append one or more values.</td></tr>
+        <tr><td><code>ஆக்கு(type, ...)</code></td><td>slice/map/channel constructor</td><td>Create runtime storage.</td></tr>
+        <tr><td><code>நகல்(dst, src)</code></td><td>slices → int</td><td>Copy and return copied element count.</td></tr>
+        <tr><td><code>நீக்கு(map, key)</code></td><td>void</td><td>Delete an entry; missing entry is harmless.</td></tr>
+        <tr><td><code>மூடு(channel)</code></td><td>void</td><td>Close a channel.</td></tr>
+        <tr><td><code>அலறு(value)</code></td><td>never normally returns</td><td>Begin panic unwind.</td></tr>
+        <tr><td><code>மீள்()</code></td><td>→ string</td><td>Recover active panic from a deferred call, otherwise <code>""</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout warning">
+    <strong>Safety behavior</strong>
+    Out-of-bounds access, invalid slice bounds, send on closed channel, assignment to a nil map, and several runtime invariants abort/panic rather than returning operational errors.
+  </div>
+
+  <div class="next-links">
+    <a href="getting-started.html"><span>Previous</span>← Getting started</a>
+    <a href="concurrency-runtime.html"><span>Next</span>Concurrency & runtime →</a>
+  </div>
+</main>
+</body>
+</html>

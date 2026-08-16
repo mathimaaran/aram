@@ -470,6 +470,28 @@ timed in this synchronous implementation.
 local-address, and close operations. Datagram receives return the sender
 address and truncate payloads to the caller buffer.
 
+## Tamil-0.62 (2026-08-15)
+
+Stdlib package **தரவுத்தளம்** introduces a shared SQL API over an internal C
+backend vtable. The first backend is SQLite; `திற("sqlite", path)` and
+`திற("sqlite3", path)` select it. This is intentionally a first-party backend
+abstraction, not yet a public driver/plugin ABI.
+
+Connections and prepared statements are opaque `முழுஎண்` handles. The API
+supports direct no-row execution, prepared statements, typed one-based binds
+(null / integer / float / UTF-8 text / bytes), row stepping, typed zero-based
+column reads, reset, finalize, and close. Text and blob column values are
+copied into Aram's managed heap before SQLite can invalidate them. Operational
+failures return `*தரவுத்தளம்.பிழை`.
+
+The generated runtime uses `dlopen` / `dlsym` for `libsqlite3.so.0` (falling
+back to `libsqlite3.so`). Consequently Aram compilation does not require
+SQLite headers or `-lsqlite3`; the shared library is required when a SQLite
+program runs. The vtable isolates engine operations so future PostgreSQL or
+MySQL first-party backends can share the Tamil API. Tamil-0.62 deliberately
+excludes pooling, concurrent use of one handle, ORM/reflection, migrations,
+and a third-party driver registry.
+
 ## Priority (2026-08-01)
 
 Harden the language (other gaps) **before** starting the NASM x86-64

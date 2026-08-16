@@ -23,6 +23,8 @@ Corpus programs are part of the frozen snapshot; treat changes as subset bumps u
 | `வலை_வாடிக்கையாளர்_பிழை/` | Tamil-0.57 | HTTPS/URL/reserved-header errors |
 | `வலை_திருப்பு/` | Tamil-0.61 | opt-in HTTP redirect + timeout options |
 | `தகவல்_வலை/` | Tamil-0.61 | IPv4 UDP loopback datagrams |
+| `தரவுத்தளம்/` | Tamil-0.62 | shared SQL vtable + SQLite prepared statements |
+| `ஊழியர்_முழுஅடுக்கு/` | Tamil-0.62 | React employee grid + Aram REST API + Tamil SQLite (`SETUP.md`) |
 | `செயல்பாடு_புலம்.aram` | Tamil-0.58 | function values in struct and slice fields |
 | `குவியல்.aram` | Tamil-0.60 | indexed conservative GC + flattened string concat |
 

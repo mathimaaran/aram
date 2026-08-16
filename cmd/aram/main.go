@@ -253,7 +253,7 @@ func runBuildAll(paths []string, outBase, outPath string, run bool, optLevel str
 		}
 		return 0
 	}
-	cmd := exec.Command(gcc, "-std=c11", optLevel, "-pthread", cFile, "-o", binPath)
+	cmd := exec.Command(gcc, "-std=c11", optLevel, "-pthread", cFile, "-o", binPath, "-ldl")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {

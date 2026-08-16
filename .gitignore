@@ -28,3 +28,6 @@ coverage.html
 /tmp/
 /out
 /hello
+
+# Node / frontend deps
+node_modules/
