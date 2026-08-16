@@ -26,7 +26,7 @@ Default output directory (when `-o` is omitted): **`build/`**
 You do **not** need `sudo apt install golang-go` for this repo. Use the portable toolchain:
 
 ```bash
-cd ~/Documents/Mathi/work/go_spec
+cd /path/to/aram
 
 # option A — one-off
 ./tools/run-go.sh test ./...
