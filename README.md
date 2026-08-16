@@ -26,6 +26,60 @@ Linux (x86-64 first, then i386), with NASM as a later backend.
 corpus/tamil/வணக்கம்.aram
 ```
 
+## After downloading (release zip or clone)
+
+Aram ships as **source**, not a prebuilt installer. Unzip or clone on **Linux**, then install only what you need for the path below.
+
+### Always required (compile and run Aram)
+
+| Need | Why | Typical install (Ubuntu/Debian) |
+|------|-----|----------------------------------|
+| Linux | Supported runtime target | — |
+| Go toolchain | Hosts the Aram compiler (`cmd/aram`) | System Go, or `source tools/env.sh` / `./tools/run-go.sh` |
+| GCC or Clang (`cc`) | Compiles generated C | `sudo apt install build-essential` |
+| pthread + `libdl` (`-ldl`) | Runtime / SQL dynamic loading | Usually included with the toolchain |
+
+Minimal try-out:
+
+```bash
+cd aram-0.62   # or your unzipped / cloned directory name
+source tools/env.sh   # only if you do not already have `go` on PATH
+go run ./cmd/aram run corpus/tamil/வணக்கம்.aram
+```
+
+Open [`docs/index.html`](docs/index.html) in a browser for the developer docs.
+
+### Optional: SQL programs (`தரவுத்தளம்`)
+
+| Need | Why |
+|------|-----|
+| Runtime `libsqlite3.so.0` | Loaded at **run** time via `dlopen` |
+
+```bash
+sudo apt install libsqlite3-0
+# check: ldconfig -p | grep libsqlite3
+go run ./cmd/aram run corpus/tamil/தரவுத்தளம்/
+```
+
+You do **not** need SQLite headers, `libsqlite3-dev`, or `-lsqlite3` to build.
+
+### Optional: full-stack employee demo only
+
+Extra on top of Go + C + SQLite — **not** required for normal Aram use:
+
+| Need | Why |
+|------|-----|
+| Node.js **18+** and npm | Vite React UI in `corpus/tamil/ஊழியர்_முழுஅடுக்கு/` |
+
+Follow [`corpus/tamil/ஊழியர்_முழுஅடுக்கு/SETUP.md`](corpus/tamil/ஊழியர்_முழுஅடுக்கு/SETUP.md).
+
+### Not required for core Aram
+
+- A prebuilt `aram` binary (use `go run` / `go build ./cmd/aram`)
+- Node / npm (except the React demo above)
+- SQLite `-dev` packages
+- Docker, Python, Java, etc.
+
 ## Layout
 
 ```text
@@ -34,7 +88,8 @@ grammar/go/      frozen Go reference (inspiration, not a checklist)
 grammar/tamil/   Aram grammar, keywords, construct cards
 corpus/tamil/    example and test programs
 stdlib/          compiler stdlib (வலை, பரிமாற்றம், தரவுத்தளம்)
-tools/           experiments (empty in Phase 0)
+tools/           portable Go helpers (`env.sh`, `run-go.sh`)
+docs/            static HTML developer documentation
 ```
 
 ## Editor setup (Tamil glyphs)
