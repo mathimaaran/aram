@@ -16,6 +16,6 @@ semantics: >
   Name பதிப்பி = print/publish.
 examples:
   - tamil: |
-      பதிப்பி("வணக்கம், அறம்!")
+      பதிப்பி("வணக்கம், நிரலுளி!")
     go_equivalent: |
-      println("வணக்கம், அறம்!")
+      println("வணக்கம், நிரலுளி!")

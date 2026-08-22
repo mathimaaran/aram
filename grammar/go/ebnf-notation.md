@@ -27,4 +27,4 @@ Operators, increasing precedence:
 - Tokens in `""` or back quotes.
 - `a … b` = character range.
 
-Aram Tamil EBNF should use this same notation so agents and humans share one style.
+Niraluli Tamil EBNF should use this same notation so agents and humans share one style.

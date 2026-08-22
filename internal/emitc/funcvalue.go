@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"aram/internal/ast"
-	"aram/internal/check"
+	"niraluli/internal/ast"
+	"niraluli/internal/check"
 )
 
 func (e *emitter) ensureFuncRuntime() {
@@ -17,7 +17,7 @@ func (e *emitter) writeFuncTypedef(b *strings.Builder) {
 	if !e.needFunc {
 		return
 	}
-	b.WriteString("typedef struct { void *fn; void *env; } aram_fn;\n")
+	b.WriteString("typedef struct { void *fn; void *env; } uli_fn;\n")
 }
 
 func (e *emitter) methodTrampKey(si *check.StructInfo, mi *check.MethodInfo) string {
@@ -40,9 +40,9 @@ func (e *emitter) ensureMethodFuncValue(si *check.StructInfo, mi *check.MethodIn
 	e.funcTrampDone[key] = true
 	tb := &e.funcTramps
 	recvCT := cPkgIdent(si.Pkg, si.Name)
-	tramp := "aram_tramp_" + key
-	bindVal := "aram_bind_" + key + "_val"
-	bindPtr := "aram_bind_" + key + "_ptr"
+	tramp := "uli_tramp_" + key
+	bindVal := "uli_bind_" + key + "_val"
+	bindPtr := "uli_bind_" + key + "_ptr"
 	results := mi.Results
 	params := mi.Params
 
@@ -71,16 +71,16 @@ func (e *emitter) ensureMethodFuncValue(si *check.StructInfo, mi *check.MethodIn
 	tb.WriteString(");\n}\n")
 
 	// Bind helpers
-	fmt.Fprintf(tb, "static aram_fn %s(%s recv) {\n", bindVal, recvCT)
-	tb.WriteString("\taram_fn f;\n")
-	fmt.Fprintf(tb, "\t%s *env = (%s *)aram_arena_alloc(sizeof(%s));\n", recvCT, recvCT, recvCT)
+	fmt.Fprintf(tb, "static uli_fn %s(%s recv) {\n", bindVal, recvCT)
+	tb.WriteString("\tuli_fn f;\n")
+	fmt.Fprintf(tb, "\t%s *env = (%s *)uli_arena_alloc(sizeof(%s));\n", recvCT, recvCT, recvCT)
 	tb.WriteString("\t*env = recv;\n")
 	fmt.Fprintf(tb, "\tf.fn = (void *)%s;\n", tramp)
 	tb.WriteString("\tf.env = env;\n")
 	tb.WriteString("\treturn f;\n}\n")
 
-	fmt.Fprintf(tb, "static aram_fn %s(%s *recv) {\n", bindPtr, recvCT)
-	tb.WriteString("\taram_fn f;\n")
+	fmt.Fprintf(tb, "static uli_fn %s(%s *recv) {\n", bindPtr, recvCT)
+	tb.WriteString("\tuli_fn f;\n")
 	fmt.Fprintf(tb, "\tf.fn = (void *)%s;\n", tramp)
 	tb.WriteString("\tf.env = recv;\n")
 	tb.WriteString("\treturn f;\n}\n")
@@ -97,8 +97,8 @@ func (e *emitter) ensurePkgFuncValue(pkg, name string, params, results []check.T
 	}
 	e.funcTrampDone[key] = true
 	tb := &e.funcTramps
-	tramp := "aram_tramp_" + key
-	bind := "aram_fv_" + key
+	tramp := "uli_tramp_" + key
+	bind := "uli_fv_" + key
 
 	e.writeFuncSigLine(tb, "static ", tramp, results, true, params)
 	tb.WriteString(" {\n")
@@ -117,17 +117,17 @@ func (e *emitter) ensurePkgFuncValue(pkg, name string, params, results []check.T
 	}
 	tb.WriteString(");\n}\n")
 
-	fmt.Fprintf(tb, "static aram_fn %s(void) {\n", bind)
-	tb.WriteString("\taram_fn f;\n")
+	fmt.Fprintf(tb, "static uli_fn %s(void) {\n", bind)
+	tb.WriteString("\tuli_fn f;\n")
 	fmt.Fprintf(tb, "\tf.fn = (void *)%s;\n", tramp)
 	tb.WriteString("\tf.env = NULL;\n")
 	tb.WriteString("\treturn f;\n}\n")
 }
 
-// writeFuncCallHelper emits aram_fn_call_tN once.
+// writeFuncCallHelper emits uli_fn_call_tN once.
 func (e *emitter) writeFuncCallHelper(ft check.Type) string {
 	e.ensureFuncRuntime()
-	name := fmt.Sprintf("aram_fn_call_t%d", int(ft))
+	name := fmt.Sprintf("uli_fn_call_t%d", int(ft))
 	if e.funcCallDone == nil {
 		e.funcCallDone = map[string]bool{}
 	}
@@ -144,7 +144,7 @@ func (e *emitter) writeFuncCallHelper(ft check.Type) string {
 	} else if len(fi.Results) > 1 {
 		ret = e.retCName(fi.Results)
 	}
-	fmt.Fprintf(tb, "static %s %s(aram_fn f", ret, name)
+	fmt.Fprintf(tb, "static %s %s(uli_fn f", ret, name)
 	for i, p := range fi.Params {
 		fmt.Fprintf(tb, ", %s a%d", e.cTypeFrom(p), i)
 	}
@@ -199,7 +199,7 @@ func (e *emitter) writeMethodValue(b *strings.Builder, expr *ast.SelectorExpr, m
 	e.ensureMethodFuncValue(mv.Struct, mv.Method)
 	key := e.methodTrampKey(mv.Struct, mv.Method)
 	if mv.Method.RecvIsPtr {
-		fmt.Fprintf(b, "aram_bind_%s_ptr(", key)
+		fmt.Fprintf(b, "uli_bind_%s_ptr(", key)
 		if mv.TakeAddr {
 			e.writeAddrOf(b, expr.X)
 		} else {
@@ -208,7 +208,7 @@ func (e *emitter) writeMethodValue(b *strings.Builder, expr *ast.SelectorExpr, m
 		b.WriteByte(')')
 		return
 	}
-	fmt.Fprintf(b, "aram_bind_%s_val(", key)
+	fmt.Fprintf(b, "uli_bind_%s_val(", key)
 	if mv.RecvIsPtr {
 		b.WriteByte('*')
 		e.writeExpr(b, expr.X)
@@ -237,8 +237,8 @@ func (e *emitter) ensureMethodExpr(me *check.MethodExprInfo) {
 	}
 	e.funcTrampDone[key] = true
 	tb := &e.funcTramps
-	tramp := "aram_tramp_" + key
-	bind := "aram_me_" + key
+	tramp := "uli_tramp_" + key
+	bind := "uli_me_" + key
 	params := append([]check.Type{me.RecvType}, me.Method.Params...)
 	results := me.Method.Results
 
@@ -262,8 +262,8 @@ func (e *emitter) ensureMethodExpr(me *check.MethodExprInfo) {
 	}
 	tb.WriteString(");\n}\n")
 
-	fmt.Fprintf(tb, "static aram_fn %s(void) {\n", bind)
-	tb.WriteString("\taram_fn f;\n")
+	fmt.Fprintf(tb, "static uli_fn %s(void) {\n", bind)
+	tb.WriteString("\tuli_fn f;\n")
 	fmt.Fprintf(tb, "\tf.fn = (void *)%s;\n", tramp)
 	tb.WriteString("\tf.env = NULL;\n")
 	tb.WriteString("\treturn f;\n}\n")
@@ -271,12 +271,12 @@ func (e *emitter) ensureMethodExpr(me *check.MethodExprInfo) {
 
 func (e *emitter) writeMethodExpr(b *strings.Builder, me *check.MethodExprInfo) {
 	e.ensureMethodExpr(me)
-	fmt.Fprintf(b, "aram_me_%s()", e.methodExprKey(me.Struct, me.Method, me.ExprRecvPtr))
+	fmt.Fprintf(b, "uli_me_%s()", e.methodExprKey(me.Struct, me.Method, me.ExprRecvPtr))
 }
 
 func (e *emitter) writePkgFuncValue(b *strings.Builder, fv *check.PkgFuncValueInfo) {
 	e.ensurePkgFuncValue(fv.Pkg, fv.Name, fv.Params, fv.Results)
-	fmt.Fprintf(b, "aram_fv_%s()", e.pkgFuncTrampKey(fv.Pkg, fv.Name))
+	fmt.Fprintf(b, "uli_fv_%s()", e.pkgFuncTrampKey(fv.Pkg, fv.Name))
 }
 
 func (e *emitter) writeFuncValueCall(b *strings.Builder, call *ast.CallExpr, ft check.Type) {
@@ -320,7 +320,7 @@ func (e *emitter) closureKey(ci *check.ClosureInfo) string {
 }
 
 func (e *emitter) envStructName(ci *check.ClosureInfo) string {
-	return "aram_env_" + e.closureKey(ci)
+	return "uli_env_" + e.closureKey(ci)
 }
 
 func (e *emitter) ensureClosure(ci *check.ClosureInfo) {
@@ -339,8 +339,8 @@ func (e *emitter) ensureClosure(ci *check.ClosureInfo) {
 
 	var tb strings.Builder
 	envName := e.envStructName(ci)
-	tramp := "aram_tramp_" + key
-	bind := "aram_bind_" + key
+	tramp := "uli_tramp_" + key
+	bind := "uli_bind_" + key
 
 	// Env struct
 	if len(ci.Captures) > 0 {
@@ -377,7 +377,7 @@ func (e *emitter) ensureClosure(ci *check.ClosureInfo) {
 		name := p.Name.Name
 		ct := e.cTypeFrom(ci.Params[i])
 		if e.isPromoted(name) && !captureHas(ci, name) {
-			fmt.Fprintf(&tb, "\t%s *%s = (%s *)aram_arena_alloc(sizeof(%s));\n", ct, e.capIdent(name), ct, ct)
+			fmt.Fprintf(&tb, "\t%s *%s = (%s *)uli_arena_alloc(sizeof(%s));\n", ct, e.capIdent(name), ct, ct)
 			fmt.Fprintf(&tb, "\t*%s = a%d;\n", e.capIdent(name), i)
 		} else if !captureHas(ci, name) {
 			fmt.Fprintf(&tb, "\t%s %s = a%d;\n", ct, cIdent(name), i)
@@ -403,7 +403,7 @@ func (e *emitter) ensureClosure(ci *check.ClosureInfo) {
 	tb.WriteString("}\n")
 
 	// Bind helper
-	fmt.Fprintf(&tb, "static aram_fn %s(", bind)
+	fmt.Fprintf(&tb, "static uli_fn %s(", bind)
 	if len(ci.Captures) == 0 {
 		tb.WriteString("void")
 	} else {
@@ -414,12 +414,12 @@ func (e *emitter) ensureClosure(ci *check.ClosureInfo) {
 			fmt.Fprintf(&tb, "%s *c%d", e.cTypeFrom(cap.Type), i)
 		}
 	}
-	tb.WriteString(") {\n\taram_fn f;\n")
+	tb.WriteString(") {\n\tuli_fn f;\n")
 	fmt.Fprintf(&tb, "\tf.fn = (void *)%s;\n", tramp)
 	if len(ci.Captures) == 0 {
 		tb.WriteString("\tf.env = NULL;\n")
 	} else {
-		fmt.Fprintf(&tb, "\t%s *e = (%s *)aram_arena_alloc(sizeof(%s));\n", envName, envName, envName)
+		fmt.Fprintf(&tb, "\t%s *e = (%s *)uli_arena_alloc(sizeof(%s));\n", envName, envName, envName)
 		for i := range ci.Captures {
 			fmt.Fprintf(&tb, "\te->c%d = c%d;\n", i, i)
 		}
@@ -439,7 +439,7 @@ func captureHas(ci *check.ClosureInfo, name string) bool {
 	return false
 }
 
-// writeDeferredFnValue calls a captured aram_fn from a தள்ளிவை thunk
+// writeDeferredFnValue calls a captured uli_fn from a தள்ளிவை thunk
 // (e.g. தள்ளிவை செயல்பாடு() { மீள்() }()).
 func (e *emitter) writeDeferredFnValue(b *strings.Builder, call *ast.CallExpr, fields []deferField) {
 	ft := e.typeOf(call.Fun)
@@ -477,16 +477,16 @@ func (e *emitter) writeDeferredFnValue(b *strings.Builder, call *ast.CallExpr, f
 
 func (e *emitter) writeFuncLit(b *strings.Builder, lit *ast.FuncLit) {
 	if e.info == nil {
-		b.WriteString("/*bad func lit*/(aram_fn){0}")
+		b.WriteString("/*bad func lit*/(uli_fn){0}")
 		return
 	}
 	ci := e.info.Closures[lit]
 	if ci == nil {
-		b.WriteString("/*bad func lit*/(aram_fn){0}")
+		b.WriteString("/*bad func lit*/(uli_fn){0}")
 		return
 	}
 	e.ensureClosure(ci)
-	fmt.Fprintf(b, "aram_bind_%s(", e.closureKey(ci))
+	fmt.Fprintf(b, "uli_bind_%s(", e.closureKey(ci))
 	for i, cap := range ci.Captures {
 		if i > 0 {
 			b.WriteString(", ")
@@ -506,7 +506,7 @@ func (e *emitter) writePromoteAlloc(b *strings.Builder, name string, t check.Typ
 	e.ensureFuncRuntime()
 	ct := e.cTypeFrom(t)
 	indent(b, level)
-	fmt.Fprintf(b, "%s *%s = (%s *)aram_arena_alloc(sizeof(%s));\n", ct, e.capIdent(name), ct, ct)
+	fmt.Fprintf(b, "%s *%s = (%s *)uli_arena_alloc(sizeof(%s));\n", ct, e.capIdent(name), ct, ct)
 	indent(b, level)
 	fmt.Fprintf(b, "*%s = %s;\n", e.capIdent(name), init)
 }

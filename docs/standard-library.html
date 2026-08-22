@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Aram standard library API reference for TCP, UDP, HTTP, and SQL databases.">
-  <title>Standard Library — Aram Documentation</title>
+  <meta name="description" content="Niraluli standard library API reference for TCP, UDP, HTTP, and SQL databases.">
+  <title>Standard Library — Niraluli Documentation</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="docs.js"></script>
 </head>
@@ -38,7 +38,7 @@
   <pre><code>கொணர் "வலை"
 கொணர் "பரிமாற்றம்"
 கொணர் "தரவுத்தளம்"</code></pre>
-  <p>Public <code>.aram</code> declarations define static types, while the C emitter replaces low-level bodies with runtime intrinsics.</p>
+  <p>Public <code>.uli</code> declarations define static types, while the C emitter replaces low-level bodies with runtime intrinsics.</p>
   <p>Network/HTTP failures return <code>*வலை.பிழை</code>; database failures return <code>*தரவுத்தளம்.பிழை</code>. Success returns <code>இன்மை</code>. Always inspect the error before using associated results.</p>
   <pre><code>மதிப்பு, பிழை := வலை.இணை("127.0.0.1:8080")
 எனில் பிழை != இன்மை {
@@ -187,7 +187,7 @@ n, _ := வலை.படி(இ, இடம்)
   </div>
   <div class="api">
     <h3><code>வழிப்படுத்தி</code></h3>
-    <p>Exact-path mux implemented in Aram using parallel path and handler slices. Duplicate registration replaces the prior handler.</p>
+    <p>Exact-path mux implemented in Niraluli using parallel path and handler slices. Duplicate registration replaces the prior handler.</p>
   </div>
   <div class="api">
     <h3><code>பதில்</code> — client response</h3>
@@ -258,7 +258,7 @@ n, _ := வலை.படி(இ, இடம்)
     <p>Enables bounded redirects and send/receive timeout behavior.</p>
   </div>
 
-  <pre><code>தலை := அகராதி[சரம்]சரம்{"X-Aram": "அறம்"}
+  <pre><code>தலை := அகராதி[சரம்]சரம்{"X-Uli": "நிரலுளி"}
 விருப்பம் := பரிமாற்றம்.வாடிக்கையாளர்விருப்பம்{
     நேரமுடிவு: 2000,
     அதிகதிருப்புகள்: 3,
@@ -289,7 +289,7 @@ n, _ := வலை.படி(இ, இடம்)
   </ul>
 
   <h2 id="database"><code>தரவுத்தளம்</code> — SQL database API</h2>
-  <p>The database package presents one Tamil API over an internal C function-pointer table (vtable). SQLite is the first backend; future first-party PostgreSQL/MySQL backends can implement the same operation set without changing Aram programs.</p>
+  <p>The database package presents one Tamil API over an internal C function-pointer table (vtable). SQLite is the first backend; future first-party PostgreSQL/MySQL backends can implement the same operation set without changing Niraluli programs.</p>
   <pre><code>கொணர் "தரவுத்தளம்"
 
 இணைப்பு, பிழை := தரவுத்தளம்.திற("sqlite", ":memory:")
@@ -329,7 +329,7 @@ n, _ := வலை.படி(இ, இடம்)
     <code class="api-signature">நெடுவரிசைப்பெயர்(கூற்று, இடம்) (சரம், *பிழை)</code><br>
     <code class="api-signature">இன்மையா(கூற்று, இடம்) (நிலை, *பிழை)</code><br>
     <code class="api-signature">முழுஎண்பெறு / மிதவைப்பெறு / சரம்பெறு / இருமிப்பெறு</code>
-    <p><code>அடுத்து</code> returns <code>மெய்</code> when a row is ready and <code>பொய்</code> when execution is complete. Column indexes are <strong>zero-based</strong>. Text/blob results are copied into Aram-managed memory.</p>
+    <p><code>அடுத்து</code> returns <code>மெய்</code> when a row is ready and <code>பொய்</code> when execution is complete. Column indexes are <strong>zero-based</strong>. Text/blob results are copied into Niraluli-managed memory.</p>
   </div>
   <div class="api">
     <h3>Reuse and cleanup</h3>
@@ -346,7 +346,7 @@ n, _ := வலை.படி(இ, இடம்)
 கூற்று, பிழை = தரவுத்தளம்.தயாரி(இணைப்பு,
     "INSERT INTO பொருள் VALUES (?, ?)")
 பிழை = தரவுத்தளம்.முழுஎண்பிணை(கூற்று, 1, 1)
-பிழை = தரவுத்தளம்.சரம்பிணை(கூற்று, 2, "அறம்")
+பிழை = தரவுத்தளம்.சரம்பிணை(கூற்று, 2, "நிரலுளி")
 _, பிழை = தரவுத்தளம்.அடுத்து(கூற்று)
 பிழை = தரவுத்தளம்.கூற்றுவிடு(கூற்று)
 
@@ -367,13 +367,13 @@ _, பிழை = தரவுத்தளம்.அடுத்து(கூற
   <h2 id="database-lifecycle">Database architecture and limitations</h2>
   <ul>
     <li><strong>Runtime-loaded SQLite:</strong> generated C uses <code>dlopen</code>/<code>dlsym</code>. Building needs no <code>sqlite3.h</code> or <code>-lsqlite3</code>; the linker uses <code>-ldl</code>. Running needs <code>libsqlite3.so.0</code> (or <code>libsqlite3.so</code>).</li>
-    <li><strong>Opaque handles:</strong> <code>இணைப்பு</code> and <code>கூற்று</code> are typed as <code>முழுஎண்</code> in Aram but must only be used with the database package APIs.</li>
+    <li><strong>Opaque handles:</strong> <code>இணைப்பு</code> and <code>கூற்று</code> are typed as <code>முழுஎண்</code> in Niraluli but must only be used with the database package APIs.</li>
     <li><strong>Explicit lifetime:</strong> finalize every statement with <code>கூற்றுவிடு</code> before closing its connection with <code>விடு</code>. There are no database finalizers.</li>
     <li><strong>No concurrent handle sharing:</strong> do not use one connection or statement from multiple <code>இழை</code> in v0.62. Separate handles are allowed.</li>
     <li><strong>Transactions:</strong> issue <code>BEGIN</code>, <code>COMMIT</code>, and <code>ROLLBACK</code> through <code>செயல்</code>.</li>
     <li><strong>Not included:</strong> pooling, ORM, migrations, reflection-based scan, public third-party drivers, PostgreSQL, and MySQL.</li>
     <li><strong>Vtable scope:</strong> it is an internal backend contract, not a stable C FFI or plugin ABI.</li>
-    <li><strong>SQL portability:</strong> the Aram API is shared, but SQL dialect and placeholder syntax may differ between future backends.</li>
+    <li><strong>SQL portability:</strong> the Niraluli API is shared, but SQL dialect and placeholder syntax may differ between future backends.</li>
   </ul>
 
   <h2 id="database-examples">Database examples in the corpus</h2>
@@ -387,12 +387,12 @@ _, பிழை = தரவுத்தளம்.அடுத்து(கூற
         </tr>
         <tr>
           <td><code>corpus/tamil/ஊழியர்_முழுஅடுக்கு/</code></td>
-          <td>Full-stack employee app: Aram REST API + persistent SQLite (<code>build/ஊழியர்கள்.db</code>) + React/Vite UI with Tamil labels and data. Follow <code>SETUP.md</code>.</td>
+          <td>Full-stack employee app: Niraluli REST API + persistent SQLite (<code>build/ஊழியர்கள்.db</code>) + React/Vite UI with Tamil labels and data. Follow <code>SETUP.md</code>.</td>
         </tr>
       </tbody>
     </table>
   </div>
-  <pre><code>go run ./cmd/aram run corpus/tamil/தரவுத்தளம்/
+  <pre><code>go run ./cmd/uli run corpus/tamil/தரவுத்தளம்/
 # Full-stack: see corpus/tamil/ஊழியர்_முழுஅடுக்கு/SETUP.md</code></pre>
   <div class="callout">
     <strong>Install SQLite at runtime</strong>

@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"aram/internal/ast"
-	"aram/internal/check"
-	"aram/internal/emitc"
-	"aram/internal/parse"
+	"niraluli/internal/ast"
+	"niraluli/internal/check"
+	"niraluli/internal/emitc"
+	"niraluli/internal/parse"
 )
 
 func root(t *testing.T) string {
@@ -112,16 +112,16 @@ func runCExpectFail(t *testing.T, cSrc string, d time.Duration) string {
 }
 
 func TestEmitAndRunVanakkam(t *testing.T) {
-	_, _, cSrc := compile(t, "வணக்கம்.aram")
+	_, _, cSrc := compile(t, "வணக்கம்.uli")
 	got := runC(t, cSrc)
-	want := "வணக்கம், அறம்!\n"
+	want := "வணக்கம், நிரலுளி!\n"
 	if got != want {
 		t.Fatalf("got %q want %q", got, want)
 	}
 }
 
 func TestEmitAndRunAdd(t *testing.T) {
-	_, _, cSrc := compile(t, "கூட்டு.aram")
+	_, _, cSrc := compile(t, "கூட்டு.uli")
 	got := runC(t, cSrc)
 	want := "9\n7\n"
 	if got != want {
@@ -130,7 +130,7 @@ func TestEmitAndRunAdd(t *testing.T) {
 }
 
 func TestEmitAndRunLoop(t *testing.T) {
-	_, _, cSrc := compile(t, "சுழல்.aram")
+	_, _, cSrc := compile(t, "சுழல்.uli")
 	got := runC(t, cSrc)
 	want := "0\n1\n2\n3\n4\n3\n2\n1\n0\n1\n2\n0\n1\n3\n4\n"
 	if got != want {
@@ -139,28 +139,28 @@ func TestEmitAndRunLoop(t *testing.T) {
 }
 
 func TestEmitAndRunString(t *testing.T) {
-	_, _, cSrc := compile(t, "சரம்.aram")
-	if !strings.Contains(cSrc, "aram_concat_many(3, __aram_parts)") {
+	_, _, cSrc := compile(t, "சரம்.uli")
+	if !strings.Contains(cSrc, "uli_concat_many(3, __uli_parts)") {
 		t.Fatalf("string chain was not flattened into one concat\n%s", cSrc)
 	}
 	got := runC(t, cSrc)
-	want := "வணக்கம், அறம்!\nமெய்\nபொய்\nஆம்\n"
+	want := "வணக்கம், நிரலுளி!\nமெய்\nபொய்\nஆம்\n"
 	if got != want {
 		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
 	}
 }
 
 func TestEmitAndRunSlice(t *testing.T) {
-	_, _, cSrc := compile(t, "பட்டியல்.aram")
+	_, _, cSrc := compile(t, "பட்டியல்.uli")
 	got := runC(t, cSrc)
-	want := "3\n20\n99\n2\nஅறம்\n"
+	want := "3\n20\n99\n2\nநிரலுளி\n"
 	if got != want {
 		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
 	}
 }
 
 func TestEmitAndRunRange(t *testing.T) {
-	_, _, cSrc := compile(t, "ஒவ்வொரு.aram")
+	_, _, cSrc := compile(t, "ஒவ்வொரு.uli")
 	got := runC(t, cSrc)
 	want := "0\n10\n1\n20\n2\n30\n10\n20\n30\n60\n"
 	if got != want {
@@ -169,7 +169,7 @@ func TestEmitAndRunRange(t *testing.T) {
 }
 
 func TestEmitAndRunRangeChan(t *testing.T) {
-	_, _, cSrc := compile(t, "ஒவ்வொரு_தடம்.aram")
+	_, _, cSrc := compile(t, "ஒவ்வொரு_தடம்.uli")
 	got := runCTimeout(t, cSrc, 5*time.Second)
 	want := "1\n2\n3\n9\n"
 	if got != want {
@@ -178,16 +178,16 @@ func TestEmitAndRunRangeChan(t *testing.T) {
 }
 
 func TestEmitAndRunAppendSliceString(t *testing.T) {
-	_, _, cSrc := compile(t, "சேர்.aram")
+	_, _, cSrc := compile(t, "சேர்.uli")
 	got := runC(t, cSrc)
-	want := "3\n3\n2\n2\nell\n5\n0\n97\n1\n98\nவணக்கம், அறம்\n"
+	want := "3\n3\n2\n2\nell\n5\n0\n97\n1\n98\nவணக்கம், நிரலுளி\n"
 	if got != want {
 		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
 	}
 }
 
 func TestEmitAndRunStruct(t *testing.T) {
-	_, _, cSrc := compile(t, "அமைப்பு.aram")
+	_, _, cSrc := compile(t, "அமைப்பு.uli")
 	got := runC(t, cSrc)
 	want := "3\n9\n0\n"
 	if got != want {
@@ -196,7 +196,7 @@ func TestEmitAndRunStruct(t *testing.T) {
 }
 
 func TestEmitAndRunPointer(t *testing.T) {
-	_, _, cSrc := compile(t, "சுட்டி.aram")
+	_, _, cSrc := compile(t, "சுட்டி.uli")
 	got := runC(t, cSrc)
 	want := "7\n9\n3\n"
 	if got != want {
@@ -205,7 +205,7 @@ func TestEmitAndRunPointer(t *testing.T) {
 }
 
 func TestEmitAndRunNil(t *testing.T) {
-	_, _, cSrc := compile(t, "இன்மை.aram")
+	_, _, cSrc := compile(t, "இன்மை.uli")
 	got := runC(t, cSrc)
 	want := "1\n5\n0\n"
 	if got != want {
@@ -214,7 +214,7 @@ func TestEmitAndRunNil(t *testing.T) {
 }
 
 func TestEmitAndRunRichStruct(t *testing.T) {
-	_, _, cSrc := compile(t, "வளர்_அமைப்பு.aram")
+	_, _, cSrc := compile(t, "வளர்_அமைப்பு.uli")
 	got := runC(t, cSrc)
 	want := "1\n4\n20\n10\n3\n8\n"
 	if got != want {
@@ -223,7 +223,7 @@ func TestEmitAndRunRichStruct(t *testing.T) {
 }
 
 func TestEmitAndRunSwitch(t *testing.T) {
-	_, _, cSrc := compile(t, "திசைவி.aram")
+	_, _, cSrc := compile(t, "திசைவி.uli")
 	got := runC(t, cSrc)
 	want := "20\n2\n9\n"
 	if got != want {
@@ -232,7 +232,7 @@ func TestEmitAndRunSwitch(t *testing.T) {
 }
 
 func TestEmitAndRunIfSwitchInit(t *testing.T) {
-	_, _, cSrc := compile(t, "தொடக்கம்_நிபந்தனை.aram")
+	_, _, cSrc := compile(t, "தொடக்கம்_நிபந்தனை.uli")
 	got := runC(t, cSrc)
 	want := "3\n20\n9\n"
 	if got != want {
@@ -241,7 +241,7 @@ func TestEmitAndRunIfSwitchInit(t *testing.T) {
 }
 
 func TestEmitAndRunStructEq(t *testing.T) {
-	_, _, cSrc := compile(t, "அமைப்பு_சமம்.aram")
+	_, _, cSrc := compile(t, "அமைப்பு_சமம்.uli")
 	got := runC(t, cSrc)
 	want := "1\n2\n3\n4\n"
 	if got != want {
@@ -250,7 +250,7 @@ func TestEmitAndRunStructEq(t *testing.T) {
 }
 
 func TestEmitAndRunPrintStruct(t *testing.T) {
-	_, _, cSrc := compile(t, "பதிப்பி_அமைப்பு.aram")
+	_, _, cSrc := compile(t, "பதிப்பி_அமைப்பு.uli")
 	got := runC(t, cSrc)
 	want := "புள்ளி{x: 3, y: 4}\nசெவ்வகம்{அ: புள்ளி{x: 1, y: 2}, ஆ: புள்ளி{x: 5, y: 6}}\n"
 	if got != want {
@@ -259,7 +259,7 @@ func TestEmitAndRunPrintStruct(t *testing.T) {
 }
 
 func TestEmitAndRunMethod(t *testing.T) {
-	_, _, cSrc := compile(t, "முறை.aram")
+	_, _, cSrc := compile(t, "முறை.uli")
 	got := runC(t, cSrc)
 	want := "7\n10\n5\n"
 	if got != want {
@@ -268,7 +268,7 @@ func TestEmitAndRunMethod(t *testing.T) {
 }
 
 func TestEmitAndRunSliceGrow(t *testing.T) {
-	_, _, cSrc := compile(t, "சேர்_வளர்.aram")
+	_, _, cSrc := compile(t, "சேர்_வளர்.uli")
 	got := runC(t, cSrc)
 	want := "6\n6\n2\n2\n3\n9\n5\n2\n2\n"
 	if got != want {
@@ -277,7 +277,7 @@ func TestEmitAndRunSliceGrow(t *testing.T) {
 }
 
 func TestEmitAndRunPositionalStruct(t *testing.T) {
-	_, _, cSrc := compile(t, "அமைப்பு_நிலை.aram")
+	_, _, cSrc := compile(t, "அமைப்பு_நிலை.uli")
 	got := runC(t, cSrc)
 	want := "3\n4\n1\n2\n"
 	if got != want {
@@ -286,7 +286,7 @@ func TestEmitAndRunPositionalStruct(t *testing.T) {
 }
 
 func TestEmitAndRunNestedSlice(t *testing.T) {
-	_, _, cSrc := compile(t, "பலபட்டியல்.aram")
+	_, _, cSrc := compile(t, "பலபட்டியல்.uli")
 	got := runC(t, cSrc)
 	want := "2\n3\n2\n5\n3\n9\n2\n"
 	if got != want {
@@ -295,7 +295,7 @@ func TestEmitAndRunNestedSlice(t *testing.T) {
 }
 
 func TestEmitAndRunMakeCopy(t *testing.T) {
-	_, _, cSrc := compile(t, "ஆக்கு.aram")
+	_, _, cSrc := compile(t, "ஆக்கு.uli")
 	got := runC(t, cSrc)
 	want := "3\n8\n0\n7\n3\n10\n30\n2\n2\n"
 	if got != want {
@@ -304,7 +304,7 @@ func TestEmitAndRunMakeCopy(t *testing.T) {
 }
 
 func TestEmitAndRunMultiReturn(t *testing.T) {
-	_, _, cSrc := compile(t, "பலமதிப்பு.aram")
+	_, _, cSrc := compile(t, "பலமதிப்பு.uli")
 	got := runC(t, cSrc)
 	want := "3\n2\n6\n2\n2\n"
 	if got != want {
@@ -313,7 +313,7 @@ func TestEmitAndRunMultiReturn(t *testing.T) {
 }
 
 func TestEmitAndRunArray(t *testing.T) {
-	_, _, cSrc := compile(t, "நிலையான.aram")
+	_, _, cSrc := compile(t, "நிலையான.uli")
 	got := runC(t, cSrc)
 	want := "3\n3\n20\n99\n2\n99\n139\n"
 	if got != want {
@@ -322,7 +322,7 @@ func TestEmitAndRunArray(t *testing.T) {
 }
 
 func TestEmitAndRunSliceStruct(t *testing.T) {
-	_, _, cSrc := compile(t, "பட்டியல்_அமைப்பு.aram")
+	_, _, cSrc := compile(t, "பட்டியல்_அமைப்பு.uli")
 	got := runC(t, cSrc)
 	want := "2\n1\n4\n3\n5\n2\n10\n10\n3\n1\n"
 	if got != want {
@@ -331,7 +331,7 @@ func TestEmitAndRunSliceStruct(t *testing.T) {
 }
 
 func TestEmitAndRunNamedResults(t *testing.T) {
-	_, _, cSrc := compile(t, "பெயர்_முடிவு.aram")
+	_, _, cSrc := compile(t, "பெயர்_முடிவு.uli")
 	got := runC(t, cSrc)
 	want := "3\n2\n42\n"
 	if got != want {
@@ -340,7 +340,7 @@ func TestEmitAndRunNamedResults(t *testing.T) {
 }
 
 func TestEmitAndRunParallelAssign(t *testing.T) {
-	_, _, cSrc := compile(t, "பரிமாற்றம்.aram")
+	_, _, cSrc := compile(t, "பரிமாற்றம்.uli")
 	got := runC(t, cSrc)
 	want := "2\n1\n30\n10\n20\n"
 	if got != want {
@@ -349,7 +349,7 @@ func TestEmitAndRunParallelAssign(t *testing.T) {
 }
 
 func TestEmitAndRunTypeAlias(t *testing.T) {
-	_, _, cSrc := compile(t, "வகை_மாற்று.aram")
+	_, _, cSrc := compile(t, "வகை_மாற்று.uli")
 	got := runC(t, cSrc)
 	want := "7\n3\n"
 	if got != want {
@@ -358,7 +358,7 @@ func TestEmitAndRunTypeAlias(t *testing.T) {
 }
 
 func TestEmitAndRunFloat(t *testing.T) {
-	_, _, cSrc := compile(t, "மிதவை.aram")
+	_, _, cSrc := compile(t, "மிதவை.uli")
 	got := runC(t, cSrc)
 	want := "4\n3\n1\n3\n"
 	if got != want {
@@ -367,7 +367,7 @@ func TestEmitAndRunFloat(t *testing.T) {
 }
 
 func TestEmitAndRunTamilDigits(t *testing.T) {
-	_, _, cSrc := compile(t, "தமிழ்_இலக்கம்.aram")
+	_, _, cSrc := compile(t, "தமிழ்_இலக்கம்.uli")
 	got := runC(t, cSrc)
 	want := "12\n3.5\n15\n"
 	if got != want {
@@ -376,7 +376,7 @@ func TestEmitAndRunTamilDigits(t *testing.T) {
 }
 
 func TestEmitAndRunConversion(t *testing.T) {
-	_, _, cSrc := compile(t, "மாற்றுதல்.aram")
+	_, _, cSrc := compile(t, "மாற்றுதல்.uli")
 	got := runC(t, cSrc)
 	want := "7\n3\n7\n11\n"
 	if got != want {
@@ -385,7 +385,7 @@ func TestEmitAndRunConversion(t *testing.T) {
 }
 
 func TestEmitAndRunConversionExtra(t *testing.T) {
-	_, _, cSrc := compile(t, "மாற்றுதல்_மேல்.aram")
+	_, _, cSrc := compile(t, "மாற்றுதல்_மேல்.uli")
 	got := runC(t, cSrc)
 	want := "மெய்\nA\n9\n5.5\n2.5\n1\n"
 	if got != want {
@@ -394,7 +394,7 @@ func TestEmitAndRunConversionExtra(t *testing.T) {
 }
 
 func TestEmitAndRunMap(t *testing.T) {
-	_, _, cSrc := compile(t, "அகராதி.aram")
+	_, _, cSrc := compile(t, "அகராதி.uli")
 	got := runC(t, cSrc)
 	want := "2\n7\n0\nபொய்\n7\nமெய்\n1\nஆ\n3\nஒன்று\n1\n0\nnil\n"
 	if got != want {
@@ -403,7 +403,7 @@ func TestEmitAndRunMap(t *testing.T) {
 }
 
 func TestEmitAndRunMapLiteral(t *testing.T) {
-	_, _, cSrc := compile(t, "அகராதி_எழுத்து.aram")
+	_, _, cSrc := compile(t, "அகராதி_எழுத்து.uli")
 	got := runC(t, cSrc)
 	want := "2\n7\n3\n0\nபொய்\n0\nok\nஒன்று\n"
 	if got != want {
@@ -412,7 +412,7 @@ func TestEmitAndRunMapLiteral(t *testing.T) {
 }
 
 func TestEmitAndRunDefer(t *testing.T) {
-	_, _, cSrc := compile(t, "தள்ளிவை.aram")
+	_, _, cSrc := compile(t, "தள்ளிவை.uli")
 	got := runC(t, cSrc)
 	// start; 9; then LIFO: bare முடி, captured 1, அ, ஆ, முடிவு
 	want := "தொடக்கம்\n9\nவெற்று\n1\nஅ\nஆ\nமுடிவு\n"
@@ -422,7 +422,7 @@ func TestEmitAndRunDefer(t *testing.T) {
 }
 
 func TestEmitAndRunDeferMethod(t *testing.T) {
-	_, _, cSrc := compile(t, "தள்ளிவை_முறை.aram")
+	_, _, cSrc := compile(t, "தள்ளிவை_முறை.uli")
 	got := runC(t, cSrc)
 	// immediate 9, 7; LIFO: இ→8, ஆ→7, அ value copy→5
 	want := "9\n7\n8\n7\n5\n"
@@ -432,7 +432,7 @@ func TestEmitAndRunDeferMethod(t *testing.T) {
 }
 
 func TestEmitAndRunRichMapKeys(t *testing.T) {
-	_, _, cSrc := compile(t, "அகராதி_விசை_வளர்.aram")
+	_, _, cSrc := compile(t, "அகராதி_விசை_வளர்.uli")
 	got := runC(t, cSrc)
 	want := "அரை\n2\n7\n0\nஆ\nசுட்டி\nமெய்\n"
 	if got != want {
@@ -441,7 +441,7 @@ func TestEmitAndRunRichMapKeys(t *testing.T) {
 }
 
 func TestEmitAndRunByteRune(t *testing.T) {
-	_, _, cSrc := compile(t, "இருமி.aram")
+	_, _, cSrc := compile(t, "இருமி.uli")
 	got := runC(t, cSrc)
 	want := "3\n65\nABC\n3\nABC\n2\n2949\nஅஆ\nA\nB\n"
 	if got != want {
@@ -450,7 +450,7 @@ func TestEmitAndRunByteRune(t *testing.T) {
 }
 
 func TestEmitAndRunGenerics(t *testing.T) {
-	_, _, cSrc := compile(t, "பொதுவகை.aram")
+	_, _, cSrc := compile(t, "பொதுவகை.uli")
 	got := runC(t, cSrc)
 	want := "7\nவணக்கம்\n42\nஅ\n99\n9\n9\n"
 	if got != want {
@@ -459,7 +459,7 @@ func TestEmitAndRunGenerics(t *testing.T) {
 }
 
 func TestEmitAndRunPrime(t *testing.T) {
-	_, _, cSrc := compile(t, "பகாஎண்.aram")
+	_, _, cSrc := compile(t, "பகாஎண்.uli")
 	got := runC(t, cSrc)
 	want := "மெய்\nபொய்\n"
 	if got != want {
@@ -468,7 +468,7 @@ func TestEmitAndRunPrime(t *testing.T) {
 }
 
 func TestEmitAndRunMethodValue(t *testing.T) {
-	_, _, cSrc := compile(t, "முறை_மதிப்பு.aram")
+	_, _, cSrc := compile(t, "முறை_மதிப்பு.uli")
 	got := runC(t, cSrc)
 	want := "10\n14\n7\n"
 	if got != want {
@@ -477,7 +477,7 @@ func TestEmitAndRunMethodValue(t *testing.T) {
 }
 
 func TestEmitAndRunMethodExpr(t *testing.T) {
-	_, _, cSrc := compile(t, "முறை_வெளிப்பாடு.aram")
+	_, _, cSrc := compile(t, "முறை_வெளிப்பாடு.uli")
 	got := runC(t, cSrc)
 	want := "7\n10\n"
 	if got != want {
@@ -486,7 +486,7 @@ func TestEmitAndRunMethodExpr(t *testing.T) {
 }
 
 func TestEmitAndRunClosure(t *testing.T) {
-	_, _, cSrc := compile(t, "மூடுகை.aram")
+	_, _, cSrc := compile(t, "மூடுகை.uli")
 	got := runC(t, cSrc)
 	want := "2\n12\n"
 	if got != want {
@@ -495,7 +495,7 @@ func TestEmitAndRunClosure(t *testing.T) {
 }
 
 func TestEmitAndRunLoopClosure(t *testing.T) {
-	_, _, cSrc := compile(t, "சுழல்_மூடுகை.aram")
+	_, _, cSrc := compile(t, "சுழல்_மூடுகை.uli")
 	got := runC(t, cSrc)
 	want := "0\n1\n2\n"
 	if got != want {
@@ -505,28 +505,28 @@ func TestEmitAndRunLoopClosure(t *testing.T) {
 
 // Emit-only: structural checks without executing (kept for fast CI).
 func TestEmitSelectAndGo(t *testing.T) {
-	for _, name := range []string{"இழை.aram", "தடத்தேர்வு.aram"} {
+	for _, name := range []string{"இழை.uli", "தடத்தேர்வு.uli"} {
 		t.Run(name, func(t *testing.T) {
 			_, _, cSrc := compile(t, name)
-			if !strings.Contains(cSrc, "aram_chan_make") {
-				t.Fatalf("%s: missing aram_chan_make", name)
+			if !strings.Contains(cSrc, "uli_chan_make") {
+				t.Fatalf("%s: missing uli_chan_make", name)
 			}
-			if name == "இழை.aram" && !strings.Contains(cSrc, "aram_go(") {
-				t.Fatalf("இழை: missing aram_go")
+			if name == "இழை.uli" && !strings.Contains(cSrc, "uli_go(") {
+				t.Fatalf("இழை: missing uli_go")
 			}
-			if name == "தடத்தேர்வு.aram" {
-				if !strings.Contains(cSrc, "aram_select(") {
-					t.Fatalf("தடத்தேர்வு: missing aram_select")
+			if name == "தடத்தேர்வு.uli" {
+				if !strings.Contains(cSrc, "uli_select(") {
+					t.Fatalf("தடத்தேர்வு: missing uli_select")
 				}
-				if !strings.Contains(cSrc, "aram_sel_kick") {
-					t.Fatalf("தடத்தேர்வு: missing aram_sel_kick (cond wake)")
+				if !strings.Contains(cSrc, "uli_sel_kick") {
+					t.Fatalf("தடத்தேர்வு: missing uli_sel_kick (cond wake)")
 				}
 				// has_def=1 → default sentinel is nComm (not mixed clause index)
-				if !strings.Contains(cSrc, "aram_select(__sc_0, 1, 1)") &&
-					!strings.Contains(cSrc, "aram_select(__sc_1, 1, 1)") {
+				if !strings.Contains(cSrc, "uli_select(__sc_0, 1, 1)") &&
+					!strings.Contains(cSrc, "uli_select(__sc_1, 1, 1)") {
 					// ids may be 0,1 depending on goID; accept any __sc_N with has_def 1
 					if !strings.Contains(cSrc, ", 1, 1)") {
-						t.Fatalf("தடத்தேர்வு: expected aram_select(..., nComm=1, has_def=1)\n%s", cSrc)
+						t.Fatalf("தடத்தேர்வு: expected uli_select(..., nComm=1, has_def=1)\n%s", cSrc)
 					}
 				}
 			}
@@ -535,7 +535,7 @@ func TestEmitSelectAndGo(t *testing.T) {
 }
 
 func TestEmitAndRunFunctionAggregateFields(t *testing.T) {
-	_, _, cSrc := compile(t, "செயல்பாடு_புலம்.aram")
+	_, _, cSrc := compile(t, "செயல்பாடு_புலம்.uli")
 	got := runC(t, cSrc)
 	want := "5\n10\n15\nபெட்டிகள்{கணக்குகள்: [<செயல்பாடு>, <செயல்பாடு>]}\n"
 	if got != want {
@@ -544,7 +544,7 @@ func TestEmitAndRunFunctionAggregateFields(t *testing.T) {
 }
 
 func TestEmitAndRunGo(t *testing.T) {
-	_, _, cSrc := compile(t, "இழை.aram")
+	_, _, cSrc := compile(t, "இழை.uli")
 	got := runCTimeout(t, cSrc, 5*time.Second)
 	want := "வணக்கம்\n"
 	if got != want {
@@ -553,7 +553,7 @@ func TestEmitAndRunGo(t *testing.T) {
 }
 
 func TestEmitAndRunSelect(t *testing.T) {
-	_, _, cSrc := compile(t, "தடத்தேர்வு.aram")
+	_, _, cSrc := compile(t, "தடத்தேர்வு.uli")
 	got := runCTimeout(t, cSrc, 5*time.Second)
 	want := "7\n9\n"
 	if got != want {
@@ -562,12 +562,12 @@ func TestEmitAndRunSelect(t *testing.T) {
 }
 
 func TestEmitAndRunPanic(t *testing.T) {
-	_, _, cSrc := compile(t, "அலறு.aram")
-	if !strings.Contains(cSrc, "aram_panic(") {
-		t.Fatalf("அலறு: missing aram_panic\n%s", cSrc)
+	_, _, cSrc := compile(t, "அலறு.uli")
+	if !strings.Contains(cSrc, "uli_panic(") {
+		t.Fatalf("அலறு: missing uli_panic\n%s", cSrc)
 	}
-	if !strings.Contains(cSrc, "aram_recover") {
-		t.Fatalf("அலறு: missing aram_recover\n%s", cSrc)
+	if !strings.Contains(cSrc, "uli_recover") {
+		t.Fatalf("அலறு: missing uli_recover\n%s", cSrc)
 	}
 	got := runCTimeout(t, cSrc, 5*time.Second)
 	want := "பிழை\n"
@@ -577,7 +577,7 @@ func TestEmitAndRunPanic(t *testing.T) {
 }
 
 func TestEmitAndRunPanicInt(t *testing.T) {
-	_, _, cSrc := compile(t, "அலறு_எண்.aram")
+	_, _, cSrc := compile(t, "அலறு_எண்.uli")
 	got := runCTimeout(t, cSrc, 5*time.Second)
 	want := "42\n"
 	if got != want {
@@ -586,7 +586,7 @@ func TestEmitAndRunPanicInt(t *testing.T) {
 }
 
 func TestEmitAndRunPanicGo(t *testing.T) {
-	_, _, cSrc := compile(t, "அலறு_இழை.aram")
+	_, _, cSrc := compile(t, "அலறு_இழை.uli")
 	got := runCTimeout(t, cSrc, 5*time.Second)
 	want := "இழை\n"
 	if got != want {
@@ -603,7 +603,7 @@ func TestEmitUncaughtPanicTrace(t *testing.T) {
     உள்()
 }
 `
-	file, perrs := parse.ParseFile("அலறு_தடம்.aram", src)
+	file, perrs := parse.ParseFile("அலறு_தடம்.uli", src)
 	if len(perrs) != 0 {
 		t.Fatal(perrs)
 	}
@@ -625,7 +625,7 @@ func TestEmitUncaughtPanicTrace(t *testing.T) {
 }
 
 func TestEmitAndRunSelectUnbufferedDefault(t *testing.T) {
-	_, _, cSrc := compile(t, "தடத்தேர்வு_காலி.aram")
+	_, _, cSrc := compile(t, "தடத்தேர்வு_காலி.uli")
 	got := runCTimeout(t, cSrc, 5*time.Second)
 	want := "1\n"
 	if got != want {
@@ -634,7 +634,7 @@ func TestEmitAndRunSelectUnbufferedDefault(t *testing.T) {
 }
 
 func TestEmitAndRunSelectUnbufferedRendezvous(t *testing.T) {
-	_, _, cSrc := compile(t, "தடத்தேர்வு_சந்திப்பு.aram")
+	_, _, cSrc := compile(t, "தடத்தேர்வு_சந்திப்பு.uli")
 	got := runCTimeout(t, cSrc, 5*time.Second)
 	want := "7\n"
 	if got != want {
@@ -643,15 +643,15 @@ func TestEmitAndRunSelectUnbufferedRendezvous(t *testing.T) {
 }
 
 func TestEmitAndRunHeap(t *testing.T) {
-	_, _, cSrc := compile(t, "குவியல்.aram")
-	if !strings.Contains(cSrc, "aram_alloc") {
-		t.Fatalf("குவியல்: missing aram_alloc\n%s", cSrc)
+	_, _, cSrc := compile(t, "குவியல்.uli")
+	if !strings.Contains(cSrc, "uli_alloc") {
+		t.Fatalf("குவியல்: missing uli_alloc\n%s", cSrc)
 	}
-	if !strings.Contains(cSrc, "aram_gc_poll") {
-		t.Fatalf("குவியல்: missing aram_gc_poll\n%s", cSrc)
+	if !strings.Contains(cSrc, "uli_gc_poll") {
+		t.Fatalf("குவியல்: missing uli_gc_poll\n%s", cSrc)
 	}
-	if !strings.Contains(cSrc, "aram_heap_init") {
-		t.Fatalf("குவியல்: missing aram_heap_init\n%s", cSrc)
+	if !strings.Contains(cSrc, "uli_heap_init") {
+		t.Fatalf("குவியல்: missing uli_heap_init\n%s", cSrc)
 	}
 	got := runCTimeout(t, cSrc, 15*time.Second)
 	want := "2400\n"
@@ -676,23 +676,23 @@ func TestGCRuntimeReclaim(t *testing.T) {
 	}
 	driver := string(runtime) + `
 int main(void) {
-	aram_heap_init();
-	volatile unsigned char *root = (unsigned char *)aram_alloc(64);
+	uli_heap_init();
+	volatile unsigned char *root = (unsigned char *)uli_alloc(64);
 	root[0] = 77;
-	size_t base = aram_heap_live();
-	for (int i = 0; i < 100; i++) (void)aram_alloc(64);
-	size_t mid = aram_heap_live();
-	aram_gc();
-	size_t after = aram_heap_live();
+	size_t base = uli_heap_live();
+	for (int i = 0; i < 100; i++) (void)uli_alloc(64);
+	size_t mid = uli_heap_live();
+	uli_gc();
+	size_t after = uli_heap_live();
 	if (mid <= base) return 2;
 	if (after >= mid) return 3;
 	if (after > base + 256) return 4;
 	if (root[0] != 77) return 5;
-	unsigned char *large = (unsigned char *)aram_alloc(1024 * 1024);
+	unsigned char *large = (unsigned char *)uli_alloc(1024 * 1024);
 	large[0] = 1;
 	large[1024 * 1024 - 1] = 2;
 	if (large[0] != 1 || large[1024 * 1024 - 1] != 2) return 6;
-	aram_heap_shutdown();
+	uli_heap_shutdown();
 	return 0;
 }
 `

@@ -1,10 +1,10 @@
-# Setup instructions — ஊழியர் விவரங்கள் (Aram + React + SQLite)
+# Setup instructions — ஊழியர் விவரங்கள் (Niraluli + React + SQLite)
 
 Step-by-step guide for this full-stack corpus. You need **two terminals**:
-one for the Aram backend, one for the React frontend.
+one for the Niraluli backend, one for the React frontend.
 
 ```text
-Terminal A: Aram REST API  →  http://127.0.0.1:8080
+Terminal A: Niraluli REST API  →  http://127.0.0.1:8080
 Terminal B: React UI       →  http://localhost:5173
 ```
 
@@ -16,8 +16,8 @@ Overview docs and schema notes: [`README.md`](README.md).
 
 | Tool | Why | Check |
 |------|-----|--------|
-| Linux + GCC/Clang | Aram C backend | `gcc --version` or `cc --version` |
-| Go toolchain | Run `cmd/aram` | `.tools/go/bin/go version` or `go version` |
+| Linux + GCC/Clang | Niraluli C backend | `gcc --version` or `cc --version` |
+| Go toolchain | Run `cmd/uli` | `.tools/go/bin/go version` or `go version` |
 | `libsqlite3.so.0` | SQLite at runtime | `ldconfig -p \| grep libsqlite3` |
 | Node.js **18+** | Vite 5 frontend | `node --version` |
 | npm | Install frontend deps | `npm --version` |
@@ -43,8 +43,8 @@ sudo apt install libsqlite3-0
 corpus/tamil/ஊழியர்_முழுஅடுக்கு/
 ├── SETUP.md          ← this file
 ├── README.md         ← design / schema / API notes
-├── backend/          ← Aram REST server
-│   └── தொடக்கம்.aram
+├── backend/          ← Niraluli REST server
+│   └── தொடக்கம்.uli
 └── frontend/         ← React + Vite UI
     ├── package.json
     ├── vite.config.js
@@ -59,21 +59,21 @@ build/ஊழியர்கள்.db
 
 ---
 
-## Step 1 — Start the Aram backend (Terminal A)
+## Step 1 — Start the Niraluli backend (Terminal A)
 
 Always start from the **repository root** (`go_spec/`), not from `frontend/`:
 
 ```bash
 cd /path/to/go_spec
 
-.tools/go/bin/go run ./cmd/aram run \
+.tools/go/bin/go run ./cmd/uli run \
   corpus/tamil/ஊழியர்_முழுஅடுக்கு/backend
 ```
 
 If `.tools/go` is not present and system Go works:
 
 ```bash
-go run ./cmd/aram run \
+go run ./cmd/uli run \
   corpus/tamil/ஊழியர்_முழுஅடுக்கு/backend
 ```
 
@@ -83,7 +83,7 @@ Expected output:
 
 ```text
 wrote build/backend.c and build/backend
-அறம் REST சேவை: http://127.0.0.1:8080
+நிரலுளி REST சேவை: http://127.0.0.1:8080
 SQLite தரவுத்தளம்: build/ஊழியர்கள்.db
 ```
 
@@ -136,7 +136,7 @@ Open:
 http://localhost:5173
 ```
 
-Vite proxies `/api` → `http://127.0.0.1:8080`, so the UI talks to the Aram backend without CORS issues in development.
+Vite proxies `/api` → `http://127.0.0.1:8080`, so the UI talks to the Niraluli backend without CORS issues in development.
 
 ---
 
@@ -147,7 +147,7 @@ You should see:
 - Tamil title **ஊழியர் விவரங்கள்**
 - Summary cards (count, departments, total salary)
 - Searchable / filterable / sortable employee grid
-- Data loaded from SQLite through Aram REST
+- Data loaded from SQLite through Niraluli REST
 
 If the grid shows an error, the backend is usually not running or not on port 8080.
 
@@ -210,7 +210,7 @@ Upgrade Node (nvm, NodeSource, or your distro packages), then reinstall frontend
 
 ### Wrong working directory for backend
 
-If you run `aram` from inside `frontend/`, the relative DB path `build/ஊழியர்கள்.db` will not land in the repo `build/` folder. Always run the Aram command from the repository root.
+If you run `uli` from inside `frontend/`, the relative DB path `build/ஊழியர்கள்.db` will not land in the repo `build/` folder. Always run the Niraluli command from the repository root.
 
 ---
 
@@ -220,7 +220,7 @@ If you run `aram` from inside `frontend/`, the relative DB path `build/ஊழி
 
 ```bash
 cd /path/to/go_spec
-.tools/go/bin/go run ./cmd/aram run \
+.tools/go/bin/go run ./cmd/uli run \
   corpus/tamil/ஊழியர்_முழுஅடுக்கு/backend
 ```
 

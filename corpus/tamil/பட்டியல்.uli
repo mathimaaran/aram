@@ -1,0 +1,30 @@
+// Niraluli: பட்டியல்.uli — Go-like slices, index, நீளம்
+// Go equivalent:
+//
+//	package main
+//
+//	import "fmt"
+//
+//	func main() {
+//		var nums []int = []int{10, 20, 30}
+//		fmt.Println(len(nums))
+//		fmt.Println(nums[1])
+//		nums[1] = 99
+//		fmt.Println(nums[1])
+//		names := []string{"நிரலுளி", "கோ"}
+//		fmt.Println(len(names))
+//		fmt.Println(names[0])
+//	}
+
+தொகுப்பு தொடக்கம்
+
+செயல்பாடு தொடக்கம்() {
+    மாறி எண்கள் []முழுஎண் = []முழுஎண்{10, 20, 30}
+    பதிப்பி(நீளம்(எண்கள்))
+    பதிப்பி(எண்கள்[1])
+    எண்கள்[1] = 99
+    பதிப்பி(எண்கள்[1])
+    பெயர்கள் := []சரம்{"நிரலுளி", "கோ"}
+    பதிப்பி(நீளம்(பெயர்கள்))
+    பதிப்பி(பெயர்கள்[0])
+}

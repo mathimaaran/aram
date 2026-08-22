@@ -19,8 +19,8 @@ semantics: >
   Operators == and != compare string contents. பதிப்பி prints சரம் with a newline.
 examples:
   - tamil: |
-      மாறி பெயர் சரம் = "அறம்"
+      மாறி பெயர் சரம் = "நிரலுளி"
       பதிப்பி("வணக்கம், " + பெயர்)
     go_equivalent: |
-      var name string = "அறம்"
+      var name string = "நிரலுளி"
       println("வணக்கம், " + name)

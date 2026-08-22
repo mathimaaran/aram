@@ -19,9 +19,9 @@
 
 ## Filenames
 
-- Official extension: **`.aram`** (ASCII).
-- Basenames may be Tamil: `வணக்கம்.aram`.
-- Do not use `.அ` or `.அறம்` as the official extension.
+- Official extension: **`.uli`** (ASCII).
+- Basenames may be Tamil: `வணக்கம்.uli`.
+- Do not use `.அ` or `.நிரலுளி` as the official extension.
 
 ## Fonts / glyphs (editors)
 

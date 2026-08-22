@@ -1,9 +1,9 @@
-# ஊழியர் விவரங்கள் — Aram + React + SQLite
+# ஊழியர் விவரங்கள் — Niraluli + React + SQLite
 
 A complete Tamil full-stack corpus:
 
 ```text
-React grid → REST /api/employees → Aram HTTP server → SQLite
+React grid → REST /api/employees → Niraluli HTTP server → SQLite
 ```
 
 **Setup (start here):** [`SETUP.md`](SETUP.md) — prerequisites, backend, frontend, verify, and troubleshooting.
@@ -32,13 +32,13 @@ CREATE TABLE ஊழியர்கள் (
 The backend uses `INSERT OR IGNORE`, so restarting it safely keeps existing
 rows and only adds missing seed IDs.
 
-## 1. Start the Aram backend
+## 1. Start the Niraluli backend
 
 See **[`SETUP.md`](SETUP.md)** for the full walkthrough. Short form from the
 repository root:
 
 ```bash
-.tools/go/bin/go run ./cmd/aram run \
+.tools/go/bin/go run ./cmd/uli run \
   corpus/tamil/ஊழியர்_முழுஅடுக்கு/backend
 ```
 
@@ -46,7 +46,7 @@ Expected startup:
 
 ```text
 wrote build/backend.c and build/backend
-அறம் REST சேவை: http://127.0.0.1:8080
+நிரலுளி REST சேவை: http://127.0.0.1:8080
 SQLite தரவுத்தளம்: build/ஊழியர்கள்.db
 ```
 
@@ -104,7 +104,7 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:5173>. Vite proxies `/api` to the Aram server at
+Open <http://localhost:5173>. Vite proxies `/api` to the Niraluli server at
 `127.0.0.1:8080`.
 
 The UI includes:
@@ -122,7 +122,7 @@ The UI includes:
 When the frontend and API are hosted separately, create `.env`:
 
 ```text
-VITE_API_URL=http://your-aram-api.example:8080
+VITE_API_URL=http://your-uli-api.example:8080
 ```
 
 Then:
@@ -131,7 +131,7 @@ Then:
 npm run build
 ```
 
-The Aram backend sends permissive `Access-Control-Allow-Origin: *` because this
+The Niraluli backend sends permissive `Access-Control-Allow-Origin: *` because this
 is a corpus example. Restrict that header to your real frontend origin before
 production use.
 
@@ -147,6 +147,6 @@ seeded on the next run.
   `இழை`.
 - Prepared statements read rows through typed column functions.
 - The backend includes small integer-to-decimal and JSON-string escaping
-  helpers because Aram does not yet include general JSON/formatting packages.
+  helpers because Niraluli does not yet include general JSON/formatting packages.
 - This corpus is read-only REST. POST/PUT/DELETE can be layered on the same
   prepared-statement API in a later example.

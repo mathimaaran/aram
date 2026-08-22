@@ -10,7 +10,7 @@ var gcRuntimeC string
 
 func (e *emitter) writeGCRuntime(b *strings.Builder) {
 	if !e.needArena {
-		b.WriteString("static void aram_gc_poll(void) {}\n")
+		b.WriteString("static void uli_gc_poll(void) {}\n")
 		return
 	}
 	b.WriteString(gcRuntimeC)
@@ -19,5 +19,5 @@ func (e *emitter) writeGCRuntime(b *strings.Builder) {
 
 func (e *emitter) writeGCPoll(b *strings.Builder, level int) {
 	indent(b, level)
-	b.WriteString("aram_gc_poll();\n")
+	b.WriteString("uli_gc_poll();\n")
 }

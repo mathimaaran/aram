@@ -1,12 +1,12 @@
-// Package parse implements a recursive-descent parser for Aram Tamil-0.
+// Package parse implements a recursive-descent parser for Niraluli Tamil-0.
 package parse
 
 import (
 	"fmt"
 
-	"aram/internal/ast"
-	"aram/internal/lex"
-	"aram/internal/token"
+	"niraluli/internal/ast"
+	"niraluli/internal/lex"
+	"niraluli/internal/token"
 )
 
 // Error is a parse error with position.

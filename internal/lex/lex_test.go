@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"testing"
 
-	"aram/internal/lex"
-	"aram/internal/token"
+	"niraluli/internal/lex"
+	"niraluli/internal/token"
 )
 
 func corpusFile(t *testing.T, name string) string {
@@ -21,7 +21,7 @@ func corpusFile(t *testing.T, name string) string {
 }
 
 func TestLexVanakkam(t *testing.T) {
-	path := corpusFile(t, "வணக்கம்.aram")
+	path := corpusFile(t, "வணக்கம்.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -53,14 +53,14 @@ func TestLexVanakkam(t *testing.T) {
 	if toks[4].Lit != "தொடக்கம்" {
 		t.Fatalf("func name: got %q", toks[4].Lit)
 	}
-	if toks[10].Kind != token.STRING || toks[10].Lit != "வணக்கம், அறம்!" {
+	if toks[10].Kind != token.STRING || toks[10].Lit != "வணக்கம், நிரலுளி!" {
 		t.Fatalf("string lit: got %s %q", toks[10].Kind, toks[10].Lit)
 	}
 }
 
 func TestLexKeywordsAndDefine(t *testing.T) {
 	src := "மாறி x முழுஎண் = 1\ny := 2\nஎனில் மெய் { } இல்லையேல் { }\n"
-	l := lex.New("t.aram", src)
+	l := lex.New("t.uli", src)
 	toks := l.All()
 	if len(l.Errors()) != 0 {
 		t.Fatalf("lex errors: %v", l.Errors())
@@ -79,7 +79,7 @@ func TestLexKeywordsAndDefine(t *testing.T) {
 func TestLexIllegalElseKeywordStillIdentifierOrKeyword(t *testing.T) {
 	// Rejected keyword இல்லையெனில் is not reserved — lexes as IDENT.
 	src := "இல்லையெனில்"
-	l := lex.New("t.aram", src)
+	l := lex.New("t.uli", src)
 	tok := l.Next()
 	if tok.Kind != token.IDENT || tok.Lit != "இல்லையெனில்" {
 		t.Fatalf("got %s %q", tok.Kind, tok.Lit)

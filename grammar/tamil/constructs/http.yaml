@@ -11,7 +11,7 @@ tamil_ebnf: |
 semantics: >
   Tamil-0.57 extends பரிமாற்றம் with a synchronous HTTP/1.0 client and
   custom response-header writes. Tamil-0.58 implements the exact-path mux
-  as an Aram struct holding path and handler slices. Tamil-0.59 exposes
+  as an Niraluli struct holding path and handler slices. Tamil-0.59 exposes
   decoded query parameters as கோரிக்கை.வினாக்கள்; repeated keys are
   last-wins, + means space, and percent escapes are decoded.
   Tamil-0.61 adds கோருவிருப்பம் with a per-operation socket timeout and
@@ -35,7 +35,7 @@ semantics: >
 examples:
   - tamil: |
       கொணர் "பரிமாற்றம்"
-      தலை := அகராதி[சரம்]சரம்{"X-Aram": "வணக்கம்"}
+      தலை := அகராதி[சரம்]சரம்{"X-Niraluli": "வணக்கம்"}
       பதில், பிழை := பரிமாற்றம்.கோரு("POST", "http://127.0.0.1:8080/echo", தலை, []இருமி8("hi"))
       எனில் பிழை == இன்மை {
           பதிப்பி(பதில்.குறியீடு)
@@ -43,7 +43,7 @@ examples:
       }
     go_equivalent: |
       req, _ := http.NewRequest("POST", "http://127.0.0.1:8080/echo", bytes.NewReader([]byte("hi")))
-      req.Header.Set("X-Aram", "வணக்கம்")
+      req.Header.Set("X-Niraluli", "வணக்கம்")
       resp, _ := http.DefaultClient.Do(req)
 notes:
   - "Locked 2026-08-13: package பரிமாற்றம் (transfer / exchange)."

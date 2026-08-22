@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"aram/internal/check"
-	"aram/internal/emitc"
-	"aram/internal/load"
+	"niraluli/internal/check"
+	"niraluli/internal/emitc"
+	"niraluli/internal/load"
 )
 
 func root(t *testing.T) string {
@@ -249,8 +249,8 @@ func TestNetEchoProgram(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(cSrc, "aram_net_listen") {
-		t.Fatalf("missing aram_net_listen\n%s", cSrc)
+	if !strings.Contains(cSrc, "uli_net_listen") {
+		t.Fatalf("missing uli_net_listen\n%s", cSrc)
 	}
 	cc, err := exec.LookPath("gcc")
 	if err != nil {
@@ -272,7 +272,7 @@ func TestNetEchoProgram(t *testing.T) {
 	if err != nil {
 		t.Fatalf("run: %v\n%s\nC:\n%s", err, got, cSrc)
 	}
-	want := "அறம்\n"
+	want := "நிரலுளி\n"
 	if string(got) != want {
 		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
 	}
@@ -296,7 +296,7 @@ func TestUDPProgram(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(cSrc, "aram_net_udp_recv") {
+	if !strings.Contains(cSrc, "uli_net_udp_recv") {
 		t.Fatalf("missing UDP runtime\n%s", cSrc)
 	}
 	cc, err := exec.LookPath("gcc")
@@ -342,7 +342,7 @@ func TestDatabaseProgram(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(cSrc, "aram_db_vtable") || !strings.Contains(cSrc, "aram_sqlite_vtable") {
+	if !strings.Contains(cSrc, "uli_db_vtable") || !strings.Contains(cSrc, "uli_sqlite_vtable") {
 		t.Fatalf("missing database vtable runtime\n%s", cSrc)
 	}
 	cc, err := exec.LookPath("gcc")
@@ -368,7 +368,7 @@ func TestDatabaseProgram(t *testing.T) {
 	if strings.Contains(string(got), "SQLite runtime unavailable") {
 		t.Skipf("SQLite runtime unavailable: %s", got)
 	}
-	want := "5\nஎண்\n1\nஅறம்\n9.5\nதரவு\nமெய்\nunsupported database driver\n"
+	want := "5\nஎண்\n1\nநிரலுளி\n9.5\nதரவு\nமெய்\nunsupported database driver\n"
 	if string(got) != want {
 		t.Fatalf("got %q want %q\nC:\n%s", got, want, cSrc)
 	}
@@ -392,7 +392,7 @@ func TestHTTPRedirectOptions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(cSrc, "aram_http_do_opts") {
+	if !strings.Contains(cSrc, "uli_http_do_opts") {
 		t.Fatalf("missing HTTP options runtime\n%s", cSrc)
 	}
 	cc, err := exec.LookPath("gcc")
@@ -438,10 +438,10 @@ func TestHttpServeOne(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(cSrc, "aram_http_mux_serve_one") {
+	if strings.Contains(cSrc, "uli_http_mux_serve_one") {
 		t.Fatalf("obsolete C HTTP mux runtime emitted\n%s", cSrc)
 	}
-	if !strings.Contains(cSrc, "aram_http_headers_set") {
+	if !strings.Contains(cSrc, "uli_http_headers_set") {
 		t.Fatalf("missing request-header map bridge\n%s", cSrc)
 	}
 	cc, err := exec.LookPath("gcc")
@@ -471,7 +471,7 @@ func TestHttpServeOne(t *testing.T) {
 	if !strings.Contains(out, "வணக்கம்") {
 		t.Fatalf("missing body: %q\nC:\n%s", out, cSrc)
 	}
-	if !strings.Contains(out, "aram lang\n") || !strings.Contains(out, "a/b\n") {
+	if !strings.Contains(out, "uli lang\n") || !strings.Contains(out, "a/b\n") {
 		t.Fatalf("missing decoded query values: %q\nC:\n%s", out, cSrc)
 	}
 	if !strings.Contains(out, "HTTP/1.0 404") || !strings.Contains(out, "காணவில்லை") {
@@ -524,7 +524,7 @@ func TestHttpHTML(t *testing.T) {
 	if !strings.Contains(out, "text/html") {
 		t.Fatalf("missing content-type: %q", out)
 	}
-	if !strings.Contains(out, "<h1>அறம்</h1>") {
+	if !strings.Contains(out, "<h1>நிரலுளி</h1>") {
 		t.Fatalf("missing html body: %q", out)
 	}
 }
@@ -547,10 +547,10 @@ func TestHttpClientAndResponseHeaders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(cSrc, "aram_http_do") {
+	if !strings.Contains(cSrc, "uli_http_do") {
 		t.Fatalf("missing HTTP client runtime\n%s", cSrc)
 	}
-	if !strings.Contains(cSrc, "aram_http_headers_each") {
+	if !strings.Contains(cSrc, "uli_http_headers_each") {
 		t.Fatalf("missing header foreach bridge\n%s", cSrc)
 	}
 	cc, err := exec.LookPath("gcc")
@@ -574,7 +574,7 @@ func TestHttpClientAndResponseHeaders(t *testing.T) {
 		t.Fatalf("run: %v\n%s\nC:\n%s", err, got, cSrc)
 	}
 	out := string(got)
-	for _, want := range []string{"200\n", "200 OK\n", "ok\n", "அறம்\n", "hello\n", "hello world\n"} {
+	for _, want := range []string{"200\n", "200 OK\n", "ok\n", "நிரலுளி\n", "hello\n", "hello world\n"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("missing %q in %q\nC:\n%s", want, out, cSrc)
 		}

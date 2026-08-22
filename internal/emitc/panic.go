@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"aram/internal/ast"
-	"aram/internal/check"
+	"niraluli/internal/ast"
+	"niraluli/internal/check"
 )
 
 func (e *emitter) fnHasUnwind() bool {
@@ -17,19 +17,19 @@ func (e *emitter) writePanicCall(b *strings.Builder, arg ast.Expr) {
 	t := e.peelUnderlying(e.typeOf(arg))
 	switch t {
 	case check.TypeString:
-		b.WriteString("aram_panic(")
+		b.WriteString("uli_panic(")
 		e.writeExpr(b, arg)
 		b.WriteByte(')')
 	case check.TypeBool:
-		b.WriteString("aram_panic_bool(")
+		b.WriteString("uli_panic_bool(")
 		e.writeExpr(b, arg)
 		b.WriteByte(')')
 	case check.TypeFloat:
-		b.WriteString("aram_panic_float(")
+		b.WriteString("uli_panic_float(")
 		e.writeExpr(b, arg)
 		b.WriteByte(')')
 	default:
-		b.WriteString("aram_panic_int((int64_t)(")
+		b.WriteString("uli_panic_int((int64_t)(")
 		e.writeExpr(b, arg)
 		b.WriteString("))")
 	}
@@ -39,13 +39,13 @@ func (e *emitter) writePanicCallRef(b *strings.Builder, t check.Type, ref string
 	t = e.peelUnderlying(t)
 	switch t {
 	case check.TypeString:
-		fmt.Fprintf(b, "aram_panic(%s)", ref)
+		fmt.Fprintf(b, "uli_panic(%s)", ref)
 	case check.TypeBool:
-		fmt.Fprintf(b, "aram_panic_bool(%s)", ref)
+		fmt.Fprintf(b, "uli_panic_bool(%s)", ref)
 	case check.TypeFloat:
-		fmt.Fprintf(b, "aram_panic_float(%s)", ref)
+		fmt.Fprintf(b, "uli_panic_float(%s)", ref)
 	default:
-		fmt.Fprintf(b, "aram_panic_int((int64_t)(%s))", ref)
+		fmt.Fprintf(b, "uli_panic_int((int64_t)(%s))", ref)
 	}
 }
 
@@ -230,7 +230,7 @@ func (e *emitter) writeUnwindPrologue(b *strings.Builder, fn *ast.FuncDecl, fram
 	if e.fnHasDefer {
 		e.needDefer = true
 		e.needArena = true
-		b.WriteString("\taram_defer_frame *volatile _defers = NULL;\n")
+		b.WriteString("\tuli_defer_frame *volatile _defers = NULL;\n")
 	}
 	rts := e.resultTypes(fn)
 	if len(rts) > 0 && !e.fnNamedResults() {
@@ -248,15 +248,15 @@ func (e *emitter) writeUnwindPrologue(b *strings.Builder, fn *ast.FuncDecl, fram
 		if frame == "" {
 			frame = e.panicFrameName(fn)
 		}
-		b.WriteString("\tint _save_defer = aram_is_defer_fn;\n")
-		b.WriteString("\tif (aram_defer_pending) {\n")
-		b.WriteString("\t\taram_defer_pending = 0;\n")
-		b.WriteString("\t\taram_is_defer_fn = 1;\n")
+		b.WriteString("\tint _save_defer = uli_is_defer_fn;\n")
+		b.WriteString("\tif (uli_defer_pending) {\n")
+		b.WriteString("\t\tuli_defer_pending = 0;\n")
+		b.WriteString("\t\tuli_is_defer_fn = 1;\n")
 		b.WriteString("\t} else {\n")
-		b.WriteString("\t\taram_is_defer_fn = 0;\n")
+		b.WriteString("\t\tuli_is_defer_fn = 0;\n")
 		b.WriteString("\t}\n")
-		fmt.Fprintf(b, "\taram_panic_push(%s);\n", strconv.Quote(frame))
-		b.WriteString("\tif (setjmp(*aram_jmp_push()) != 0) goto __aram_epilogue;\n")
+		fmt.Fprintf(b, "\tuli_panic_push(%s);\n", strconv.Quote(frame))
+		b.WriteString("\tif (setjmp(*uli_jmp_push()) != 0) goto __uli_epilogue;\n")
 	}
 }
 
@@ -264,68 +264,68 @@ func (e *emitter) writePanicRuntime(b *strings.Builder) {
 	if !e.needPanic {
 		return
 	}
-	b.WriteString("#define ARAM_JMP_MAX 64\n")
-	b.WriteString("static _Thread_local jmp_buf aram_jmps[ARAM_JMP_MAX];\n")
-	b.WriteString("static _Thread_local int aram_jmp_n;\n")
-	b.WriteString("static _Thread_local const char *aram_panic_msg;\n")
-	b.WriteString("static _Thread_local int aram_panic_on;\n")
-	b.WriteString("static _Thread_local int aram_is_defer_fn;\n")
-	b.WriteString("static _Thread_local int aram_defer_pending;\n")
-	b.WriteString("static _Thread_local const char *aram_pstack[ARAM_JMP_MAX];\n")
-	b.WriteString("static _Thread_local int aram_pstack_n;\n")
-	b.WriteString("static _Thread_local const char *aram_panic_snap[ARAM_JMP_MAX];\n")
-	b.WriteString("static _Thread_local int aram_panic_snap_n;\n")
-	b.WriteString("static _Thread_local char aram_panic_buf[128];\n")
-	b.WriteString("static void aram_panic_push(const char *name) {\n")
-	b.WriteString("\tif (aram_pstack_n < ARAM_JMP_MAX) aram_pstack[aram_pstack_n++] = name ? name : \"?\";\n")
+	b.WriteString("#define ULI_JMP_MAX 64\n")
+	b.WriteString("static _Thread_local jmp_buf uli_jmps[ULI_JMP_MAX];\n")
+	b.WriteString("static _Thread_local int uli_jmp_n;\n")
+	b.WriteString("static _Thread_local const char *uli_panic_msg;\n")
+	b.WriteString("static _Thread_local int uli_panic_on;\n")
+	b.WriteString("static _Thread_local int uli_is_defer_fn;\n")
+	b.WriteString("static _Thread_local int uli_defer_pending;\n")
+	b.WriteString("static _Thread_local const char *uli_pstack[ULI_JMP_MAX];\n")
+	b.WriteString("static _Thread_local int uli_pstack_n;\n")
+	b.WriteString("static _Thread_local const char *uli_panic_snap[ULI_JMP_MAX];\n")
+	b.WriteString("static _Thread_local int uli_panic_snap_n;\n")
+	b.WriteString("static _Thread_local char uli_panic_buf[128];\n")
+	b.WriteString("static void uli_panic_push(const char *name) {\n")
+	b.WriteString("\tif (uli_pstack_n < ULI_JMP_MAX) uli_pstack[uli_pstack_n++] = name ? name : \"?\";\n")
 	b.WriteString("}\n")
-	b.WriteString("static void aram_panic_pop(void) {\n")
-	b.WriteString("\tif (aram_pstack_n > 0) aram_pstack_n--;\n")
+	b.WriteString("static void uli_panic_pop(void) {\n")
+	b.WriteString("\tif (uli_pstack_n > 0) uli_pstack_n--;\n")
 	b.WriteString("}\n")
-	b.WriteString("static void aram_panic_dump(void) {\n")
-	b.WriteString("\tfprintf(stderr, \"அலறு: %s\\n\", aram_panic_msg ? aram_panic_msg : \"\");\n")
-	b.WriteString("\tfor (int i = aram_panic_snap_n - 1; i >= 0; i--) {\n")
-	b.WriteString("\t\tfprintf(stderr, \"  %s\\n\", aram_panic_snap[i] ? aram_panic_snap[i] : \"?\");\n")
+	b.WriteString("static void uli_panic_dump(void) {\n")
+	b.WriteString("\tfprintf(stderr, \"அலறு: %s\\n\", uli_panic_msg ? uli_panic_msg : \"\");\n")
+	b.WriteString("\tfor (int i = uli_panic_snap_n - 1; i >= 0; i--) {\n")
+	b.WriteString("\t\tfprintf(stderr, \"  %s\\n\", uli_panic_snap[i] ? uli_panic_snap[i] : \"?\");\n")
 	b.WriteString("\t}\n")
 	b.WriteString("}\n")
-	b.WriteString("static jmp_buf *aram_jmp_push(void) {\n")
-	b.WriteString("\tif (aram_jmp_n >= ARAM_JMP_MAX) {\n")
+	b.WriteString("static jmp_buf *uli_jmp_push(void) {\n")
+	b.WriteString("\tif (uli_jmp_n >= ULI_JMP_MAX) {\n")
 	b.WriteString("\t\tfprintf(stderr, \"அலறு: jmp stack overflow\\n\");\n")
 	b.WriteString("\t\tabort();\n")
 	b.WriteString("\t}\n")
-	b.WriteString("\treturn &aram_jmps[aram_jmp_n++];\n")
+	b.WriteString("\treturn &uli_jmps[uli_jmp_n++];\n")
 	b.WriteString("}\n")
-	b.WriteString("static void aram_jmp_pop(void) {\n")
-	b.WriteString("\tif (aram_jmp_n > 0) aram_jmp_n--;\n")
+	b.WriteString("static void uli_jmp_pop(void) {\n")
+	b.WriteString("\tif (uli_jmp_n > 0) uli_jmp_n--;\n")
 	b.WriteString("}\n")
-	b.WriteString("static void aram_panic(const char *msg) {\n")
-	b.WriteString("\taram_panic_msg = msg ? msg : \"\";\n")
-	b.WriteString("\taram_panic_on = 1;\n")
-	b.WriteString("\taram_panic_snap_n = aram_pstack_n;\n")
-	b.WriteString("\tfor (int i = 0; i < aram_pstack_n && i < ARAM_JMP_MAX; i++) aram_panic_snap[i] = aram_pstack[i];\n")
-	b.WriteString("\tif (aram_jmp_n <= 0) {\n")
-	b.WriteString("\t\taram_panic_dump();\n")
+	b.WriteString("static void uli_panic(const char *msg) {\n")
+	b.WriteString("\tuli_panic_msg = msg ? msg : \"\";\n")
+	b.WriteString("\tuli_panic_on = 1;\n")
+	b.WriteString("\tuli_panic_snap_n = uli_pstack_n;\n")
+	b.WriteString("\tfor (int i = 0; i < uli_pstack_n && i < ULI_JMP_MAX; i++) uli_panic_snap[i] = uli_pstack[i];\n")
+	b.WriteString("\tif (uli_jmp_n <= 0) {\n")
+	b.WriteString("\t\tuli_panic_dump();\n")
 	b.WriteString("\t\tabort();\n")
 	b.WriteString("\t}\n")
-	b.WriteString("\tlongjmp(aram_jmps[aram_jmp_n - 1], 1);\n")
+	b.WriteString("\tlongjmp(uli_jmps[uli_jmp_n - 1], 1);\n")
 	b.WriteString("}\n")
-	b.WriteString("static void aram_panic_int(int64_t v) {\n")
-	b.WriteString("\tsnprintf(aram_panic_buf, sizeof aram_panic_buf, \"%lld\", (long long)v);\n")
-	b.WriteString("\taram_panic(aram_panic_buf);\n")
+	b.WriteString("static void uli_panic_int(int64_t v) {\n")
+	b.WriteString("\tsnprintf(uli_panic_buf, sizeof uli_panic_buf, \"%lld\", (long long)v);\n")
+	b.WriteString("\tuli_panic(uli_panic_buf);\n")
 	b.WriteString("}\n")
-	b.WriteString("static void aram_panic_float(double v) {\n")
-	b.WriteString("\tsnprintf(aram_panic_buf, sizeof aram_panic_buf, \"%g\", v);\n")
-	b.WriteString("\taram_panic(aram_panic_buf);\n")
+	b.WriteString("static void uli_panic_float(double v) {\n")
+	b.WriteString("\tsnprintf(uli_panic_buf, sizeof uli_panic_buf, \"%g\", v);\n")
+	b.WriteString("\tuli_panic(uli_panic_buf);\n")
 	b.WriteString("}\n")
-	b.WriteString("static void aram_panic_bool(int v) {\n")
-	b.WriteString("\taram_panic(v ? \"மெய்\" : \"பொய்\");\n")
+	b.WriteString("static void uli_panic_bool(int v) {\n")
+	b.WriteString("\tuli_panic(v ? \"மெய்\" : \"பொய்\");\n")
 	b.WriteString("}\n")
-	b.WriteString("static const char *aram_recover(void) {\n")
-	b.WriteString("\tif (!aram_is_defer_fn || !aram_panic_on) return \"\";\n")
-	b.WriteString("\taram_panic_on = 0;\n")
+	b.WriteString("static const char *uli_recover(void) {\n")
+	b.WriteString("\tif (!uli_is_defer_fn || !uli_panic_on) return \"\";\n")
+	b.WriteString("\tuli_panic_on = 0;\n")
 	b.WriteString("\t{\n")
-	b.WriteString("\t\tconst char *m = aram_panic_msg ? aram_panic_msg : \"\";\n")
-	b.WriteString("\t\taram_panic_msg = NULL;\n")
+	b.WriteString("\t\tconst char *m = uli_panic_msg ? uli_panic_msg : \"\";\n")
+	b.WriteString("\t\tuli_panic_msg = NULL;\n")
 	b.WriteString("\t\treturn m;\n")
 	b.WriteString("\t}\n")
 	b.WriteString("}\n")
@@ -335,16 +335,16 @@ func (e *emitter) writePanicRethrow(b *strings.Builder) {
 	if !e.needPanic {
 		return
 	}
-	b.WriteString("\taram_is_defer_fn = _save_defer;\n")
-	b.WriteString("\tif (aram_panic_on) {\n")
-	b.WriteString("\t\taram_jmp_pop();\n")
-	b.WriteString("\t\tif (aram_jmp_n <= 0) {\n")
-	b.WriteString("\t\t\taram_panic_dump();\n")
+	b.WriteString("\tuli_is_defer_fn = _save_defer;\n")
+	b.WriteString("\tif (uli_panic_on) {\n")
+	b.WriteString("\t\tuli_jmp_pop();\n")
+	b.WriteString("\t\tif (uli_jmp_n <= 0) {\n")
+	b.WriteString("\t\t\tuli_panic_dump();\n")
 	b.WriteString("\t\t\tabort();\n")
 	b.WriteString("\t\t}\n")
-	b.WriteString("\t\taram_panic_pop();\n")
-	b.WriteString("\t\tlongjmp(aram_jmps[aram_jmp_n - 1], 1);\n")
+	b.WriteString("\t\tuli_panic_pop();\n")
+	b.WriteString("\t\tlongjmp(uli_jmps[uli_jmp_n - 1], 1);\n")
 	b.WriteString("\t}\n")
-	b.WriteString("\taram_panic_pop();\n")
-	b.WriteString("\taram_jmp_pop();\n")
+	b.WriteString("\tuli_panic_pop();\n")
+	b.WriteString("\tuli_jmp_pop();\n")
 }

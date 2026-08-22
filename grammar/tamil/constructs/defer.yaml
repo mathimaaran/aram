@@ -5,7 +5,7 @@ go_inspired: |
   defer f(x)
   defer p.Show()          // value recv: copy p now
   defer p.Bump()          // pointer recv: save &p now
-  defer done              // Aram sugar ≡ done()
+  defer done              // Niraluli sugar ≡ done()
 tamil_keywords:
   defer: தள்ளிவை
 tamil_ebnf: |

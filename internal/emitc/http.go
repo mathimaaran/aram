@@ -4,8 +4,8 @@ import (
 	_ "embed"
 	"strings"
 
-	"aram/internal/ast"
-	"aram/internal/check"
+	"niraluli/internal/ast"
+	"niraluli/internal/check"
 )
 
 //go:embed http_runtime.inc
@@ -37,11 +37,11 @@ func (e *emitter) writeHttpRuntime(b *strings.Builder) {
 	b.WriteString("#include <ctype.h>\n")
 	b.WriteString("#include <stdarg.h>\n")
 	b.WriteString("#include <strings.h>\n")
-	b.WriteString("static void *aram_http_headers_new(void);\n")
-	b.WriteString("static void aram_http_headers_set(void *, const char *, const char *);\n")
-	b.WriteString("static const char *aram_http_headers_get(void *, const char *);\n")
-	b.WriteString("typedef void (*aram_http_header_visit_fn)(const char *, const char *, void *);\n")
-	b.WriteString("static void aram_http_headers_each(void *, aram_http_header_visit_fn, void *);\n")
+	b.WriteString("static void *uli_http_headers_new(void);\n")
+	b.WriteString("static void uli_http_headers_set(void *, const char *, const char *);\n")
+	b.WriteString("static const char *uli_http_headers_get(void *, const char *);\n")
+	b.WriteString("typedef void (*uli_http_header_visit_fn)(const char *, const char *, void *);\n")
+	b.WriteString("static void uli_http_headers_each(void *, uli_http_header_visit_fn, void *);\n")
 	b.WriteString(httpRuntimeC)
 	b.WriteByte('\n')
 }
@@ -56,17 +56,17 @@ func (e *emitter) writeHttpMapBridge(b *strings.Builder) {
 		}
 		mapType := e.mapCName(t)
 		tabType := e.mapTabName(t)
-		b.WriteString("static void *aram_http_headers_new(void) {\n")
+		b.WriteString("static void *uli_http_headers_new(void) {\n")
 		b.WriteString("\treturn (void *)" + e.mapMakeName(t) + "(0);\n")
 		b.WriteString("}\n")
-		b.WriteString("static void aram_http_headers_set(void *m, const char *k, const char *v) {\n")
+		b.WriteString("static void uli_http_headers_set(void *m, const char *k, const char *v) {\n")
 		b.WriteString("\t" + e.mapSetName(t) + "((" + mapType + ")m, k, v);\n")
 		b.WriteString("}\n")
-		b.WriteString("static const char *aram_http_headers_get(void *m, const char *k) {\n")
+		b.WriteString("static const char *uli_http_headers_get(void *m, const char *k) {\n")
 		b.WriteString("\tif (!m) return NULL;\n")
 		b.WriteString("\treturn " + e.mapGetName(t) + "((" + mapType + ")m, k);\n")
 		b.WriteString("}\n")
-		b.WriteString("static void aram_http_headers_each(void *m, aram_http_header_visit_fn fn, void *ctx) {\n")
+		b.WriteString("static void uli_http_headers_each(void *m, uli_http_header_visit_fn fn, void *ctx) {\n")
 		b.WriteString("\t" + mapType + " tab = (" + mapType + ")m;\n")
 		b.WriteString("\tif (!tab || !fn) return;\n")
 		b.WriteString("\tfor (int64_t i = 0; i < tab->cap; i++) {\n")
@@ -95,7 +95,7 @@ func (e *emitter) httpClientRetCall(fn *ast.FuncDecl, callExpr string) string {
 		}
 	}
 	var b strings.Builder
-	b.WriteString("\taram_http_client_result r = " + callExpr + ";\n")
+	b.WriteString("\tuli_http_client_result r = " + callExpr + ";\n")
 	b.WriteString("\t" + respType + " resp;\n")
 	b.WriteString("\tmemset(&resp, 0, sizeof resp);\n")
 	b.WriteString("\tresp." + codeF + " = r.code;\n")
@@ -114,25 +114,25 @@ func (e *emitter) writeHttpIntrinsic(b *strings.Builder, fn *ast.FuncDecl) bool 
 	var call string
 	switch fn.Name.Name {
 	case "எழுது":
-		call = "\treturn (" + errType + ")aram_http_write(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", NULL, " + cIdent("உடல்") + ".data, " + cIdent("உடல்") + ".len);\n"
+		call = "\treturn (" + errType + ")uli_http_write(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", NULL, " + cIdent("உடல்") + ".data, " + cIdent("உடல்") + ".len);\n"
 	case "எழுதுசரம்":
-		call = "\treturn (" + errType + ")aram_http_write_str(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", NULL, " + cIdent("உடல்") + ");\n"
+		call = "\treturn (" + errType + ")uli_http_write_str(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", NULL, " + cIdent("உடல்") + ");\n"
 	case "எழுதுதலைப்புகள்":
-		call = "\treturn (" + errType + ")aram_http_write(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", " + cIdent("தலைப்புகள்") + ", " + cIdent("உடல்") + ".data, " + cIdent("உடல்") + ".len);\n"
+		call = "\treturn (" + errType + ")uli_http_write(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", " + cIdent("தலைப்புகள்") + ", " + cIdent("உடல்") + ".data, " + cIdent("உடல்") + ".len);\n"
 	case "எழுதுசரந்தலைப்புகள்":
-		call = "\treturn (" + errType + ")aram_http_write_str(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", " + cIdent("தலைப்புகள்") + ", " + cIdent("உடல்") + ");\n"
+		call = "\treturn (" + errType + ")uli_http_write_str(" + cIdent("ப") + ", " + cIdent("குறியீடு") + ", " + cIdent("உள்ளடக்கம்") + ", " + cIdent("தலைப்புகள்") + ", " + cIdent("உடல்") + ");\n"
 	case "சேவைஒன்று":
-		call = "\treturn (" + errType + ")aram_http_serve_one(" + cIdent("கேட்பி") + ", " + cIdent("க") + ");\n"
+		call = "\treturn (" + errType + ")uli_http_serve_one(" + cIdent("கேட்பி") + ", " + cIdent("க") + ");\n"
 	case "கேட்டுசேவை":
-		call = "\treturn (" + errType + ")aram_http_listen_and_serve(" + cIdent("முகவரி") + ", " + cIdent("க") + ");\n"
+		call = "\treturn (" + errType + ")uli_http_listen_and_serve(" + cIdent("முகவரி") + ", " + cIdent("க") + ");\n"
 	case "பெறு":
-		call = e.httpClientRetCall(fn, "aram_http_get("+cIdent("முகவரி")+")")
+		call = e.httpClientRetCall(fn, "uli_http_get("+cIdent("முகவரி")+")")
 	case "பதிவிடு":
-		call = e.httpClientRetCall(fn, "aram_http_post("+cIdent("முகவரி")+", "+cIdent("உள்ளடக்கம்")+", "+cIdent("உடல்")+".data, "+cIdent("உடல்")+".len)")
+		call = e.httpClientRetCall(fn, "uli_http_post("+cIdent("முகவரி")+", "+cIdent("உள்ளடக்கம்")+", "+cIdent("உடல்")+".data, "+cIdent("உடல்")+".len)")
 	case "கோரு":
-		call = e.httpClientRetCall(fn, "aram_http_do("+cIdent("முறைமை")+", "+cIdent("முகவரி")+", "+cIdent("தலைப்புகள்")+", "+cIdent("உடல்")+".data, "+cIdent("உடல்")+".len)")
+		call = e.httpClientRetCall(fn, "uli_http_do("+cIdent("முறைமை")+", "+cIdent("முகவரி")+", "+cIdent("தலைப்புகள்")+", "+cIdent("உடல்")+".data, "+cIdent("உடல்")+".len)")
 	case "கோருவிருப்பம்":
-		call = e.httpClientRetCall(fn, "aram_http_do_opts("+cIdent("முறைமை")+", "+cIdent("முகவரி")+", "+cIdent("தலைப்புகள்")+", "+cIdent("உடல்")+".data, "+cIdent("உடல்")+".len, "+cIdent("விருப்பம்")+"."+cIdent("நேரமுடிவு")+", "+cIdent("விருப்பம்")+"."+cIdent("அதிகதிருப்புகள்")+")")
+		call = e.httpClientRetCall(fn, "uli_http_do_opts("+cIdent("முறைமை")+", "+cIdent("முகவரி")+", "+cIdent("தலைப்புகள்")+", "+cIdent("உடல்")+".data, "+cIdent("உடல்")+".len, "+cIdent("விருப்பம்")+"."+cIdent("நேரமுடிவு")+", "+cIdent("விருப்பம்")+"."+cIdent("அதிகதிருப்புகள்")+")")
 	default:
 		return false
 	}

@@ -1,0 +1,24 @@
+// Niraluli: invalid/பழைய_else.uli — rejected else keyword இல்லையெனில்
+// Go has no exact parallel; valid Go would use else:
+//
+//	package main
+//
+//	import "fmt"
+//
+//	func main() {
+//		if true {
+//			fmt.Println("சரி")
+//		} else {
+//			fmt.Println("தவறான else சொல்")
+//		}
+//	}
+
+தொகுப்பு தொடக்கம்
+
+செயல்பாடு தொடக்கம்() {
+    எனில் மெய் {
+        பதிப்பி("சரி")
+    } இல்லையெனில் {
+        பதிப்பி("தவறான else சொல்")
+    }
+}

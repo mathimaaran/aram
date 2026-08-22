@@ -6,7 +6,7 @@ go_inspired: |
   f := Flag(true)
   s := string(65)
   q := (*Score)(p) // Score's underlying is int
-  x := 2 + 3.5     // Aram: mixed typed int/float → float
+  x := 2 + 3.5     // Niraluli: mixed typed int/float → float
 tamil_ebnf: |
   Conversion = Type "(" Expression ")" .
   Type may be "(" "*" Type ")" for pointer conversions .
@@ -22,7 +22,7 @@ examples:
       q := (*மதிப்பெண்)(p)
     go_equivalent: |
       fmt.Println(string(65))
-      // Go needs float64(2)+3.5 for typed ints; Aram promotes
+      // Go needs float64(2)+3.5 for typed ints; Niraluli promotes
       q := (*Score)(p)
 notes:
   - "Mixed int/float is slightly more permissive than Go for typed values."

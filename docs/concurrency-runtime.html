@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Aram concurrency, panic, defer, and garbage collection reference.">
-  <title>Concurrency & Runtime — Aram Documentation</title>
+  <meta name="description" content="Niraluli concurrency, panic, defer, and garbage collection reference.">
+  <title>Concurrency & Runtime — Niraluli Documentation</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="docs.js"></script>
 </head>
@@ -37,10 +37,10 @@
     பதிப்பி("concurrent")
 }()</code></pre>
   <p><code>இழை</code> starts a call on a new pthread. It accepts normal calls, method calls, and immediately invoked closures. Captured closure variables follow normal by-reference closure semantics.</p>
-  <p>The generated program's main thread waits for all Aram-created threads before shutting down the heap and exiting.</p>
+  <p>The generated program's main thread waits for all Niraluli-created threads before shutting down the heap and exiting.</p>
   <div class="callout warning">
     <strong>Thread cost</strong>
-    Aram currently maps each <code>இழை</code> to an OS thread; it does not provide Go's lightweight goroutine scheduler. Use bounded concurrency.
+    Niraluli currently maps each <code>இழை</code> to an OS thread; it does not provide Go's lightweight goroutine scheduler. Use bounded concurrency.
   </div>
 
   <h2 id="channels">Channels</h2>
@@ -112,7 +112,7 @@
     அலறு("something failed")
 }</code></pre>
   <p><code>அலறு</code> accepts <code>சரம்</code>, <code>முழுஎண்</code>, <code>மிதவைஎண்</code>, <code>நிலை</code>, <code>இருமி8</code>, or <code>இருமி32</code>; primitive values are stringified. The panic state is per thread.</p>
-  <p><code>மீள்()</code> only stops an active panic when called from deferred execution. It returns the panic string. Otherwise it returns <code>""</code>. An uncaught panic prints Aram function frames and aborts the process.</p>
+  <p><code>மீள்()</code> only stops an active panic when called from deferred execution. It returns the panic string. Otherwise it returns <code>""</code>. An uncaught panic prints Niraluli function frames and aborts the process.</p>
   <p>There is no interface/any panic payload in v0.62.</p>
 
   <h2 id="heap">Managed heap and garbage collection</h2>
@@ -121,7 +121,7 @@
   <h3>Collection model</h3>
   <ol>
     <li>Allocation checks the current heap trigger.</li>
-    <li>A collector requests all registered Aram threads to stop or park.</li>
+    <li>A collector requests all registered Niraluli threads to stop or park.</li>
     <li>Thread stacks and captured register sets are scanned conservatively.</li>
     <li>Interior-looking pointers are resolved through a sorted object index.</li>
     <li>Reachable heap objects are recursively marked; unmarked objects are freed.</li>

@@ -17,11 +17,11 @@ semantics: >
 examples:
   - tamil: |
       செயல்பாடு தொடக்கம்() {
-          பதிப்பி("வணக்கம், அறம்!")
+          பதிப்பி("வணக்கம், நிரலுளி!")
       }
     go_equivalent: |
       func main() {
-          println("வணக்கம், அறம்!")
+          println("வணக்கம், நிரலுளி!")
       }
 notes:
   - "Methods with receivers are Tamil-0.8 — see method.yaml."

@@ -1,6 +1,6 @@
 # Go core EBNF (curated extract)
 
-Source: Go spec go1.26. Curated for Aram design — not the full grammar.
+Source: Go spec go1.26. Curated for Niraluli design — not the full grammar.
 
 ## Lexical (selected)
 
@@ -75,5 +75,5 @@ ImportDecl = "import" ( ImportSpec | "(" { ImportSpec ";" } ")" ) .
 
 Go: package name `main` + `func main()` with no params/results.
 
-Aram Tamil-0 plans an analogous entry via semantic keywords
+Niraluli Tamil-0 plans an analogous entry via semantic keywords
 (`தொகுப்பு தொடக்கம்` + `செயல்பாடு தொடக்கம்`) — exact EBNF in `grammar/tamil/`.

@@ -4,7 +4,7 @@ Phase 1 (in progress): Go module at repo root.
 
 | Path | Role |
 |------|------|
-| `cmd/aram` | CLI: `run` / `build` / `emit` / `check` / `parse` / `lex` |
+| `cmd/uli` | CLI: `run` / `build` / `emit` / `check` / `parse` / `lex` |
 | `internal/token` | token kinds + Tamil-0 keyword map |
 | `internal/lex` | UTF-8 lexer |
 | `internal/ast` | AST nodes |
@@ -26,16 +26,16 @@ Default output directory (when `-o` is omitted): **`build/`**
 You do **not** need `sudo apt install golang-go` for this repo. Use the portable toolchain:
 
 ```bash
-cd /path/to/aram
+cd /path/to/uli
 
 # option A — one-off
 ./tools/run-go.sh test ./...
-./tools/run-go.sh run ./cmd/aram corpus/tamil/வணக்கம்.aram
+./tools/run-go.sh run ./cmd/uli corpus/tamil/வணக்கம்.uli
 
 # option B — for the rest of the shell session
 source tools/env.sh
 go test ./...
-go run ./cmd/aram corpus/tamil/வணக்கம்.aram
+go run ./cmd/uli corpus/tamil/வணக்கம்.uli
 ```
 
 Or install a system Go later (`sudo apt install golang-go`) if you prefer; `tools/env.sh` will use it automatically.

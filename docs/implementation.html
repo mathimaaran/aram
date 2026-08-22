@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Aram compiler implementation architecture, backend design, limitations, and roadmap.">
-  <title>Implementation Notes — Aram Documentation</title>
+  <meta name="description" content="Niraluli compiler implementation architecture, backend design, limitations, and roadmap.">
+  <title>Implementation Notes — Niraluli Documentation</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="docs.js"></script>
 </head>
@@ -32,7 +32,7 @@
   </div>
 
   <h2 id="architecture">Architecture at a glance</h2>
-  <pre><code>UTF-8 .aram source
+  <pre><code>UTF-8 .uli source
        │
        ▼
  lexer + semicolon insertion
@@ -77,7 +77,7 @@
   <h3>Type lowering</h3>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Aram concept</th><th>C representation</th></tr></thead>
+      <thead><tr><th>Niraluli concept</th><th>C representation</th></tr></thead>
       <tbody>
         <tr><td>Integers / bytes / runes</td><td><code>int64_t</code>, <code>uint8_t</code>, <code>int32_t</code></td></tr>
         <tr><td>Float</td><td><code>double</code></td></tr>
@@ -104,7 +104,7 @@
   <p>Function values pair a trampoline pointer with an environment pointer. Captured locals are promoted when needed, and closures store references in managed heap environments. Bound methods save their receiver; method expressions use an unbound receiver-first function shape.</p>
 
   <h3>Intrinsic packages</h3>
-  <p>Public Aram signatures in <code>stdlib/</code> are normal declarations for loading/checking. During emission, known package functions are replaced with calls into embedded C runtime helpers. Higher-level exact-path mux logic remains implemented in Aram. The database package embeds <code>db_runtime.inc</code>: an internal <code>aram_db_vtable</code> of operation pointers, with SQLite filled in through <code>dlopen</code>/<code>dlsym</code> so future first-party engines can share one Tamil API.</p>
+  <p>Public Niraluli signatures in <code>stdlib/</code> are normal declarations for loading/checking. During emission, known package functions are replaced with calls into embedded C runtime helpers. Higher-level exact-path mux logic remains implemented in Niraluli. The database package embeds <code>db_runtime.inc</code>: an internal <code>uli_db_vtable</code> of operation pointers, with SQLite filled in through <code>dlopen</code>/<code>dlsym</code> so future first-party engines can share one Tamil API.</p>
 
   <h2 id="runtime">Embedded runtime subsystems</h2>
   <p>The emitter only includes runtime features needed by loaded packages and typed expressions.</p>
@@ -121,7 +121,7 @@
         <tr><td>Concurrency</td><td>pthread threads, mutexes, condition variables, buffered/unbuffered channels, select.</td></tr>
         <tr><td>TCP/UDP</td><td>Linux/POSIX IPv4 sockets; GC-aware blocking calls.</td></tr>
         <tr><td>HTTP</td><td>Synchronous HTTP/1.x parser/serializer layered over sockets; fixed safety limits.</td></tr>
-        <tr><td>SQL databases</td><td>Internal C <code>aram_db_vtable</code>; SQLite via <code>dlopen</code>/<code>dlsym</code>; prepared statements with copied text/blob values; driver links <code>-ldl</code>.</td></tr>
+        <tr><td>SQL databases</td><td>Internal C <code>uli_db_vtable</code>; SQLite via <code>dlopen</code>/<code>dlsym</code>; prepared statements with copied text/blob values; driver links <code>-ldl</code>.</td></tr>
       </tbody>
     </table>
   </div>
@@ -138,10 +138,10 @@
         <tr><td>0.42–0.51</td><td>Defer polish, function values, closures, method expressions, pthread concurrency, panic/recover, channel range.</td></tr>
         <tr><td>0.52</td><td>Native managed heap and conservative GC.</td></tr>
         <tr><td>0.53–0.57</td><td>TCP, HTTP server, operational error returns, headers/mux, HTTP client and custom response headers.</td></tr>
-        <tr><td>0.58–0.59</td><td>Function values in aggregates, Aram mux, query parameters, chunked response decoding, protocol validation.</td></tr>
+        <tr><td>0.58–0.59</td><td>Function values in aggregates, Niraluli mux, query parameters, chunked response decoding, protocol validation.</td></tr>
         <tr><td>0.60</td><td>GC/string polish and <code>-O2</code> default C builds.</td></tr>
         <tr><td>0.61</td><td>HTTP timeout/redirect options and IPv4 UDP.</td></tr>
-        <tr><td>0.62</td><td>Shared SQL database vtable (<code>தரவுத்தளம்</code>), runtime-loaded SQLite backend, corpus API sample, and full-stack Aram/React employee demo.</td></tr>
+        <tr><td>0.62</td><td>Shared SQL database vtable (<code>தரவுத்தளம்</code>), runtime-loaded SQLite backend, corpus API sample, and full-stack Niraluli/React employee demo.</td></tr>
       </tbody>
     </table>
   </div>
@@ -190,7 +190,7 @@
   <p>The current C backend remains the semantic reference while the native backend begins.</p>
 
   <h2 id="public">Public project status</h2>
-  <p>Aram v0.62 is suitable for public release as an <strong>experimental research compiler</strong>. It should not be described as production-ready.</p>
+  <p>Niraluli v0.62 is suitable for public release as an <strong>experimental research compiler</strong>. It should not be described as production-ready.</p>
   <p>Licensing: the repository is under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a> (<code>LICENSE</code> + <code>NOTICE</code>). See also <a href="misc.html#license">Misc → License</a>.</p>
   <p>Remaining public-release hygiene:</p>
   <ul>

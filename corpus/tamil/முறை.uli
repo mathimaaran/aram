@@ -1,0 +1,40 @@
+// Niraluli: முறை.uli — methods on struct / pointer receivers
+// Go equivalent:
+//
+//	type Point struct { x int; y int }
+//	func (p Point) Sum() int { return p.x + p.y }
+//	func (p *Point) SetX(v int) { p.x = v }
+//	func main() {
+//		p := Point{x: 3, y: 4}
+//		println(p.Sum())
+//		p.SetX(10)
+//		println(p.x)
+//		q := &p
+//		q.SetX(1)
+//		println(p.Sum())
+//	}
+
+தொகுப்பு தொடக்கம்
+
+வகை புள்ளி அமைப்பு {
+    x முழுஎண்
+    y முழுஎண்
+}
+
+செயல்பாடு (ப புள்ளி) கூட்டு() முழுஎண் {
+    திருப்பு ப.x + ப.y
+}
+
+செயல்பாடு (ப *புள்ளி) அமை_x(ம முழுஎண்) {
+    ப.x = ம
+}
+
+செயல்பாடு தொடக்கம்() {
+    ப := புள்ளி{x: 3, y: 4}
+    பதிப்பி(ப.கூட்டு())
+    ப.அமை_x(10)
+    பதிப்பி(ப.x)
+    சு := &ப
+    சு.அமை_x(1)
+    பதிப்பி(ப.கூட்டு())
+}

@@ -1,11 +1,11 @@
-// Package check type-checks Aram Tamil-0 ASTs.
+// Package check type-checks Niraluli Tamil-0 ASTs.
 package check
 
 import (
 	"fmt"
 
-	"aram/internal/ast"
-	"aram/internal/token"
+	"niraluli/internal/ast"
+	"niraluli/internal/token"
 )
 
 // Type kinds for Tamil-0.3.

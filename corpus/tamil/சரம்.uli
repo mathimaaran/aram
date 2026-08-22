@@ -1,0 +1,36 @@
+// Niraluli: சரம்.uli — string values, concat, compare, return
+// Go equivalent:
+//
+//	package main
+//
+//	import "fmt"
+//
+//	func greet(name string) string {
+//		return "வணக்கம், " + name + "!"
+//	}
+//
+//	func main() {
+//		msg := greet("நிரலுளி")
+//		fmt.Println(msg)
+//		var a string = "ஆம்"
+//		var b string = "இல்லை"
+//		fmt.Println(a == "ஆம்")
+//		fmt.Println(a == b)
+//		fmt.Println(a)
+//	}
+
+தொகுப்பு தொடக்கம்
+
+செயல்பாடு வாழ்த்து(பெயர் சரம்) சரம் {
+    திருப்பு "வணக்கம், " + பெயர் + "!"
+}
+
+செயல்பாடு தொடக்கம்() {
+    செய்தி := வாழ்த்து("நிரலுளி")
+    பதிப்பி(செய்தி)
+    மாறி ஆ சரம் = "ஆம்"
+    மாறி ஈ சரம் = "இல்லை"
+    பதிப்பி(ஆ == "ஆம்")
+    பதிப்பி(ஆ == ஈ)
+    பதிப்பி(ஆ)
+}

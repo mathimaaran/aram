@@ -13,7 +13,7 @@
   const groups = [
     ["Learn", pages.slice(0, 3)],
     ["Runtime & APIs", pages.slice(3, 5)],
-    ["Develop Aram", pages.slice(5, 7)],
+    ["Develop Niraluli", pages.slice(5, 7)],
     ["Extras", pages.slice(7)]
   ];
 
@@ -29,8 +29,8 @@
   topbar.className = "topbar";
   topbar.innerHTML = `
     <a class="brand" href="index.html">
-      <span class="brand-mark">அறம்</span>
-      <span>Aram docs</span>
+      <span class="brand-mark">நிரலுளி</span>
+      <span>Niraluli docs</span>
       <span class="version">v0.62</span>
     </a>
     <div class="top-actions">
@@ -60,15 +60,15 @@
 
   const footer = document.createElement("footer");
   footer.className = "site-footer";
-  footer.innerHTML = `Aram v0.62 developer documentation · Experimental Linux/C compiler`;
+  footer.innerHTML = `Niraluli v0.62 developer documentation · Experimental Linux/C compiler`;
   document.body.append(footer);
 
-  const savedTheme = localStorage.getItem("aram-doc-theme");
+  const savedTheme = localStorage.getItem("uli-doc-theme");
   if (savedTheme) document.documentElement.dataset.theme = savedTheme;
   document.querySelector(".theme-button").addEventListener("click", () => {
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     document.documentElement.dataset.theme = next;
-    localStorage.setItem("aram-doc-theme", next);
+    localStorage.setItem("uli-doc-theme", next);
   });
   document.querySelector(".menu-button").addEventListener("click", () => {
     document.body.classList.toggle("nav-open");

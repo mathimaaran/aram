@@ -41,7 +41,7 @@ Out of scope for Tamil-0:
 - [x] Named structs (`வகை` / `அமைப்பு`) — no pointers yet
 - [x] Pointers (`*T`, `&x`, `*p`; auto-deref on `*struct`)
 - [x] Methods on struct / pointer receivers
-- [x] Same-package multi-file (`aram <dir>` / multiple `.aram`)
+- [x] Same-package multi-file (`uli <dir>` / multiple `.uli`)
 - [x] Cross-package `கொணர்` (import)
 - [x] Export / privacy (`வெளி`)
 - [x] `இன்மை` (nil) + pointer `==` / `!=`

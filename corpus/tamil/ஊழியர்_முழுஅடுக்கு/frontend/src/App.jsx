@@ -114,10 +114,10 @@ function App() {
     <main className="page-shell">
       <header className="hero">
         <div>
-          <p className="eyebrow">அறம் · React · SQLite</p>
+          <p className="eyebrow">நிரலுளி · React · SQLite</p>
           <h1>ஊழியர் விவரங்கள்</h1>
           <p className="subtitle">
-            அறம் REST சேவையிலிருந்து பெறப்பட்ட தமிழ் நிறுவனத் தரவுகள்
+            நிரலுளி REST சேவையிலிருந்து பெறப்பட்ட தமிழ் நிறுவனத் தரவுகள்
           </p>
         </div>
         <button
@@ -191,7 +191,7 @@ function App() {
             <strong>தரவைப் பெற முடியவில்லை</strong>
             <p>{error}</p>
             <p className="error-hint">
-              அறம் backend சேவை 127.0.0.1:8080 முகவரியில் இயங்குகிறதா?
+              நிரலுளி backend சேவை 127.0.0.1:8080 முகவரியில் இயங்குகிறதா?
             </p>
             <button onClick={loadEmployees} type="button">
               மீண்டும் முயற்சி செய்

@@ -1,6 +1,6 @@
 # Tamil corpus
 
-Example and (later) test programs for Aram. Subset: **Tamil-0 (frozen 2026-08-01)**.
+Example and (later) test programs for Niraluli. Subset: **Tamil-0 (frozen 2026-08-01)**.
 
 Corpus programs are part of the frozen snapshot; treat changes as subset bumps unless fixing comments/docs only.
 
@@ -8,12 +8,12 @@ Corpus programs are part of the frozen snapshot; treat changes as subset bumps u
 
 | File | Covers |
 |------|--------|
-| `வணக்கம்.aram` | package, entry `தொடக்கம்`, `பதிப்பி` string |
-| `எண்கணிதம்.aram` | `மாறி`, `:=`, `=`, arithmetic `+ - * / %` |
-| `நிபந்தனை.aram` | `எனில்` / `இல்லையேல்`, `மெய்` / comparisons |
-| `கூட்டு.aram` | helper `செயல்பாடு`, params, `திருப்பு`, call |
-| `சுழல்.aram` | Tamil-0.1 | `சுழல்` C-style + while-like loops |
-| `பல்கோப்பு/` | Tamil-0.9 | same-package multi-file (`aram பல்கோப்பு`) |
+| `வணக்கம்.uli` | package, entry `தொடக்கம்`, `பதிப்பி` string |
+| `எண்கணிதம்.uli` | `மாறி`, `:=`, `=`, arithmetic `+ - * / %` |
+| `நிபந்தனை.uli` | `எனில்` / `இல்லையேல்`, `மெய்` / comparisons |
+| `கூட்டு.uli` | helper `செயல்பாடு`, params, `திருப்பு`, call |
+| `சுழல்.uli` | Tamil-0.1 | `சுழல்` C-style + while-like loops |
+| `பல்கோப்பு/` | Tamil-0.9 | same-package multi-file (`uli பல்கோப்பு`) |
 | `கொணர்_எடு/` | Tamil-0.10 | `கொணர் "கணிதம்"` + `கணிதம்.கூட்டு` |
 | `வலை_எதிரொலி/` | Tamil-0.53 | TCP echo via `கொணர் "வலை"` |
 | `வலைபரிமாற்றம்/` | Tamil-0.59 | query params + request headers + exact-path mux |
@@ -24,23 +24,23 @@ Corpus programs are part of the frozen snapshot; treat changes as subset bumps u
 | `வலை_திருப்பு/` | Tamil-0.61 | opt-in HTTP redirect + timeout options |
 | `தகவல்_வலை/` | Tamil-0.61 | IPv4 UDP loopback datagrams |
 | `தரவுத்தளம்/` | Tamil-0.62 | shared SQL vtable + SQLite prepared statements |
-| `ஊழியர்_முழுஅடுக்கு/` | Tamil-0.62 | React employee grid + Aram REST API + Tamil SQLite (`SETUP.md`) |
-| `செயல்பாடு_புலம்.aram` | Tamil-0.58 | function values in struct and slice fields |
-| `குவியல்.aram` | Tamil-0.60 | indexed conservative GC + flattened string concat |
+| `ஊழியர்_முழுஅடுக்கு/` | Tamil-0.62 | React employee grid + Niraluli REST API + Tamil SQLite (`SETUP.md`) |
+| `செயல்பாடு_புலம்.uli` | Tamil-0.58 | function values in struct and slice fields |
+| `குவியல்.uli` | Tamil-0.60 | indexed conservative GC + flattened string concat |
 
 ## Invalid (`invalid/`)
 
 | File | Why invalid |
 |------|-------------|
-| `தொகுப்பு_இல்லை.aram` | missing `தொகுப்பு` clause |
-| `அறிவிக்கப்படாத_ஒதுக்கீடு.aram` | `=` without prior `மாறி` / `:=` (syntax OK; semantic error later) |
-| `பழைய_else.aram` | uses `இல்லையெனில்` (IDENT); not parse-fatal — style/semantic later |
-| `முழுமையற்ற_ஒதுக்கீடு.aram` | `=` with missing expression (parse error) |
+| `தொகுப்பு_இல்லை.uli` | missing `தொகுப்பு` clause |
+| `அறிவிக்கப்படாத_ஒதுக்கீடு.uli` | `=` without prior `மாறி` / `:=` (syntax OK; semantic error later) |
+| `பழைய_else.uli` | uses `இல்லையெனில்` (IDENT); not parse-fatal — style/semantic later |
+| `முழுமையற்ற_ஒதுக்கீடு.uli` | `=` with missing expression (parse error) |
 
 ## Conventions
 
 - One idea per file where practical.
-- Basenames may be Tamil; extension is always `.aram`.
+- Basenames may be Tamil; extension is always `.uli`.
 - ASCII fallback names are for docs only (not checked in).
 - Invalid programs are expected to fail once the checker/parser exists.
 - Comments use Go style (`//` line, `/* */` block). Each file includes a Go-equivalent sketch in a leading `//` comment.

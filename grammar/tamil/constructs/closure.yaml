@@ -10,7 +10,7 @@ tamil_ebnf: |
   FuncLit = "செயல்பாடு" "(" [ ParameterList ] ")" [ Result ] Block .
   Operand = … | FuncLit .
 semantics: >
-  Function literals yield function values (aram_fn). Free variables from
+  Function literals yield function values (uli_fn). Free variables from
   enclosing scopes are captured by reference (Go-like): mutations inside
   the closure are visible outside. Captured locals are arena-promoted in
   C. Nested literals allowed. Tamil-0.46: சுழல் / ஒவ்வொரு iteration
@@ -28,6 +28,6 @@ examples:
       inc()
       println(n)
 notes:
-  - "Builds on Tamil-0.44 function types / aram_fn."
+  - "Builds on Tamil-0.44 function types / uli_fn."
   - "Tamil-0.46: Go 1.22+ per-iteration loop variables."
   - "Method expressions and interfaces still later."

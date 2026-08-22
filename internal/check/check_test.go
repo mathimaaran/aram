@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"testing"
 
-	"aram/internal/check"
-	"aram/internal/parse"
+	"niraluli/internal/check"
+	"niraluli/internal/parse"
 )
 
 func root(t *testing.T) string {
@@ -20,7 +20,7 @@ func root(t *testing.T) string {
 }
 
 func TestCheckValidCorpus(t *testing.T) {
-	names := []string{"வணக்கம்.aram", "எண்கணிதம்.aram", "நிபந்தனை.aram", "கூட்டு.aram", "பதிப்பு.aram", "சுழல்.aram", "சரம்.aram", "பட்டியல்.aram", "பலபட்டியல்.aram", "பட்டியல்_அமைப்பு.aram", "ஒவ்வொரு.aram", "சேர்.aram", "சேர்_வளர்.aram", "ஆக்கு.aram", "அகராதி.aram", "அகராதி_எழுத்து.aram", "அகராதி_விசை_வளர்.aram", "தள்ளிவை.aram", "தள்ளிவை_முறை.aram", "இருமி.aram", "பொதுவகை.aram", "பகாஎண்.aram", "பலமதிப்பு.aram", "பெயர்_முடிவு.aram", "பரிமாற்றம்.aram", "வகை_மாற்று.aram", "மிதவை.aram", "தமிழ்_இலக்கம்.aram", "மாற்றுதல்.aram", "மாற்றுதல்_மேல்.aram", "நிலையான.aram", "அமைப்பு.aram", "அமைப்பு_நிலை.aram", "சுட்டி.aram", "முறை.aram", "முறை_மதிப்பு.aram", "முறை_வெளிப்பாடு.aram", "மூடுகை.aram", "சுழல்_மூடுகை.aram", "இன்மை.aram", "வளர்_அமைப்பு.aram", "திசைவி.aram", "தொடக்கம்_நிபந்தனை.aram", "அமைப்பு_சமம்.aram", "பதிப்பி_அமைப்பு.aram", "செயல்பாடு_புலம்.aram", "இழை.aram", "தடத்தேர்வு.aram", "தடத்தேர்வு_காலி.aram", "தடத்தேர்வு_சந்திப்பு.aram", "அலறு.aram", "அலறு_இழை.aram", "அலறு_எண்.aram", "ஒவ்வொரு_தடம்.aram", "குவியல்.aram"}
+	names := []string{"வணக்கம்.uli", "எண்கணிதம்.uli", "நிபந்தனை.uli", "கூட்டு.uli", "பதிப்பு.uli", "சுழல்.uli", "சரம்.uli", "பட்டியல்.uli", "பலபட்டியல்.uli", "பட்டியல்_அமைப்பு.uli", "ஒவ்வொரு.uli", "சேர்.uli", "சேர்_வளர்.uli", "ஆக்கு.uli", "அகராதி.uli", "அகராதி_எழுத்து.uli", "அகராதி_விசை_வளர்.uli", "தள்ளிவை.uli", "தள்ளிவை_முறை.uli", "இருமி.uli", "பொதுவகை.uli", "பகாஎண்.uli", "பலமதிப்பு.uli", "பெயர்_முடிவு.uli", "பரிமாற்றம்.uli", "வகை_மாற்று.uli", "மிதவை.uli", "தமிழ்_இலக்கம்.uli", "மாற்றுதல்.uli", "மாற்றுதல்_மேல்.uli", "நிலையான.uli", "அமைப்பு.uli", "அமைப்பு_நிலை.uli", "சுட்டி.uli", "முறை.uli", "முறை_மதிப்பு.uli", "முறை_வெளிப்பாடு.uli", "மூடுகை.uli", "சுழல்_மூடுகை.uli", "இன்மை.uli", "வளர்_அமைப்பு.uli", "திசைவி.uli", "தொடக்கம்_நிபந்தனை.uli", "அமைப்பு_சமம்.uli", "பதிப்பி_அமைப்பு.uli", "செயல்பாடு_புலம்.uli", "இழை.uli", "தடத்தேர்வு.uli", "தடத்தேர்வு_காலி.uli", "தடத்தேர்வு_சந்திப்பு.uli", "அலறு.uli", "அலறு_இழை.uli", "அலறு_எண்.uli", "ஒவ்வொரு_தடம்.uli", "குவியல்.uli"}
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
 			path := filepath.Join(root(t), "corpus", "tamil", name)
@@ -40,7 +40,7 @@ func TestCheckValidCorpus(t *testing.T) {
 }
 
 func TestCheckUndeclaredAssign(t *testing.T) {
-	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "அறிவிக்கப்படாத_ஒதுக்கீடு.aram")
+	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "அறிவிக்கப்படாத_ஒதுக்கீடு.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -56,7 +56,7 @@ func TestCheckUndeclaredAssign(t *testing.T) {
 }
 
 func TestCheckNilShortDecl(t *testing.T) {
-	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "இன்மை_குறுக்கு.aram")
+	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "இன்மை_குறுக்கு.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -72,7 +72,7 @@ func TestCheckNilShortDecl(t *testing.T) {
 }
 
 func TestCheckValueRecursiveStruct(t *testing.T) {
-	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "மதிப்பு_சுழல்.aram")
+	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "மதிப்பு_சுழல்.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -88,7 +88,7 @@ func TestCheckValueRecursiveStruct(t *testing.T) {
 }
 
 func TestCheckSliceStructNotComparable(t *testing.T) {
-	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "துண்டு_சமம்.aram")
+	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "துண்டு_சமம்.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -104,7 +104,7 @@ func TestCheckSliceStructNotComparable(t *testing.T) {
 }
 
 func TestCheckThreeIndexString(t *testing.T) {
-	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "மூன்று_துண்டு_சரம்.aram")
+	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "மூன்று_துண்டு_சரம்.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -120,7 +120,7 @@ func TestCheckThreeIndexString(t *testing.T) {
 }
 
 func TestCheckMixedStructLit(t *testing.T) {
-	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "அமைப்பு_கலப்பு.aram")
+	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "அமைப்பு_கலப்பு.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -136,7 +136,7 @@ func TestCheckMixedStructLit(t *testing.T) {
 }
 
 func TestCheckBadMapKey(t *testing.T) {
-	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "அகராதி_விசை.aram")
+	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "அகராதி_விசை.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -152,7 +152,7 @@ func TestCheckBadMapKey(t *testing.T) {
 }
 
 func TestCheckMapLitMissingKey(t *testing.T) {
-	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "அகராதி_எழுத்து_விசை.aram")
+	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "அகராதி_எழுத்து_விசை.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -168,7 +168,7 @@ func TestCheckMapLitMissingKey(t *testing.T) {
 }
 
 func TestCheckMethodValueNonAddressable(t *testing.T) {
-	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "முறை_மதிப்பு_சுட்டி.aram")
+	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "முறை_மதிப்பு_சுட்டி.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -184,7 +184,7 @@ func TestCheckMethodValueNonAddressable(t *testing.T) {
 }
 
 func TestCheckMethodExprPointerOnValue(t *testing.T) {
-	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "முறை_வெளிப்பாடு_சுட்டி.aram")
+	path := filepath.Join(root(t), "corpus", "tamil", "invalid", "முறை_வெளிப்பாடு_சுட்டி.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -201,10 +201,10 @@ func TestCheckMethodExprPointerOnValue(t *testing.T) {
 
 func TestCheckInvalidConcurrency(t *testing.T) {
 	names := []string{
-		"தடம்_அனுப்பு.aram",
-		"தடத்தேர்வு_பெறு_அல்ல.aram",
-		"ஒவ்வொரு_தடம்_இரு.aram",
-		"ஒவ்வொரு_தடம்_அனுப்பு.aram",
+		"தடம்_அனுப்பு.uli",
+		"தடத்தேர்வு_பெறு_அல்ல.uli",
+		"ஒவ்வொரு_தடம்_இரு.uli",
+		"ஒவ்வொரு_தடம்_அனுப்பு.uli",
 	}
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
@@ -227,8 +227,8 @@ func TestCheckInvalidConcurrency(t *testing.T) {
 
 func TestCheckInvalidPanic(t *testing.T) {
 	names := []string{
-		"அலறு_தருமதிப்பு.aram",
-		"அலறு_பட்டியல்.aram",
+		"அலறு_தருமதிப்பு.uli",
+		"அலறு_பட்டியல்.uli",
 	}
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {

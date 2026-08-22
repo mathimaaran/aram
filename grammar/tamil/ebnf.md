@@ -1,4 +1,4 @@
-# Aram Tamil EBNF
+# Niraluli Tamil EBNF
 
 Notation: same as Go (`grammar/go/ebnf-notation.md`).
 Keywords: `grammar/tamil/keywords.yaml`.
@@ -119,8 +119,8 @@ Explicit `;` remains valid (e.g. `சுழல்` clauses).
 
 Several `SourceFile`s with the same `PackageName` form one package.
 Decls are shared (types, funcs, methods). Exactly one entry
-`செயல்பாடு தொடக்கம்()` across the package. Tooling: `aram <dir>` or
-`aram a.aram b.aram …`. Cross-package: `கொணர் "rel/dir"` then `pkg.Name`.
+`செயல்பாடு தொடக்கம்()` across the package. Tooling: `uli <dir>` or
+`uli a.uli b.uli …`. Cross-package: `கொணர் "rel/dir"` then `pkg.Name`.
 
 ## Export (Tamil-0.11)
 

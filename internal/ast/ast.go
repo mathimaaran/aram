@@ -1,10 +1,10 @@
-// Package ast defines Aram abstract syntax trees.
+// Package ast defines Niraluli abstract syntax trees.
 package ast
 
 import (
 	"fmt"
 
-	"aram/internal/token"
+	"niraluli/internal/token"
 )
 
 // Node is implemented by all AST nodes.

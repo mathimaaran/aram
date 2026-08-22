@@ -1,6 +1,6 @@
-# Aram (அறம்)
+# Niraluli (நிரலுளி)
 
-Aram is a **Go-inspired** programming language with **semantic Tamil** keywords.
+Niraluli is a **Go-inspired** programming language with **semantic Tamil** keywords.
 It is free to diverge from Go. The long-term goal is a quality compiler for
 Linux (x86-64 first, then i386), with NASM as a later backend.
 
@@ -9,9 +9,9 @@ Linux (x86-64 first, then i386), with NASM as a later backend.
 
 | Item | Value |
 |------|--------|
-| Language | Aram (அறம்) |
+| Language | Niraluli (நிரலுளி) |
 | Host compiler language | Go |
-| Source extension | `.aram` |
+| Source extension | `.uli` |
 | Keywords | Semantic Tamil |
 | Semantics | Go-inspired, free to diverge |
 | Language subset | **v0.62** |
@@ -23,28 +23,28 @@ Linux (x86-64 first, then i386), with NASM as a later backend.
 ## First program
 
 ```text
-corpus/tamil/வணக்கம்.aram
+corpus/tamil/வணக்கம்.uli
 ```
 
 ## After downloading (release zip or clone)
 
-Aram ships as **source**, not a prebuilt installer. Unzip or clone on **Linux**, then install only what you need for the path below.
+Niraluli ships as **source**, not a prebuilt installer. Unzip or clone on **Linux**, then install only what you need for the path below.
 
-### Always required (compile and run Aram)
+### Always required (compile and run Niraluli)
 
 | Need | Why | Typical install (Ubuntu/Debian) |
 |------|-----|----------------------------------|
 | Linux | Supported runtime target | — |
-| Go toolchain | Hosts the Aram compiler (`cmd/aram`) | System Go, or `source tools/env.sh` / `./tools/run-go.sh` |
+| Go toolchain | Hosts the Niraluli compiler (`cmd/uli`) | System Go, or `source tools/env.sh` / `./tools/run-go.sh` |
 | GCC or Clang (`cc`) | Compiles generated C | `sudo apt install build-essential` |
 | pthread + `libdl` (`-ldl`) | Runtime / SQL dynamic loading | Usually included with the toolchain |
 
 Minimal try-out:
 
 ```bash
-cd aram-0.62   # or your unzipped / cloned directory name
+cd uli-0.62   # or your unzipped / cloned directory name
 source tools/env.sh   # only if you do not already have `go` on PATH
-go run ./cmd/aram run corpus/tamil/வணக்கம்.aram
+go run ./cmd/uli run corpus/tamil/வணக்கம்.uli
 ```
 
 Open [`docs/index.html`](docs/index.html) in a browser for the developer docs.
@@ -58,14 +58,14 @@ Open [`docs/index.html`](docs/index.html) in a browser for the developer docs.
 ```bash
 sudo apt install libsqlite3-0
 # check: ldconfig -p | grep libsqlite3
-go run ./cmd/aram run corpus/tamil/தரவுத்தளம்/
+go run ./cmd/uli run corpus/tamil/தரவுத்தளம்/
 ```
 
 You do **not** need SQLite headers, `libsqlite3-dev`, or `-lsqlite3` to build.
 
 ### Optional: full-stack employee demo only
 
-Extra on top of Go + C + SQLite — **not** required for normal Aram use:
+Extra on top of Go + C + SQLite — **not** required for normal Niraluli use:
 
 | Need | Why |
 |------|-----|
@@ -73,9 +73,9 @@ Extra on top of Go + C + SQLite — **not** required for normal Aram use:
 
 Follow [`corpus/tamil/ஊழியர்_முழுஅடுக்கு/SETUP.md`](corpus/tamil/ஊழியர்_முழுஅடுக்கு/SETUP.md).
 
-### Not required for core Aram
+### Not required for core Niraluli
 
-- A prebuilt `aram` binary (use `go run` / `go build ./cmd/aram`)
+- A prebuilt `uli` binary (use `go run` / `go build ./cmd/uli`)
 - Node / npm (except the React demo above)
 - SQLite `-dev` packages
 - Docker, Python, Java, etc.
@@ -85,7 +85,7 @@ Follow [`corpus/tamil/ஊழியர்_முழுஅடுக்கு/SETUP
 ```text
 notes/           design decisions, roadmap, Unicode, Tamil fonts
 grammar/go/      frozen Go reference (inspiration, not a checklist)
-grammar/tamil/   Aram grammar, keywords, construct cards
+grammar/tamil/   Niraluli grammar, keywords, construct cards
 corpus/tamil/    example and test programs
 stdlib/          compiler stdlib (வலை, பரிமாற்றம், தரவுத்தளம்)
 tools/           portable Go helpers (`env.sh`, `run-go.sh`)
@@ -94,7 +94,7 @@ docs/            static HTML developer documentation
 
 ## Editor setup (Tamil glyphs)
 
-Aram source uses Tamil script. If you see **squares** instead of letters, install/use
+Niraluli source uses Tamil script. If you see **squares** instead of letters, install/use
 **Noto Sans Tamil** and set a font fallback — see [`notes/fonts-tamil.md`](notes/fonts-tamil.md).
 
 ## Status
@@ -107,8 +107,8 @@ Aram source uses Tamil script. If you see **squares** instead of letters, instal
 ```bash
 source tools/env.sh   # if needed
 go test ./...
-go run ./cmd/aram check corpus/tamil/வணக்கம்.aram
-go run ./cmd/aram run corpus/tamil/வணக்கம்.aram
+go run ./cmd/uli check corpus/tamil/வணக்கம்.uli
+go run ./cmd/uli run corpus/tamil/வணக்கம்.uli
 # → build/வணக்கம்.c and build/வணக்கம் (override with -o)
 # C builds default to -O2; pass --debug or -O0 for an unoptimized build.
 ```
@@ -125,7 +125,7 @@ without phonetic input).
 
 ## License
 
-Aram is licensed under the [Apache License, Version 2.0](LICENSE).
+Niraluli is licensed under the [Apache License, Version 2.0](LICENSE).
 See [`NOTICE`](NOTICE) for copyright attribution.
 
 ## Working with AI agents

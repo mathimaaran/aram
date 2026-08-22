@@ -3,8 +3,8 @@ package check
 import (
 	"fmt"
 
-	"aram/internal/ast"
-	"aram/internal/token"
+	"niraluli/internal/ast"
+	"niraluli/internal/token"
 )
 
 type pkgState struct {

@@ -42,4 +42,4 @@ notes:
   - "Tamil-0.61: IPv4 UDP datagrams via தகவல்தளம்."
   - "விடு = close conn; நிறுத்து = stop listener (மூடு is the chan keyword)."
   - "கேள் = listen; ஏற்று = accept; இணை = dial/connect; படி/எழுது = read/write."
-  - "Stdlib path: stdlib/வலை/; dummy .aram signatures, C intrinsics in emitc."
+  - "Stdlib path: stdlib/வலை/; dummy .uli signatures, C intrinsics in emitc."

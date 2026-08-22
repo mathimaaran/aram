@@ -17,6 +17,6 @@ examples:
       பதிப்பி(ப)
     go_equivalent: |
       p := Point{x: 3, y: 4}
-      println(p) // Aram format: புள்ளி{x: 3, y: 4}
+      println(p) // Niraluli format: புள்ளி{x: 3, y: 4}
 notes:
   - "Debug aid; not a stable serialization format."

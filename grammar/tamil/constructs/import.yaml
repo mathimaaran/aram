@@ -12,7 +12,7 @@ tamil_ebnf: |
 ast:
   type: ImportSpec
 semantics: >
-  கொணர் "rel/path" loads all *.aram files in that directory (relative to the
+  கொணர் "rel/path" loads all *.uli files in that directory (relative to the
   importing file) as one package. If that directory is missing, Tamil-0.53+
   also looks under compiler stdlib/ (e.g. கொணர் "வலை"). The package name is
   the imported files' தொகுப்பு name. Use qualified names pkg.Func / pkg.Type.

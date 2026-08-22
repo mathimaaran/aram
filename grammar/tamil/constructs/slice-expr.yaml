@@ -12,8 +12,8 @@ semantics: >
 examples:
   - tamil: |
       பதிப்பி(எண்கள்[1:3])
-      பதிப்பி("அறம்"[0:3])
+      பதிப்பி("நிரலுளி"[0:3])
     go_equivalent: |
-      // print elems of nums[1:3]; println("அறம்"[0:3])
+      // print elems of nums[1:3]; println("நிரலுளி"[0:3])
 notes:
   - "Three-index: see slice-grow.yaml (0.19)."

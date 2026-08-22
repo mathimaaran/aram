@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Aram compiler commands, build output, testing, and repository workflow.">
-  <title>Compiler & Tooling — Aram Documentation</title>
+  <meta name="description" content="Niraluli compiler commands, build output, testing, and repository workflow.">
+  <title>Compiler & Tooling — Niraluli Documentation</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="docs.js"></script>
 </head>
@@ -31,10 +31,10 @@
   </div>
 
   <h2 id="commands">Command reference</h2>
-  <pre><code>aram [run|build|emit|check|parse|lex] \
+  <pre><code>uli [run|build|emit|check|parse|lex] \
   [-O0|-O1|-O2|-O3|-Os|--debug] \
   [-o out] \
-  &lt;file.aram|directory&gt;…</code></pre>
+  &lt;file.uli|directory&gt;…</code></pre>
 
   <div class="table-wrap">
     <table>
@@ -50,14 +50,14 @@
     </table>
   </div>
 
-  <p>While working in the repository, replace <code>aram</code> with:</p>
-  <pre><code>go run ./cmd/aram</code></pre>
+  <p>While working in the repository, replace <code>uli</code> with:</p>
+  <pre><code>go run ./cmd/uli</code></pre>
 
   <h2 id="pipeline">Compilation pipeline</h2>
   <ol>
     <li><strong>Expansion:</strong> input files/directories are expanded; imported directories are recursively loaded.</li>
     <li><strong>Lexing:</strong> UTF-8 source becomes tokens; Go-like semicolon insertion runs here.</li>
-    <li><strong>Parsing:</strong> recursive-descent parser produces the Aram AST.</li>
+    <li><strong>Parsing:</strong> recursive-descent parser produces the Niraluli AST.</li>
     <li><strong>Package merge:</strong> same-package files are merged in dependency order.</li>
     <li><strong>Checking:</strong> names, visibility, types, method sets, generic instantiations, closure captures, and entry rules are validated.</li>
     <li><strong>C emission:</strong> typed program metadata drives generated C types, runtime inclusion, monomorphization, and function bodies.</li>
@@ -67,11 +67,11 @@
 
   <h2 id="outputs">Output files and build flags</h2>
   <p>Default output base comes from the input filename or directory:</p>
-  <pre><code>go run ./cmd/aram build corpus/tamil/வணக்கம்.aram
+  <pre><code>go run ./cmd/uli build corpus/tamil/வணக்கம்.uli
 # build/வணக்கம்.c
 # build/வணக்கம்</code></pre>
   <p>Override the binary output:</p>
-  <pre><code>go run ./cmd/aram build -o dist/hello hello.aram
+  <pre><code>go run ./cmd/uli build -o dist/hello hello.uli
 # dist/hello.c
 # dist/hello</code></pre>
   <p><code>emit -o generated/program</code> adds the <code>.c</code> extension when missing.</p>
@@ -88,7 +88,7 @@
 
   <h2 id="packages">Package loading</h2>
   <ul>
-    <li>A directory input loads its <code>.aram</code> package files.</li>
+    <li>A directory input loads its <code>.uli</code> package files.</li>
     <li>Relative import paths resolve from the importing package directory.</li>
     <li><code>"வலை"</code>, <code>"பரிமாற்றம்"</code>, and <code>"தரவுத்தளம்"</code> resolve from <code>stdlib/</code>.</li>
     <li>Dependency packages are checked/emitted before dependents.</li>
@@ -97,7 +97,7 @@
   </ul>
 
   <h2 id="repository">Repository layout</h2>
-  <pre><code>cmd/aram/               compiler command-line driver
+  <pre><code>cmd/uli/               compiler command-line driver
 internal/ast/           syntax tree definitions
 internal/token/         token and source position model
 internal/lex/           lexer and semicolon insertion
@@ -106,12 +106,12 @@ internal/load/          package/import loader and integration tests
 internal/check/         static checker and typed program metadata
 internal/emitc/         C emitter and embedded C runtimes
 stdlib/வலை/             TCP/UDP public declarations
-stdlib/பரிமாற்றம்/      HTTP public declarations and Aram mux
+stdlib/பரிமாற்றம்/      HTTP public declarations and Niraluli mux
 stdlib/தரவுத்தளம்/      SQL database public declarations
 grammar/tamil/          EBNF, keyword glossary, construct cards
 corpus/tamil/           valid/invalid examples and integration programs
   தரவுத்தளம்/           SQLite API sample
-  ஊழியர்_முழுஅடுக்கு/   Aram REST + React + SQLite full-stack demo
+  ஊழியர்_முழுஅடுக்கு/   Niraluli REST + React + SQLite full-stack demo
 notes/                  roadmap, design decisions, deferred inventory
 tools/                  portable toolchain helpers
 docs/                   this static developer documentation
@@ -146,7 +146,7 @@ go test ./internal/load -run TestHTTPRedirectOptions -count=1</code></pre>
   </ol>
   <div class="callout">
     <strong>No syntax change?</strong>
-    Standard library/runtime additions often need only public <code>stdlib/*.aram</code> declarations, checker-compatible signatures, emitter intrinsics, C runtime code, corpus, tests, and documentation.
+    Standard library/runtime additions often need only public <code>stdlib/*.uli</code> declarations, checker-compatible signatures, emitter intrinsics, C runtime code, corpus, tests, and documentation.
   </div>
 
   <h2 id="debugging">Debugging generated C</h2>
@@ -156,12 +156,12 @@ go test ./internal/load -run TestHTTPRedirectOptions -count=1</code></pre>
     <li>Build with <code>--debug</code> to disable optimization.</li>
     <li>Compile the emitted file manually with extra warning/sanitizer flags when appropriate.</li>
   </ol>
-  <pre><code>go run ./cmd/aram emit -o build/debug program.aram
+  <pre><code>go run ./cmd/uli emit -o build/debug program.uli
 gcc -std=c11 -O0 -g -pthread \
   -fsanitize=address,undefined \
   build/debug.c -o build/debug
 ./build/debug</code></pre>
-  <p>Generated identifiers are UTF-8-safe C-mangled names. Runtime helpers retain readable <code>aram_*</code> names such as <code>aram_alloc</code>, <code>aram_http_do_opts</code>, <code>aram_net_udp_recv</code>, and database helpers under <code>aram_db_*</code>.</p>
+  <p>Generated identifiers are UTF-8-safe C-mangled names. Runtime helpers retain readable <code>uli_*</code> names such as <code>uli_alloc</code>, <code>uli_http_do_opts</code>, <code>uli_net_udp_recv</code>, and database helpers under <code>uli_db_*</code>.</p>
 
   <div class="next-links">
     <a href="standard-library.html"><span>Previous</span>← Standard library</a>

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Install Aram, compile programs, and learn the project workflow.">
-  <title>Getting Started — Aram Documentation</title>
+  <meta name="description" content="Install Niraluli, compile programs, and learn the project workflow.">
+  <title>Getting Started — Niraluli Documentation</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="docs.js"></script>
 </head>
@@ -13,7 +13,7 @@
   <section class="hero">
     <p class="eyebrow">Guide</p>
     <h1>Getting started</h1>
-    <p class="lead">Build the compiler, run an Aram program, organize packages, and understand the files produced by the C backend.</p>
+    <p class="lead">Build the compiler, run an Niraluli program, organize packages, and understand the files produced by the C backend.</p>
   </section>
 
   <div class="toc">
@@ -33,7 +33,7 @@
   <h2 id="requirements">Requirements</h2>
   <ul>
     <li>Linux (the current supported runtime target).</li>
-    <li>Go toolchain to build/run the Aram compiler.</li>
+    <li>Go toolchain to build/run the Niraluli compiler.</li>
     <li>GCC or Clang-compatible <code>cc</code> to compile generated C.</li>
     <li>pthread support for concurrency and the runtime.</li>
     <li><code>libdl</code> (<code>-ldl</code>) for dynamic loading used by the SQL runtime.</li>
@@ -47,10 +47,10 @@ go test ./...</code></pre>
   <p>If your system Go is suitable, the first line is optional.</p>
 
   <h2 id="compiler">Run the compiler</h2>
-  <p>The compiler entry point is <code>cmd/aram</code>. During development, invoke it through Go:</p>
-  <pre><code>go run ./cmd/aram check corpus/tamil/வணக்கம்.aram
-go run ./cmd/aram run corpus/tamil/வணக்கம்.aram
-go run ./cmd/aram build corpus/tamil/வணக்கம்.aram</code></pre>
+  <p>The compiler entry point is <code>cmd/uli</code>. During development, invoke it through Go:</p>
+  <pre><code>go run ./cmd/uli check corpus/tamil/வணக்கம்.uli
+go run ./cmd/uli run corpus/tamil/வணக்கம்.uli
+go run ./cmd/uli build corpus/tamil/வணக்கம்.uli</code></pre>
 
   <div class="table-wrap">
     <table>
@@ -67,13 +67,13 @@ go run ./cmd/aram build corpus/tamil/வணக்கம்.aram</code></pre>
   </div>
 
   <p>Generated C builds use <code>-O2</code> by default. Select a different level or debug output explicitly:</p>
-  <pre><code>go run ./cmd/aram build --debug program.aram
-go run ./cmd/aram build -O0 program.aram
-go run ./cmd/aram build -O3 -o bin/my-program program.aram</code></pre>
+  <pre><code>go run ./cmd/uli build --debug program.uli
+go run ./cmd/uli build -O0 program.uli
+go run ./cmd/uli build -O3 -o bin/my-program program.uli</code></pre>
   <p>Supported optimization flags are <code>-O0</code>, <code>-O1</code>, <code>-O2</code>, <code>-O3</code>, and <code>-Os</code>. Without <code>-o</code>, outputs are written below <code>build/</code>.</p>
 
   <h2 id="hello">Your first program</h2>
-  <p>Create <code>hello.aram</code>:</p>
+  <p>Create <code>hello.uli</code>:</p>
   <pre><code>தொகுப்பு தொடக்கம்
 
 செயல்பாடு தொடக்கம்() {
@@ -84,32 +84,32 @@ go run ./cmd/aram build -O3 -o bin/my-program program.aram</code></pre>
     <li>Its package name is <code>தொடக்கம்</code>.</li>
     <li>It contains exactly one zero-argument <code>செயல்பாடு தொடக்கம்()</code>.</li>
   </ol>
-  <pre><code>go run ./cmd/aram run hello.aram</code></pre>
+  <pre><code>go run ./cmd/uli run hello.uli</code></pre>
 
   <h2 id="packages">Files and packages</h2>
   <p>Every source file begins with a package clause. Multiple files with the same package name share declarations:</p>
   <pre><code>project/
-├── தொடக்கம்.aram
-└── helpers.aram</code></pre>
-  <pre><code>// helpers.aram
+├── தொடக்கம்.uli
+└── helpers.uli</code></pre>
+  <pre><code>// helpers.uli
 தொகுப்பு தொடக்கம்
 
 செயல்பாடு இரட்டி(எ முழுஎண்) முழுஎண் {
     திருப்பு எ * 2
 }</code></pre>
-  <pre><code>// தொடக்கம்.aram
+  <pre><code>// தொடக்கம்.uli
 தொகுப்பு தொடக்கம்
 
 செயல்பாடு தொடக்கம்() {
     பதிப்பி(இரட்டி(21))
 }</code></pre>
   <p>Compile a directory or pass multiple files:</p>
-  <pre><code>go run ./cmd/aram run project/
-go run ./cmd/aram run project/தொடக்கம்.aram project/helpers.aram</code></pre>
+  <pre><code>go run ./cmd/uli run project/
+go run ./cmd/uli run project/தொடக்கம்.uli project/helpers.uli</code></pre>
 
   <h2 id="imports">Imports and exports</h2>
-  <p><code>கொணர்</code> imports a package. Names are private unless explicitly marked <code>வெளி</code>; Aram does not use capitalization for visibility.</p>
-  <pre><code>// math/எண்.aram
+  <p><code>கொணர்</code> imports a package. Names are private unless explicitly marked <code>வெளி</code>; Niraluli does not use capitalization for visibility.</p>
+  <pre><code>// math/எண்.uli
 தொகுப்பு கணிதம்
 
 வெளி செயல்பாடு கூட்டு(அ முழுஎண், ஆ முழுஎண்) முழுஎண் {
@@ -147,20 +147,20 @@ go run ./cmd/aram run project/தொடக்கம்.aram project/helpers.aram
     <table>
       <thead><tr><th>Path</th><th>What it shows</th></tr></thead>
       <tbody>
-        <tr><td><code>corpus/tamil/வணக்கம்.aram</code></td><td>Minimal hello program</td></tr>
+        <tr><td><code>corpus/tamil/வணக்கம்.uli</code></td><td>Minimal hello program</td></tr>
         <tr><td><code>corpus/tamil/தரவுத்தளம்/</code></td><td>SQLite open, create, prepare, bind, query, and unsupported-driver error</td></tr>
-        <tr><td><code>corpus/tamil/ஊழியர்_முழுஅடுக்கு/</code></td><td>Aram HTTP REST + SQLite employees DB + React UI (see <code>SETUP.md</code>)</td></tr>
+        <tr><td><code>corpus/tamil/ஊழியர்_முழுஅடுக்கு/</code></td><td>Niraluli HTTP REST + SQLite employees DB + React UI (see <code>SETUP.md</code>)</td></tr>
       </tbody>
     </table>
   </div>
-  <pre><code>go run ./cmd/aram run corpus/tamil/தரவுத்தளம்/</code></pre>
+  <pre><code>go run ./cmd/uli run corpus/tamil/தரவுத்தளம்/</code></pre>
   <p>API details: <a href="standard-library.html#database">Standard library → SQL database</a>.</p>
 
   <h2 id="editor">Tamil editor setup</h2>
   <ul>
     <li>Store source as UTF-8.</li>
     <li>Install Noto Sans Tamil and include it as an editor font fallback.</li>
-    <li>Aram identifiers may mix Unicode letters, marks, digits, and underscore.</li>
+    <li>Niraluli identifiers may mix Unicode letters, marks, digits, and underscore.</li>
     <li>Both Arabic digits and Tamil digits <code>௦–௯</code> work in numeric literals.</li>
   </ul>
   <p>Repository-specific font setup is documented in <code>notes/fonts-tamil.md</code>.</p>

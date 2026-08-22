@@ -4,7 +4,7 @@ subset: Tamil-0.62
 go_inspired: |
   db, err := sql.Open("sqlite", ":memory:")
   stmt, err := db.Prepare("INSERT INTO item VALUES (?, ?)")
-  stmt.Exec(1, "Aram")
+  stmt.Exec(1, "Niraluli")
   rows, err := db.Query("SELECT id, name FROM item")
 tamil_keywords: {}
 tamil_ebnf: |
@@ -18,8 +18,8 @@ semantics: >
   One-based bind functions support null, int64, float64, UTF-8 text, and byte
   blobs. அடுத்து returns (மெய், இன்மை) for a row and (பொய், இன்மை) when done.
   Column getters use zero-based indexes and copy text/blob results into the
-  Aram managed heap. All operational failures return *தரவுத்தளம்.பிழை.
-  The SQLite backend is loaded at runtime with dlopen, so compiling an Aram
+  Niraluli managed heap. All operational failures return *தரவுத்தளம்.பிழை.
+  The SQLite backend is loaded at runtime with dlopen, so compiling an Niraluli
   program needs no sqlite3 headers or -lsqlite3; execution needs
   libsqlite3.so.0 (or libsqlite3.so). Handles require explicit கூற்றுவிடு /
   விடு; there are no finalizers. A connection or statement must not be used
@@ -33,7 +33,7 @@ examples:
       மாறி க தரவுத்தளம்.கூற்று
       க, ப = தரவுத்தளம்.தயாரி(இ, "INSERT INTO பொருள் VALUES (?, ?)")
       ப = தரவுத்தளம்.முழுஎண்பிணை(க, 1, 1)
-      ப = தரவுத்தளம்.சரம்பிணை(க, 2, "அறம்")
+      ப = தரவுத்தளம்.சரம்பிணை(க, 2, "நிரலுளி")
       _, ப = தரவுத்தளம்.அடுத்து(க)
       ப = தரவுத்தளம்.கூற்றுவிடு(க)
       ப = தரவுத்தளம்.விடு(இ)
@@ -41,7 +41,7 @@ examples:
       db, _ := sql.Open("sqlite", ":memory:")
       db.Exec("CREATE TABLE item (id INTEGER, name TEXT)")
       stmt, _ := db.Prepare("INSERT INTO item VALUES (?, ?)")
-      stmt.Exec(1, "Aram")
+      stmt.Exec(1, "Niraluli")
       stmt.Close()
       db.Close()
 notes:

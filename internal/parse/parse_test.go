@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"aram/internal/ast"
-	"aram/internal/parse"
+	"niraluli/internal/ast"
+	"niraluli/internal/parse"
 )
 
 func corpus(t *testing.T, elems ...string) string {
@@ -36,46 +36,46 @@ func mustParse(t *testing.T, path string) *ast.File {
 
 func TestParseValidCorpus(t *testing.T) {
 		files := []string{
-			"வணக்கம்.aram",
-			"எண்கணிதம்.aram",
-			"நிபந்தனை.aram",
-			"கூட்டு.aram",
-			"பதிப்பு.aram",
-			"சுழல்.aram",
-			"சரம்.aram",
-			"பட்டியல்.aram",
-			"பலபட்டியல்.aram",
-			"ஒவ்வொரு.aram",
-			"சேர்.aram",
-			"சேர்_வளர்.aram",
-			"ஆக்கு.aram",
-			"அகராதி.aram",
-			"அகராதி_எழுத்து.aram",
-			"தள்ளிவை.aram",
-			"தள்ளிவை_முறை.aram",
-			"அகராதி_விசை_வளர்.aram",
-			"இருமி.aram",
-			"பொதுவகை.aram",
-			"பகாஎண்.aram",
-			"பலமதிப்பு.aram",
-			"நிலையான.aram",
-			"அமைப்பு.aram",
-			"அமைப்பு_நிலை.aram",
-			"சுட்டி.aram",
-			"முறை.aram",
-			"முறை_மதிப்பு.aram",
-			"முறை_வெளிப்பாடு.aram",
-			"மூடுகை.aram",
-			"சுழல்_மூடுகை.aram",
-			"இழை.aram",
-			"தடத்தேர்வு.aram",
-			"தடத்தேர்வு_காலி.aram",
-			"தடத்தேர்வு_சந்திப்பு.aram",
-			"அலறு.aram",
-			"அலறு_இழை.aram",
-			"அலறு_எண்.aram",
-			"ஒவ்வொரு_தடம்.aram",
-			"குவியல்.aram",
+			"வணக்கம்.uli",
+			"எண்கணிதம்.uli",
+			"நிபந்தனை.uli",
+			"கூட்டு.uli",
+			"பதிப்பு.uli",
+			"சுழல்.uli",
+			"சரம்.uli",
+			"பட்டியல்.uli",
+			"பலபட்டியல்.uli",
+			"ஒவ்வொரு.uli",
+			"சேர்.uli",
+			"சேர்_வளர்.uli",
+			"ஆக்கு.uli",
+			"அகராதி.uli",
+			"அகராதி_எழுத்து.uli",
+			"தள்ளிவை.uli",
+			"தள்ளிவை_முறை.uli",
+			"அகராதி_விசை_வளர்.uli",
+			"இருமி.uli",
+			"பொதுவகை.uli",
+			"பகாஎண்.uli",
+			"பலமதிப்பு.uli",
+			"நிலையான.uli",
+			"அமைப்பு.uli",
+			"அமைப்பு_நிலை.uli",
+			"சுட்டி.uli",
+			"முறை.uli",
+			"முறை_மதிப்பு.uli",
+			"முறை_வெளிப்பாடு.uli",
+			"மூடுகை.uli",
+			"சுழல்_மூடுகை.uli",
+			"இழை.uli",
+			"தடத்தேர்வு.uli",
+			"தடத்தேர்வு_காலி.uli",
+			"தடத்தேர்வு_சந்திப்பு.uli",
+			"அலறு.uli",
+			"அலறு_இழை.uli",
+			"அலறு_எண்.uli",
+			"ஒவ்வொரு_தடம்.uli",
+			"குவியல்.uli",
 		}
 	for _, name := range files {
 		t.Run(name, func(t *testing.T) {
@@ -91,7 +91,7 @@ func TestParseValidCorpus(t *testing.T) {
 }
 
 func TestParseAddFunc(t *testing.T) {
-	f := mustParse(t, corpus(t, "கூட்டு.aram"))
+	f := mustParse(t, corpus(t, "கூட்டு.uli"))
 	var fn *ast.FuncDecl
 	for _, d := range f.Decls {
 		if fd, ok := d.(*ast.FuncDecl); ok && fd.Name.Name == "கூட்டு" {
@@ -115,7 +115,7 @@ func TestParseAddFunc(t *testing.T) {
 }
 
 func TestParseInvalidMissingPackage(t *testing.T) {
-	path := corpus(t, "invalid", "தொகுப்பு_இல்லை.aram")
+	path := corpus(t, "invalid", "தொகுப்பு_இல்லை.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -130,7 +130,7 @@ func TestParseInvalidOldElseStillParses(t *testing.T) {
 	// இல்லையெனில் is not the ELSE keyword — it lexes as IDENT.
 	// The file is therefore syntactically a bare ident + block after if;
 	// rejecting it is a later semantic/style concern, not the parser's job.
-	path := corpus(t, "invalid", "பழைய_else.aram")
+	path := corpus(t, "invalid", "பழைய_else.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -142,7 +142,7 @@ func TestParseInvalidOldElseStillParses(t *testing.T) {
 }
 
 func TestParseInvalidIncompleteAssign(t *testing.T) {
-	path := corpus(t, "invalid", "முழுமையற்ற_ஒதுக்கீடு.aram")
+	path := corpus(t, "invalid", "முழுமையற்ற_ஒதுக்கீடு.uli")
 	src, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -154,7 +154,7 @@ func TestParseInvalidIncompleteAssign(t *testing.T) {
 }
 
 func TestParseSelectCorpus(t *testing.T) {
-	f := mustParse(t, corpus(t, "தடத்தேர்வு.aram"))
+	f := mustParse(t, corpus(t, "தடத்தேர்வு.uli"))
 	if len(f.Decls) == 0 {
 		t.Fatal("expected decls")
 	}
@@ -179,13 +179,13 @@ func parseWithTimeout(t *testing.T, path, src string) []error {
 // Invalid select/switch/struct snippets must finish quickly (error ⇒ progress).
 func TestParseMustTerminateInvalid(t *testing.T) {
 	names := []string{
-		"தடத்தேர்வு_பிரிவு.aram",
-		"தடத்தேர்வு_முழுமையற்ற.aram",
-		"தடத்தேர்வு_வெற்று.aram",
-		"திசைவி_பிரிவு.aram",
-		"திசைவி_முழுமையற்ற.aram",
-		"இழை_அழைப்பு_இல்லை.aram",
-		"அமைப்பு_பிரிவு.aram",
+		"தடத்தேர்வு_பிரிவு.uli",
+		"தடத்தேர்வு_முழுமையற்ற.uli",
+		"தடத்தேர்வு_வெற்று.uli",
+		"திசைவி_பிரிவு.uli",
+		"திசைவி_முழுமையற்ற.uli",
+		"இழை_அழைப்பு_இல்லை.uli",
+		"அமைப்பு_பிரிவு.uli",
 	}
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
@@ -236,7 +236,7 @@ func TestParseMustTerminateInline(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			errs := parseWithTimeout(t, tc.name+".aram", tc.src)
+			errs := parseWithTimeout(t, tc.name+".uli", tc.src)
 			if tc.name == "select_only_default_ok_shape" {
 				if len(errs) != 0 {
 					t.Fatalf("unexpected parse errors: %v", errs)

@@ -1,4 +1,4 @@
-# Aram — design decisions
+# Niraluli — design decisions
 
 Locked decisions for Phase 0. Change only with an explicit note and date.
 
@@ -6,9 +6,9 @@ Locked decisions for Phase 0. Change only with an explicit note and date.
 
 | Decision | Choice | Locked |
 |----------|--------|--------|
-| Language name | **Aram** (அறம்) — virtue / rightness | 2026-07-25 |
-| Source extension | `.aram` (Latin). Tamil may appear in basenames. | 2026-07-25 |
-| Hello program | `வணக்கம்.aram` (ASCII fallback: `vanakkam.aram`) | 2026-07-25 |
+| Language name | **Niraluli** (நிரலுளி) — virtue / rightness | 2026-07-25 |
+| Source extension | `.uli` (Latin). Tamil may appear in basenames. | 2026-07-25 |
+| Hello program | `வணக்கம்.uli` (ASCII fallback: `vanakkam.uli`) | 2026-07-25 |
 | Keyword style | **Semantic Tamil** (meaning, not English phonetics) | 2026-07-25 |
 | Relation to Go | **Go-inspired, free to diverge** | 2026-07-25 |
 | Host language (compiler) | **Go** | 2026-07-25 |
@@ -47,36 +47,36 @@ Locked decisions for Phase 0. Change only with an explicit note and date.
 ## Naming package
 
 ```text
-Full name:  Aram (அறம்)
-Binary:     aram
-Extension:  .aram
-Hello:      வணக்கம்.aram
+Full name:  Niraluli (நிரலுளி)
+Binary:     uli
+Extension:  .uli
+Hello:      வணக்கம்.uli
 ```
 
 ## Tamil-0.1 (2026-08-01)
 
 Adds Go-style loops with keyword **சுழல்**, **முறி** (`break`), and **தொடர்** (`continue`).
-See `grammar/tamil/constructs/for.yaml`, `break.yaml`, `continue.yaml`, and `corpus/tamil/சுழல்.aram`.
+See `grammar/tamil/constructs/for.yaml`, `break.yaml`, `continue.yaml`, and `corpus/tamil/சுழல்.uli`.
 
 ## Tamil-0.2 (2026-08-01)
 
 Adds first-class strings: type keyword **சரம்**, variables/params/returns, `+` concatenation,
 and `==` / `!=` content comparison. C backend uses `const char *`, `strcmp`, and a small
-`aram_concat` helper (allocated; no free in Tamil-0.2).
-See `grammar/tamil/constructs/string.yaml` and `corpus/tamil/சரம்.aram`.
+`uli_concat` helper (allocated; no free in Tamil-0.2).
+See `grammar/tamil/constructs/string.yaml` and `corpus/tamil/சரம்.uli`.
 
 ## Tamil-0.3 (2026-08-01)
 
 Adds Go-like slices: type `[]T` (T = முழுஎண் | நிலை | சரம்), composite literals `[]T{…}`,
 index get/set, and builtin **நீளம்** (`len`). C backend uses fat pointers; out-of-bounds aborts.
 No `ஒவ்வொரு`, append, or `xs[i:j]` yet.
-See `grammar/tamil/constructs/slice.yaml` and `corpus/tamil/பட்டியல்.aram`.
+See `grammar/tamil/constructs/slice.yaml` and `corpus/tamil/பட்டியல்.uli`.
 
 ## Tamil-0.4 (2026-08-01)
 
 Adds **ஒவ்வொரு** (range) over slices inside `சுழல்`, Go-style:
 `சுழல் i, v := ஒவ்வொரு xs { … }`, index-only, and blank `_`.
-See `grammar/tamil/constructs/range.yaml` and `corpus/tamil/ஒவ்வொரு.aram`.
+See `grammar/tamil/constructs/range.yaml` and `corpus/tamil/ஒவ்வொரு.uli`.
 
 ## Tamil-0.5 (2026-08-01)
 
@@ -86,31 +86,31 @@ See `grammar/tamil/constructs/range.yaml` and `corpus/tamil/ஒவ்வொர�
 - **நீளம்** on `சரம்` — byte length
 - **String/slice arena** — concat and growth allocate from an arena freed at end of `main`
 
-See `grammar/tamil/constructs/append.yaml`, `slice-expr.yaml`, and `corpus/tamil/சேர்.aram`.
+See `grammar/tamil/constructs/append.yaml`, `slice-expr.yaml`, and `corpus/tamil/சேர்.uli`.
 
 ## Tamil-0.6 (2026-08-01)
 
 Named structs: **வகை** (`type`) and **அமைப்பு** (`struct`), keyed literals, field `.` select/assign.
 Field types in 0.6: முழுஎண், நிலை, சரம் only. No pointers or methods yet.
-See `grammar/tamil/constructs/struct.yaml` and `corpus/tamil/அமைப்பு.aram`.
+See `grammar/tamil/constructs/struct.yaml` and `corpus/tamil/அமைப்பு.uli`.
 
 ## Tamil-0.7 (2026-08-01)
 
 Go-like pointers: `*T`, `&x`, `*p`; auto-deref field select on `*அமைப்பு`.
 `T` may be முழுஎண், நிலை, சரம், named struct, or another pointer.
 Struct field types stay scalars (no `*T` fields yet). No methods, no `nil` keyword.
-See `grammar/tamil/constructs/pointer.yaml` and `corpus/tamil/சுட்டி.aram`.
+See `grammar/tamil/constructs/pointer.yaml` and `corpus/tamil/சுட்டி.uli`.
 
 ## Tamil-0.8 (2026-08-01)
 
 Methods: `செயல்பாடு (பெயர் T|*T) பெயர்(…)`, calls `X.பெயர்(…)`.
 Named struct receivers only; Go-like addressability for pointer receivers.
-See `grammar/tamil/constructs/method.yaml` and `corpus/tamil/முறை.aram`.
+See `grammar/tamil/constructs/method.yaml` and `corpus/tamil/முறை.uli`.
 
 ## Tamil-0.9 (2026-08-01)
 
-Same-package multi-file: several `.aram` files with `தொகுப்பு தொடக்கம்`
-share types/funcs/methods. CLI: `aram <dir>` or multiple paths.
+Same-package multi-file: several `.uli` files with `தொகுப்பு தொடக்கம்`
+share types/funcs/methods. CLI: `uli <dir>` or multiple paths.
 Cross-package import keyword reserved: **கொணர்** (“bring”; verb — not noun இறக்குமதி).
 See `grammar/tamil/constructs/multifile.yaml` and `corpus/tamil/பல்கோப்பு/`.
 
@@ -308,7 +308,7 @@ method expressions arrived in 0.47. See `constructs/func-value.yaml`.
 
 Function literals / closures: `செயல்பாடு(params) [results] { body }` as
 expressions. Free variables captured by reference (Go-like); C arena
-promotes captured locals. Builds on 0.44 `aram_fn`. See
+promotes captured locals. Builds on 0.44 `uli_fn`. See
 `constructs/closure.yaml`.
 
 ## Tamil-0.46 (2026-08-01)
@@ -320,7 +320,7 @@ iteration values. See `constructs/closure.yaml`.
 ## Tamil-0.47 (2026-08-08)
 
 Method expressions `T.M` and `(*T).M` as unbound function values on the
-`aram_fn` path. Method-set rules match Go (value receivers on `T`; value
+`uli_fn` path. Method-set rules match Go (value receivers on `T`; value
 and pointer on `*T`). See `constructs/method-expr.yaml`.
 
 ## Tamil-0.48 (2026-08-08)
@@ -367,11 +367,11 @@ until `மூடு` (and drain). Send-only channels are an error. Bare
 
 Native heap + GC on the C backend (no new keywords):
 - Replace bump arena with malloc-backed stop-the-world conservative
-  mark-sweep (`aram_alloc`).
+  mark-sweep (`uli_alloc`).
 - Safe points: poll at function entry / loop back-edges; park around
   `தடம்` / `தடத்தேர்வு` cond-wait.
 - Thread registry + Linux `pthread_getattr_np` stack bounds.
-- `இழை` register/unregister; `aram_arena_alloc` is a wrapper.
+- `இழை` register/unregister; `uli_arena_alloc` is a wrapper.
 See `constructs/gc.yaml`. HTTP / sockets still later.
 
 ## Tamil-0.53 (2026-08-13)
@@ -427,7 +427,7 @@ injection returns `*வலை.பிழை`.
 
 Function values may be stored in struct fields and slices, including through
 function type aliases. Aggregate printing renders them as `<செயல்பாடு>` and
-aggregates containing them are not comparable. The HTTP mux now uses an Aram
+aggregates containing them are not comparable. The HTTP mux now uses an Niraluli
 `வழிப்படுத்தி` struct with parallel path and handler slices; callers pass
 `*வழிப்படுத்தி` to registration and serving functions.
 
@@ -440,12 +440,12 @@ Malformed escapes produce a 400 response. `பாதை` remains query-free.
 The client accepts strict HTTP/1.0 or HTTP/1.1 status lines and decodes
 `Transfer-Encoding: chunked` bodies up to the existing 1 MiB decoded-body
 limit. Unsupported transfer encodings remain errors. The obsolete C mux
-table was removed now that Tamil-0.58's mux is implemented in Aram.
+table was removed now that Tamil-0.58's mux is implemented in Niraluli.
 
 
 ## Tamil-0.60 (2026-08-14)
 
-`aram build` and `aram run` compile generated C with `-O2` by default.
+`uli build` and `uli run` compile generated C with `-O2` by default.
 `--debug` / `-O0` restore unoptimized builds; explicit `-O1`, `-O2`, `-O3`,
 and `-Os` are accepted.
 
@@ -481,11 +481,11 @@ Connections and prepared statements are opaque `முழுஎண்` handles. 
 supports direct no-row execution, prepared statements, typed one-based binds
 (null / integer / float / UTF-8 text / bytes), row stepping, typed zero-based
 column reads, reset, finalize, and close. Text and blob column values are
-copied into Aram's managed heap before SQLite can invalidate them. Operational
+copied into Niraluli's managed heap before SQLite can invalidate them. Operational
 failures return `*தரவுத்தளம்.பிழை`.
 
 The generated runtime uses `dlopen` / `dlsym` for `libsqlite3.so.0` (falling
-back to `libsqlite3.so`). Consequently Aram compilation does not require
+back to `libsqlite3.so`). Consequently Niraluli compilation does not require
 SQLite headers or `-lsqlite3`; the shared library is required when a SQLite
 program runs. The vtable isolates engine operations so future PostgreSQL or
 MySQL first-party backends can share the Tamil API. Tamil-0.62 deliberately

@@ -1,4 +1,4 @@
-// Package token defines Aram Tamil-0 lexical tokens.
+// Package token defines Niraluli Tamil-0 lexical tokens.
 package token
 
 // Kind is the type of a token.

@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"strings"
 
-	"aram/internal/ast"
+	"niraluli/internal/ast"
 )
 
 //go:embed db_runtime.inc
@@ -47,59 +47,59 @@ func (e *emitter) writeDBIntrinsic(b *strings.Builder, fn *ast.FuncDecl) bool {
 	var call string
 	switch fn.Name.Name {
 	case "திற":
-		call = e.dbTupleResult(fn, "aram_db_i64_result",
-			"aram_db_open("+cIdent("இயக்கி")+", "+cIdent("முகவரி")+")")
+		call = e.dbTupleResult(fn, "uli_db_i64_result",
+			"uli_db_open("+cIdent("இயக்கி")+", "+cIdent("முகவரி")+")")
 	case "விடு":
-		call = "\treturn (" + errType + ")aram_db_close(" + cIdent("இ") + ");\n"
+		call = "\treturn (" + errType + ")uli_db_close(" + cIdent("இ") + ");\n"
 	case "செயல்":
 		resultType := cPkgIdent("தரவுத்தளம்", "செயல்முடிவு")
-		call = "\taram_db_exec_result r = aram_db_exec(" + cIdent("இ") + ", " + cIdent("வினா") + ");\n" +
+		call = "\tuli_db_exec_result r = uli_db_exec(" + cIdent("இ") + ", " + cIdent("வினா") + ");\n" +
 			"\t" + resultType + " result;\n" +
 			"\tresult." + cIdent("பாதித்தவை") + " = r.affected;\n" +
 			"\tresult." + cIdent("சேர்க்கையெண்") + " = r.inserted;\n" +
 			"\treturn (" + ret + "){ result, (" + errType + ")r.err };\n"
 	case "தயாரி":
-		call = e.dbTupleResult(fn, "aram_db_i64_result",
-			"aram_db_prepare("+cIdent("இ")+", "+cIdent("வினா")+")")
+		call = e.dbTupleResult(fn, "uli_db_i64_result",
+			"uli_db_prepare("+cIdent("இ")+", "+cIdent("வினா")+")")
 	case "இன்மைபிணை":
-		call = "\treturn (" + errType + ")aram_db_bind_null(" + cIdent("க") + ", " + cIdent("இடம்") + ");\n"
+		call = "\treturn (" + errType + ")uli_db_bind_null(" + cIdent("க") + ", " + cIdent("இடம்") + ");\n"
 	case "முழுஎண்பிணை":
-		call = "\treturn (" + errType + ")aram_db_bind_i64(" + cIdent("க") + ", " + cIdent("இடம்") + ", " + cIdent("மதிப்பு") + ");\n"
+		call = "\treturn (" + errType + ")uli_db_bind_i64(" + cIdent("க") + ", " + cIdent("இடம்") + ", " + cIdent("மதிப்பு") + ");\n"
 	case "மிதவைப்பிணை":
-		call = "\treturn (" + errType + ")aram_db_bind_f64(" + cIdent("க") + ", " + cIdent("இடம்") + ", " + cIdent("மதிப்பு") + ");\n"
+		call = "\treturn (" + errType + ")uli_db_bind_f64(" + cIdent("க") + ", " + cIdent("இடம்") + ", " + cIdent("மதிப்பு") + ");\n"
 	case "சரம்பிணை":
-		call = "\treturn (" + errType + ")aram_db_bind_text(" + cIdent("க") + ", " + cIdent("இடம்") + ", " + cIdent("மதிப்பு") + ");\n"
+		call = "\treturn (" + errType + ")uli_db_bind_text(" + cIdent("க") + ", " + cIdent("இடம்") + ", " + cIdent("மதிப்பு") + ");\n"
 	case "இருமிப்பிணை":
-		call = "\treturn (" + errType + ")aram_db_bind_blob(" + cIdent("க") + ", " + cIdent("இடம்") + ", " + cIdent("மதிப்பு") + ".data, " + cIdent("மதிப்பு") + ".len);\n"
+		call = "\treturn (" + errType + ")uli_db_bind_blob(" + cIdent("க") + ", " + cIdent("இடம்") + ", " + cIdent("மதிப்பு") + ".data, " + cIdent("மதிப்பு") + ".len);\n"
 	case "அடுத்து":
-		call = e.dbTupleResult(fn, "aram_db_bool_result",
-			"aram_db_step("+cIdent("க")+")")
+		call = e.dbTupleResult(fn, "uli_db_bool_result",
+			"uli_db_step("+cIdent("க")+")")
 	case "நெடுவரிசைகள்":
-		call = e.dbTupleResult(fn, "aram_db_i64_result",
-			"aram_db_column_count("+cIdent("க")+")")
+		call = e.dbTupleResult(fn, "uli_db_i64_result",
+			"uli_db_column_count("+cIdent("க")+")")
 	case "நெடுவரிசைப்பெயர்":
-		call = e.dbTupleResult(fn, "aram_db_str_result",
-			"aram_db_column_name("+cIdent("க")+", "+cIdent("இடம்")+")")
+		call = e.dbTupleResult(fn, "uli_db_str_result",
+			"uli_db_column_name("+cIdent("க")+", "+cIdent("இடம்")+")")
 	case "இன்மையா":
-		call = e.dbTupleResult(fn, "aram_db_bool_result",
-			"aram_db_column_is_null("+cIdent("க")+", "+cIdent("இடம்")+")")
+		call = e.dbTupleResult(fn, "uli_db_bool_result",
+			"uli_db_column_is_null("+cIdent("க")+", "+cIdent("இடம்")+")")
 	case "முழுஎண்பெறு":
-		call = e.dbTupleResult(fn, "aram_db_i64_result",
-			"aram_db_column_i64("+cIdent("க")+", "+cIdent("இடம்")+")")
+		call = e.dbTupleResult(fn, "uli_db_i64_result",
+			"uli_db_column_i64("+cIdent("க")+", "+cIdent("இடம்")+")")
 	case "மிதவைப்பெறு":
-		call = e.dbTupleResult(fn, "aram_db_f64_result",
-			"aram_db_column_f64("+cIdent("க")+", "+cIdent("இடம்")+")")
+		call = e.dbTupleResult(fn, "uli_db_f64_result",
+			"uli_db_column_f64("+cIdent("க")+", "+cIdent("இடம்")+")")
 	case "சரம்பெறு":
-		call = e.dbTupleResult(fn, "aram_db_str_result",
-			"aram_db_column_text("+cIdent("க")+", "+cIdent("இடம்")+")")
+		call = e.dbTupleResult(fn, "uli_db_str_result",
+			"uli_db_column_text("+cIdent("க")+", "+cIdent("இடம்")+")")
 	case "இருமிப்பெறு":
-		call = "\taram_db_blob_result r = aram_db_column_blob(" + cIdent("க") + ", " + cIdent("இடம்") + ");\n" +
-			"\taram_slice_u8 value = { r.data, r.len, r.len };\n" +
+		call = "\tuli_db_blob_result r = uli_db_column_blob(" + cIdent("க") + ", " + cIdent("இடம்") + ");\n" +
+			"\tuli_slice_u8 value = { r.data, r.len, r.len };\n" +
 			"\treturn (" + ret + "){ value, (" + errType + ")r.err };\n"
 	case "மீட்டமை":
-		call = "\treturn (" + errType + ")aram_db_reset(" + cIdent("க") + ");\n"
+		call = "\treturn (" + errType + ")uli_db_reset(" + cIdent("க") + ");\n"
 	case "கூற்றுவிடு":
-		call = "\treturn (" + errType + ")aram_db_finalize(" + cIdent("க") + ");\n"
+		call = "\treturn (" + errType + ")uli_db_finalize(" + cIdent("க") + ");\n"
 	default:
 		return false
 	}

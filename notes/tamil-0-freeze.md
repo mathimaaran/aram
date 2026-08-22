@@ -2,7 +2,7 @@
 
 **Frozen:** 2026-08-01  
 **Subset:** Tamil-0  
-**Next:** Phase 1 implementation (`cmd/aram` lexer → parser → C emit)
+**Next:** Phase 1 implementation (`cmd/uli` lexer → parser → C emit)
 
 ## Immutable for Tamil-0 (unless bumping subset)
 

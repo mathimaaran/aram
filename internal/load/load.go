@@ -1,4 +1,4 @@
-// Package load expands and parses Aram source paths (files or directories).
+// Package load expands and parses Niraluli source paths (files or directories).
 package load
 
 import (
@@ -8,12 +8,12 @@ import (
 	"sort"
 	"strings"
 
-	"aram/internal/ast"
-	"aram/internal/parse"
+	"niraluli/internal/ast"
+	"niraluli/internal/parse"
 )
 
-// Expand turns CLI args into a sorted list of .aram file paths.
-// A directory argument expands to all *.aram files directly inside it
+// Expand turns CLI args into a sorted list of .uli file paths.
+// A directory argument expands to all *.uli files directly inside it
 // (non-recursive).
 func Expand(args []string) ([]string, error) {
 	if len(args) == 0 {
@@ -37,12 +37,12 @@ func Expand(args []string) ([]string, error) {
 					continue
 				}
 				name := e.Name()
-				if strings.HasSuffix(name, ".aram") {
+				if strings.HasSuffix(name, ".uli") {
 					dirFiles = append(dirFiles, filepath.Join(a, name))
 				}
 			}
 			if len(dirFiles) == 0 {
-				return nil, fmt.Errorf("no .aram files in %s", a)
+				return nil, fmt.Errorf("no .uli files in %s", a)
 			}
 			sort.Strings(dirFiles)
 			for _, p := range dirFiles {
@@ -53,8 +53,8 @@ func Expand(args []string) ([]string, error) {
 			}
 			continue
 		}
-		if !strings.HasSuffix(a, ".aram") {
-			return nil, fmt.Errorf("not an .aram file: %s", a)
+		if !strings.HasSuffix(a, ".uli") {
+			return nil, fmt.Errorf("not an .uli file: %s", a)
 		}
 		if !seen[a] {
 			seen[a] = true

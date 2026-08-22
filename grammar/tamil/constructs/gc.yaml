@@ -12,7 +12,7 @@ semantics: >
   sorted object index for logarithmic conservative pointer lookup, and safe
   threshold growth for single allocations larger than the current trigger. Allocation is still implicit (concat, சேர்,
   ஆக்கு, closures, தடம், தள்ளிவை thunks). There is no free keyword.
-  Safe points: aram_gc_poll at function entry and loop back-edges, and
+  Safe points: uli_gc_poll at function entry and loop back-edges, and
   park around தடம் / தடத்தேர்வு cond-wait. Linux pthread stack bounds
   (pthread_getattr_np). No new Tamil keywords.   Sockets: Tamil-0.53 (`வலை`). HTTP: Tamil-0.54 (`பரிமாற்றம்`).
 examples:
@@ -31,8 +31,8 @@ examples:
 notes:
   - "Locked 2026-08-13: STW conservative mark-sweep on C; not Boehm."
   - "Runtime source: internal/emitc/gc_runtime.inc (embedded into generated C)."
-  - "aram_arena_alloc is a wrapper over aram_alloc (heap)."
-  - "Main thread: aram_heap_init / aram_heap_shutdown; இழை register/unregister."
+  - "uli_arena_alloc is a wrapper over uli_alloc (heap)."
+  - "Main thread: uli_heap_init / uli_heap_shutdown; இழை register/unregister."
   - "No Tamil GC builtin; reclaim is automatic."
   - "Tamil-0.60: build/run compile with -O2 by default; --debug or -O0 overrides."
   - "Tamil-0.60: register roots are captured with setjmp before stop-the-world marking."

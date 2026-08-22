@@ -20,7 +20,7 @@ semantics: >
   the receiver as written (T or *T). Method-set rules match Go: T.M only
   if M has a value receiver; (*T).M if M is in the method set of *T
   (value or pointer receiver). Variable names shadow type names (value
-  path → method value). Builds on Tamil-0.44 aram_fn; reuse call helpers.
+  path → method value). Builds on Tamil-0.44 uli_fn; reuse call helpers.
 examples:
   - tamil: |
       க := புள்ளி.கூட்டு

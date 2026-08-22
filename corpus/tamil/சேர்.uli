@@ -1,0 +1,31 @@
+// Niraluli: சேர்.uli — append, slice expr, string range, concat arena
+// Go-ish equivalents noted in comments below.
+
+தொகுப்பு தொடக்கம்
+
+செயல்பாடு தொடக்கம்() {
+    // append
+    xs := []முழுஎண்{1, 2}
+    xs = சேர்(xs, 3)
+    பதிப்பி(நீளம்(xs))
+    பதிப்பி(xs[2])
+
+    // slice expression
+    ys := xs[1:]
+    பதிப்பி(நீளம்(ys))
+    பதிப்பி(ys[0])
+
+    // substring
+    s := "hello"
+    பதிப்பி(s[1:4])
+    பதிப்பி(நீளம்(s))
+
+    // range over string (UTF-8 runes; index = byte offset)
+    சுழல் i, r := ஒவ்வொரு "ab" {
+        பதிப்பி(i)
+        பதிப்பி(r)
+    }
+
+    // concat still works (arena)
+    பதிப்பி("வணக்கம், " + "நிரலுளி")
+}

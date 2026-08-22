@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"aram/internal/ast"
+	"niraluli/internal/ast"
 )
 
-// Package is one Aram package (directory of .aram files).
+// Package is one Niraluli package (directory of .uli files).
 type Package struct {
 	Name  string
 	Dir   string

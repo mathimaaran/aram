@@ -18,6 +18,6 @@ semantics: >
   One loop keyword (Go-style). Cond must be நிலை when present.
   init/post are optional SimpleStmts. range / break / continue not yet.
 examples:
-  - corpus: corpus/tamil/சுழல்.aram
+  - corpus: corpus/tamil/சுழல்.uli
 notes:
   - "Name locked: சுழல். Implemented in Tamil-0.1 (2026-08-01)."

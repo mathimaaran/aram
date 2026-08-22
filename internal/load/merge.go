@@ -3,7 +3,7 @@ package load
 import (
 	"fmt"
 
-	"aram/internal/ast"
+	"niraluli/internal/ast"
 )
 
 // MergeFiles concatenates same-package files into one File (imports + decls).

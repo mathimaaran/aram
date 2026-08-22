@@ -1,4 +1,4 @@
-// Package lex implements the Aram Tamil-0 lexer.
+// Package lex implements the Niraluli Tamil-0 lexer.
 package lex
 
 import (
@@ -7,7 +7,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"aram/internal/token"
+	"niraluli/internal/token"
 )
 
 // Error is a lexing error with source position.
@@ -20,7 +20,7 @@ func (e Error) Error() string {
 	return fmt.Sprintf("%d:%d: %s", e.Pos.Line, e.Pos.Col, e.Msg)
 }
 
-// Lexer tokenizes UTF-8 Aram source.
+// Lexer tokenizes UTF-8 Niraluli source.
 type Lexer struct {
 	src        string
 	file       string

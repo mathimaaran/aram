@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Aram v0.62 language reference.">
-  <title>Language Reference — Aram Documentation</title>
+  <meta name="description" content="Niraluli v0.62 language reference.">
+  <title>Language Reference — Niraluli Documentation</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="docs.js"></script>
 </head>
@@ -37,7 +37,7 @@
 
   <h2 id="lexical">Lexical rules</h2>
   <h3>Source and identifiers</h3>
-  <p>Aram source is UTF-8 and uses the <code>.aram</code> extension. Identifiers begin with a Unicode letter or underscore and continue with letters, decimal digits, Unicode combining marks, or underscore. Tamil and Latin identifiers are both valid.</p>
+  <p>Niraluli source is UTF-8 and uses the <code>.uli</code> extension. Identifiers begin with a Unicode letter or underscore and continue with letters, decimal digits, Unicode combining marks, or underscore. Tamil and Latin identifiers are both valid.</p>
   <p><code>தொடக்கம்</code> is the conventional entry package/function name, not a reserved keyword.</p>
 
   <h3>Literals</h3>
@@ -57,7 +57,7 @@
   <h2 id="keywords">Keywords and built-ins</h2>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Category</th><th>Aram spelling</th><th>Meaning</th></tr></thead>
+      <thead><tr><th>Category</th><th>Niraluli spelling</th><th>Meaning</th></tr></thead>
       <tbody>
         <tr><td>Packages</td><td><code>தொகுப்பு</code>, <code>கொணர்</code>, <code>வெளி</code></td><td>package, import, exported visibility</td></tr>
         <tr><td>Declarations</td><td><code>செயல்பாடு</code>, <code>மாறி</code>, <code>வகை</code>, <code>அமைப்பு</code></td><td>function, variable, type, struct</td></tr>
@@ -100,12 +100,12 @@
   <pre><code>எண் := முழுஎண்(3.9)
 மிதவை := மிதவைஎண்(எண்)
 எழுத்து := சரம்(65)
-இருமிகள் := []இருமி8("அறம்")
+இருமிகள் := []இருமி8("நிரலுளி")
 மீண்டும் := சரம்(இருமிகள்)</code></pre>
 
   <h2 id="variables">Variables and assignment</h2>
   <pre><code>மாறி எண்ணிக்கை முழுஎண்
-மாறி பெயர் சரம் = "அறம்"
+மாறி பெயர் சரம் = "நிரலுளி"
 வயது := 1
 
 எண்ணிக்கை = 10
@@ -281,7 +281,7 @@ _, _ = வலை.எழுது(இணைப்பு, தரவு)</code></pr
 }
 
 எண் := அடையாளம்(42)
-பெயர் := அடையாளம்[சரம்]("அறம்")</code></pre>
+பெயர் := அடையாளம்[சரம்]("நிரலுளி")</code></pre>
   <p>Generics are currently limited to unconstrained function type parameters. Multiple parameters, slices of type parameters, inference, explicit type arguments, and cross-package use are supported. Generic types, generic methods, constraints, and an <code>any</code> interface are not implemented. The C backend monomorphizes each instantiation.</p>
 
   <h2 id="packages">Packages and visibility</h2>

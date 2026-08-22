@@ -1,11 +1,11 @@
 # Tamil fonts and glyphs (editors & launch)
 
-Aram source is **UTF-8 Tamil**. If an editor or terminal shows **empty boxes (“tofu” / squares)** instead of letters, the text is usually fine — the **font cannot render Tamil glyphs**.
+Niraluli source is **UTF-8 Tamil**. If an editor or terminal shows **empty boxes (“tofu” / squares)** instead of letters, the text is usually fine — the **font cannot render Tamil glyphs**.
 
 This matters for:
 
-- Developing Aram (reading `.aram` corpus and keywords)
-- End users writing Aram
+- Developing Niraluli (reading `.uli` corpus and keywords)
+- End users writing Niraluli
 - Future IDE / syntax-highlight extensions we ship
 - Docs, websites, and screenshots at language launch
 
@@ -54,11 +54,11 @@ Put a Tamil font **after** your preferred monospace so Latin stays monospace and
 User settings path (Linux): `~/.config/Cursor/User/settings.json`  
 (VS Code: `~/.config/Code/User/settings.json`)
 
-After changing **editor** fonts: **Developer: Reload Window**, then reopen the `.aram` file.
+After changing **editor** fonts: **Developer: Reload Window**, then reopen the `.uli` file.
 
 ### Cursor **explorer / chat** still showing boxes
 
-The **project explorer** (file names like `பெயர்_முடிவு.aram`) uses the workbench UI font,
+The **project explorer** (file names like `பெயர்_முடிவு.uli`) uses the workbench UI font,
 not `editor.fontFamily`. On Linux Cursor hard-codes:
 
 `system-ui, Ubuntu, Droid Sans, sans-serif`
@@ -75,10 +75,10 @@ Then **fully quit Cursor** and reopen.
 
 Agent chat does **not** use `editor.fontFamily`. It uses the workbench UI stack
 (`--cursor-font-family-sans` → `system-ui` / `sans-serif`). On Zorin that is
-**Arimo**, which has **no Tamil**, so chat draws empty squares even when `.aram`
+**Arimo**, which has **no Tamil**, so chat draws empty squares even when `.uli`
 files look fine.
 
-Fix: user fontconfig `~/.config/fontconfig/conf.d/98-aram-tamil-fallback.conf`
+Fix: user fontconfig `~/.config/fontconfig/conf.d/98-uli-tamil-fallback.conf`
 (Noto Sans + Noto Sans Tamil UI in front of Arimo). Then:
 
 1. `fc-cache -f`
@@ -90,19 +90,19 @@ Check: `fc-match sans-serif` should mention Noto, not only Arimo.
 
 ### Workspace tip (optional later)
 
-When we ship an Aram VS Code/Cursor extension, recommend or set:
+When we ship an Niraluli VS Code/Cursor extension, recommend or set:
 
 ```json
 {
-  "[aram]": {
+  "[uli]": {
     "editor.fontFamily": "monospace, 'Noto Sans Tamil UI', 'Noto Sans Tamil'"
   }
 }
 ```
 
-(Requires a language id `aram` for `.aram` files.)
+(Requires a language id `uli` for `.uli` files.)
 
-## Terminal (program output like `வணக்கம், அறம்!`)
+## Terminal (program output like `வணக்கம், நிரலுளி!`)
 
 Terminals are **cell grids**. Tamil glyphs are often wider than one Latin cell, so a monospace primary font + thin Tamil fallback looks **squeezed** and **lighter** even when readable.
 
@@ -143,7 +143,7 @@ Tips:
 
 1. Preferences → Profile → Text
 2. Custom font: e.g. `JetBrains Mono Regular` 13–15
-3. Ensure system fallback can reach Noto Tamil (fontconfig), **or** temporarily set the profile font to **Noto Sans Tamil UI** when demoing Aram output (Latin will be proportional)
+3. Ensure system fallback can reach Noto Tamil (fontconfig), **or** temporarily set the profile font to **Noto Sans Tamil UI** when demoing Niraluli output (Latin will be proportional)
 
 Optional fontconfig tweak (`~/.config/fontconfig/fonts.conf`) so monospace stacks Tamil better:
 
@@ -175,7 +175,7 @@ If VTE still looks cramped: **Kitty**, **WezTerm**, or **GNOME Console** often s
 - Using Condensed Tamil faces
 - Expecting perfect alignment of Tamil inside strict monospace columns
 
-For Aram demos, slightly larger terminal font + Noto Sans Tamil UI is the recommended setup.
+For Niraluli demos, slightly larger terminal font + Noto Sans Tamil UI is the recommended setup.
 
 ### Other editors / web
 
@@ -190,14 +190,14 @@ For Aram demos, slightly larger terminal font + Noto Sans Tamil UI is the recomm
 | Encoding | UTF-8 |
 | BOM | Prefer **no** BOM |
 | Normalization | Identifiers: plan **NFC** (see `unicode-tamil.md`) |
-| Extension | `.aram` (ASCII) |
+| Extension | `.uli` (ASCII) |
 
 If `hexdump` / Python shows correct `U+0Bxx` code points but the UI shows squares → **font**.  
 If code points are wrong or `` → **encoding/corruption**.
 
 ## Launch / packaging notes
 
-When announcing or distributing Aram:
+When announcing or distributing Niraluli:
 
 1. **README “Editor setup”** — link this doc; require or recommend Noto Tamil.
 2. **Installer / devcontainer** — install `fonts-noto` (or equivalent) on Linux images used for demos/CI screenshots.

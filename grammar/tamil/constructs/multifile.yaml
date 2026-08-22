@@ -10,16 +10,16 @@ semantics: >
   Same-package multi-file: every file declares தொகுப்பு தொடக்கம்.
   Types, functions, and methods are shared across files in the package.
   Exactly one செயல்பாடு தொடக்கம்() must exist in the package.
-  The aram tool accepts multiple .aram paths or a directory of *.aram.
+  The uli tool accepts multiple .uli paths or a directory of *.uli.
   Cross-package கொணர் is Tamil-0.10 — see import.yaml.
 examples:
   - tamil: |
-      # file வடிவம்.aram
+      # file வடிவம்.uli
       தொகுப்பு தொடக்கம்
       வகை புள்ளி அமைப்பு { x முழுஎண் }
       செயல்பாடு (ப *புள்ளி) அமை(ம முழுஎண்) { ப.x = ம }
 
-      # file தொடக்கம்.aram
+      # file தொடக்கம்.uli
       தொகுப்பு தொடக்கம்
       செயல்பாடு தொடக்கம்() {
           ப := புள்ளி{x: 0}
