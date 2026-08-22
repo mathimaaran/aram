@@ -4,6 +4,8 @@ Niraluli is a **Go-inspired** programming language with **semantic Tamil** keywo
 It is free to diverge from Go. The long-term goal is a quality compiler for
 Linux (x86-64 first, then i386), with NASM as a later backend.
 
+**நிரலுளி** joins **நிரல்** (program) and **உளி** (chisel): a tool for carving programs.
+
 **Phase 0:** complete (Tamil-0 frozen 2026-08-01).  
 **Phase 1:** active C backend through v0.62; NASM remains later.
 
